@@ -258,6 +258,7 @@
   <div class="notice">
     ※ 評価の見方: <b>◎最高 ○良い △普通 ▽イマイチ ×ダメ</b>。サイズ・風向〈オフ/サイド/オンショア〉・風速・うねりの周期から算出した目安で、
     モモ〜コシ以下のサイズは風が良くても▽止まり、スネ以下やクローズ級は×になります。<br>
+    ※ <b>サイズ</b>はうねりの向きとビーチの向きの一致度・周期から推定した<b>ブレイクサイズの目安</b>です（届かない向きのうねりや短周期の風波は割り引いて計算）。「沖合 ○m」はモデルの沖合有義波高そのままの参考値です。<br>
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
     潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。<br>
@@ -320,7 +321,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v1';
+const CACHE_KEY = 'surf-cache-v2';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -421,7 +422,7 @@ async function fetchAll(force) {
     const lats = SPOTS.map(s => s.lat).join(',');
     const lons = SPOTS.map(s => s.lon).join(',');
     const mUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lats}&longitude=${lons}`
-      + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_level_height_msl`
+      + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,wind_wave_direction,sea_level_height_msl`
       + `&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`;
     const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
       + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=8`;
@@ -479,8 +480,34 @@ function processSpot(spot, m, w) {
     const periods = pick(h.swell_wave_period, use).filter(p => p > 0);
     const period = periods.length ? periods.reduce((a, b) => a + b) / periods.length : 0;
     const windWaves = pick(h.wind_wave_height, use);
+    const windWaveH = windWaves.length ? Math.max(...windWaves) : 0;
     const windRatio = maxH > 0 && windWaves.length
       ? (windWaves.reduce((a, b) => a + b) / windWaves.length) / maxH : 0;
+
+    // 風波の向き(波高2乗重み付き円環平均)
+    let wx = 0, wy = 0;
+    use.forEach(i => {
+      const wwd = h.wind_wave_direction ? h.wind_wave_direction[i] : null;
+      const wwh = h.wind_wave_height[i] || 0;
+      if (wwd == null) return;
+      const rad = wwd * Math.PI / 180, wgt = wwh * wwh;
+      wx += Math.sin(rad) * wgt; wy += Math.cos(rad) * wgt;
+    });
+    const windWaveDir = (wx || wy) ? ((Math.atan2(wx, wy) * 180 / Math.PI) + 360) % 360 : null;
+
+    // ブレイクサイズ推定(effH):
+    // - ポイントに届く向きのうねりだけを数える(ビーチの向きとの一致度で減衰)
+    // - 周期が長いほどブレイクは大きく、短い風波は乗れる波になりにくいので半分に割引
+    const expo = dir => {
+      if (dir == null) return 0.5;
+      const a = angDiff(dir, spot.facing);
+      return a <= 45 ? 1 : a <= 75 ? 0.75 : a <= 105 ? 0.4 : a <= 135 ? 0.15 : 0.05;
+    };
+    const pBoost = period >= 11 ? 1.15 : period >= 8 ? 1 : period >= 6 ? 0.85 : 0.7;
+    const effH = Math.min(
+      maxH,
+      (swellH * expo(swellDir) * pBoost + windWaveH * expo(windWaveDir) * 0.5) * (spot.cal || 1)
+    );
 
     const windAt = hours => {
       const sel = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hours.includes(hr); });
@@ -500,11 +527,11 @@ function processSpot(spot, m, w) {
     const amQ = am ? windQuality(am.dir, spot.facing) : null;
 
     return {
-      date, maxH, swellH, swellDir, period, windRatio,
-      wc: waveCount(maxH, period, windRatio),
+      date, maxH, effH, swellH, swellDir, period, windRatio,
+      wc: waveCount(effH, period, windRatio),
       am, pm,
       amQ, pmQ: pm ? windQuality(pm.dir, spot.facing) : null,
-      cond: condition(maxH, period, amQ, am ? am.speed : null),
+      cond: condition(effH, period, amQ, am ? am.speed : null),
       tides: tides.filter(t => t.date === date),
     };
   });
@@ -594,6 +621,7 @@ function demoData() {
       swell_wave_direction: swellD,
       swell_wave_period: mk(i => 8 + 3 * Math.sin(i / 40 + seed)),
       wind_wave_height: wave.map(v => v * 0.3),
+      wind_wave_direction: mk(i => (s.facing + 30 * Math.sin(i / 11 + seed) + 360) % 360),
       sea_level_height_msl: mk(i => 0.8 * Math.sin(2 * Math.PI * (i % 24) / 12.42 + seed) + 0.3 * Math.sin(2 * Math.PI * (i % 24) / 25 + seed)),
     }});
     wind.push({ hourly: {
@@ -645,8 +673,8 @@ function renderMap() {
   const markers = SPOTS.map(spot => {
     const { x, y } = spotXY(spot);
     const d = state.data && state.data.spots[spot.id] && state.data.spots[spot.id].daily[state.dayIdx];
-    const col = d ? `var(${sizeColorVar(d.maxH)})` : 'var(--accent)';
-    const title = d ? `${spot.name} ${sizeLabel(d.maxH)} ${fmt1(d.maxH)}m ${d.cond.sym}${d.cond.text}` : spot.name;
+    const col = d ? `var(${sizeColorVar(d.effH)})` : 'var(--accent)';
+    const title = d ? `${spot.name} ${sizeLabel(d.effH)} ${fmt1(d.effH)}m ${d.cond.sym}${d.cond.text}` : spot.name;
     // 希望位置→他の位置の順、近い→遠いオフセットの順に試し、空きに置く(全滅ならドットのみ)
     let rect = null;
     const posOrder = [...new Set([spot.lbl || 'r', 'r', 'l', 'b', 't'])];
@@ -731,7 +759,7 @@ function spotDetailPage(spot) {
   const sd = state.data.spots[spot.id];
   const d = sd.daily[state.dayIdx];
   if (!d) return '';
-  const colorVar = sizeColorVar(d.maxH);
+  const colorVar = sizeColorVar(d.effH);
   const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
   const windHtml = (label, wv, wq) => wv
     ? `<span class="k">${label}</span> ${dir16(wv.dir)} ${fmt1(wv.speed)}m/s <span class="wtag ${wq.cls}">${wq.label}</span>`
@@ -745,7 +773,7 @@ function spotDetailPage(spot) {
     return `<tr data-day="${i}" class="${i === state.dayIdx ? 'sel' : ''}">
       <td>${l.head} ${l.sub}</td>
       <td><span class="cond ${w.cond.cls}" style="font-size:.76rem;padding:0 7px">${w.cond.sym} ${w.cond.text}</span></td>
-      <td>${sizeLabel(w.maxH)} <span class="k">${fmt1(w.maxH)}m</span></td>
+      <td>${sizeLabel(w.effH)} <span class="k">${fmt1(w.effH)}m</span></td>
       <td>${w.swellDir != null ? dir16(w.swellDir) : '—'} ${fmt1(w.swellH)}m${w.surge ? ' <span class="surge-tag">⚠急上昇</span>' : ''}</td>
       <td>${fmt1(w.period)}s</td>
       <td>${w.am ? `${dir16(w.am.dir)} ${fmt1(w.am.speed)}m/s <span class="wtag ${w.amQ.cls}">${w.amQ.label}</span>` : '—'}</td>
@@ -758,11 +786,11 @@ function spotDetailPage(spot) {
       <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
     </div>
     <div class="size-row" style="margin-top:12px">
-      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
-        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.effH)}
+        <span class="size-m">${fmt1(d.effH)}m<span class="k">｜沖合 ${fmt1(d.maxH)}m</span></span></span>
       <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
     </div>
-    ${d.maxH < 0.15 ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    ${d.effH < 0.15 ? '<div class="flat-note">ほぼフラットです</div>' : ''}
     ${d.surge ? '<div class="surge-note">⚠ うねりが急上昇する予想です（台風・低気圧うねりの可能性）。最新の<a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁 台風情報</a>も確認してください</div>' : ''}
     <div class="fact-grid" style="max-width:560px">
       <div class="fact"><span class="k">うねり</span>
@@ -790,8 +818,8 @@ function spotCard(spot) {
   const sd = state.data.spots[spot.id];
   const d = sd.daily[state.dayIdx];
   if (!d) return '';
-  const flat = d.maxH < 0.15;
-  const colorVar = sizeColorVar(d.maxH);
+  const flat = d.effH < 0.15;
+  const colorVar = sizeColorVar(d.effH);
   const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
 
   const windHtml = seg => {
@@ -811,8 +839,8 @@ function spotCard(spot) {
       <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
     </div>
     <div class="size-row">
-      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
-        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.effH)}
+        <span class="size-m">${fmt1(d.effH)}m<span class="k">｜沖合 ${fmt1(d.maxH)}m</span></span></span>
       <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
     </div>
     ${flat ? '<div class="flat-note">ほぼフラットです</div>' : ''}
@@ -844,11 +872,11 @@ const COND_COLOR = {
 function weekBarsSvg(daily) {
   const W = 320, H = 76, top = 28, bottom = 12;
   const plotH = H - top - bottom;
-  const maxScale = Math.max(1.0, ...daily.map(d => d.maxH));
+  const maxScale = Math.max(1.0, ...daily.map(d => d.effH));
   const bw = 18, gap = (W - daily.length * bw) / daily.length;
   const bars = daily.map((d, i) => {
     const x = gap / 2 + i * (bw + gap);
-    const bh = Math.max(2, d.maxH / maxScale * plotH);
+    const bh = Math.max(2, d.effH / maxScale * plotH);
     const y = top + plotH - bh;
     const sel = i === state.dayIdx;
     const l = dayLabel(d.date, i);
@@ -857,8 +885,8 @@ function weekBarsSvg(daily) {
         fill="${COND_COLOR[d.cond.cls]}">${d.cond.sym}</text>
       <rect class="bar" data-day="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3"
         fill="${sel ? 'var(--accent-deep)' : 'var(--accent)'}" opacity="${sel ? 1 : 0.55}">
-        <title>${l.head} ${l.sub}: ${fmt1(d.maxH)}m ${d.cond.sym}${d.cond.text}</title></rect>
-      ${sel ? `<text class="val" x="${x + bw / 2}" y="${y - 3}" text-anchor="middle">${fmt1(d.maxH)}</text>` : ''}
+        <title>${l.head} ${l.sub}: ${fmt1(d.effH)}m ${d.cond.sym}${d.cond.text}</title></rect>
+      ${sel ? `<text class="val" x="${x + bw / 2}" y="${y - 3}" text-anchor="middle">${fmt1(d.effH)}</text>` : ''}
       <text x="${x + bw / 2}" y="${H - 2}" text-anchor="middle">${i === 0 ? '今日' : l.sub}</text>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="週間波高(m)と評価">
