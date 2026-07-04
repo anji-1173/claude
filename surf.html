@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全国波情報</title>
+<meta name="description" content="全国主要サーフスポットの波情報。波のサイズ・波数・うねりの向き・周期・風・満潮干潮時間を毎日チェック。">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c1e21;
+    --text-sub: #65676b;
+    --muted: #898781;
+    --border: #e0e2e6;
+    --accent: #2a78d6;
+    --accent-deep: #1c5cab;
+    --accent-soft: #dbeafe;
+    --grid-line: #e1e0d9;
+    --baseline: #c3c2b7;
+    --good: #0ca30c;
+    --good-soft: #e2f4e2;
+    --bad: #d03b3b;
+    --bad-soft: #fbe7e7;
+    --mid: #898781;
+    --mid-soft: #eeedea;
+    --wave-fill: rgba(42,120,214,.14);
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+    /* サイズ帯の濃淡（シーケンシャル青・検証済みランプ） */
+    --sz1: #cde2fb; --sz2: #9ec5f4; --sz3: #6da7ec; --sz4: #3987e5; --sz5: #1c5cab;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #1f2228;
+      --text: #e8eaed;
+      --text-sub: #9aa0a6;
+      --muted: #898781;
+      --border: #33363d;
+      --accent: #3987e5;
+      --accent-deep: #86b6ef;
+      --accent-soft: #1e3a5f;
+      --grid-line: #2c2c2a;
+      --baseline: #383835;
+      --good: #0ca30c;
+      --good-soft: #143520;
+      --bad: #e66767;
+      --bad-soft: #3d1a1a;
+      --mid: #9aa0a6;
+      --mid-soft: #2a2d33;
+      --wave-fill: rgba(57,135,229,.20);
+      --shadow: 0 1px 3px rgba(0,0,0,.4);
+      --sz1: #0d366b; --sz2: #104281; --sz3: #184f95; --sz4: #1c5cab; --sz5: #3987e5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; padding: 8px 0 4px;
+  }
+  header h1 { font-size: 1.35rem; margin: 0; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  #updated { font-size: .8rem; color: var(--text-sub); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .btn {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 14px; font-size: .85rem;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+  .chip {
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 13px; font-size: .84rem; color: var(--text-sub);
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .day-chip { min-width: 62px; text-align: center; line-height: 1.3; padding: 4px 8px; }
+  .day-chip small { display: block; font-size: .68rem; opacity: .85; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 12px; margin-top: 14px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .spot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .spot-name { font-size: 1.02rem; font-weight: 700; margin: 0; }
+  .spot-region { font-size: .72rem; color: var(--text-sub); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
+
+  .size-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+  .size-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 8px; padding: 3px 10px; font-weight: 700; font-size: 1.05rem;
+    color: var(--text);
+    border-left: 6px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .size-m { font-size: .82rem; color: var(--text-sub); font-weight: 400; }
+  .stars { color: var(--accent); font-size: .85rem; letter-spacing: 1px; }
+  .stars .off { color: var(--border); }
+
+  .fact-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px;
+    font-size: .84rem; margin: 6px 0;
+  }
+  .fact { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex-wrap: wrap; }
+  .fact b { font-weight: 600; white-space: nowrap; }
+  .fact .k { color: var(--muted); font-size: .74rem; white-space: nowrap; }
+  .arrow { display: inline-block; font-weight: 700; color: var(--accent-deep); }
+
+  .windline { display: flex; gap: 10px; font-size: .82rem; margin: 2px 0; flex-wrap: wrap; }
+  .wtag {
+    border-radius: 6px; padding: 0 7px; font-size: .74rem; font-weight: 600;
+  }
+  .w-off  { background: var(--good-soft); color: var(--good); }
+  .w-on   { background: var(--bad-soft);  color: var(--bad); }
+  .w-side { background: var(--mid-soft);  color: var(--mid); }
+
+  .tideline { font-size: .82rem; color: var(--text); margin: 2px 0 6px; }
+  .tideline .k { color: var(--muted); font-size: .74rem; }
+  .tideline b { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .weekbars { margin-top: 6px; }
+  .weekbars svg { display: block; width: 100%; height: 62px; }
+  .weekbars text { font-size: 9px; fill: var(--muted); }
+  .weekbars .val { fill: var(--text); font-weight: 600; }
+  .weekbars rect.bar { cursor: pointer; }
+
+  .expand-btn {
+    width: 100%; margin-top: 10px; background: none; border: none;
+    border-top: 1px solid var(--border); color: var(--text-sub);
+    font-size: .78rem; padding: 7px 0 0;
+  }
+  .detail { margin-top: 8px; }
+  .detail h3 { font-size: .82rem; margin: 10px 0 4px; color: var(--text-sub); font-weight: 600; }
+  .tide-chart { position: relative; }
+  .tide-chart svg { display: block; width: 100%; height: 110px; }
+  .tide-chart .tick { font-size: 9px; fill: var(--muted); }
+  .tide-chart .lbl { font-size: 9.5px; fill: var(--text); font-weight: 600; }
+  .tide-tip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: var(--shadow); font-size: .72rem; padding: 2px 8px; white-space: nowrap;
+    transform: translate(-50%, -130%);
+  }
+  table.hourly { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  table.hourly th, table.hourly td {
+    padding: 3px 4px; text-align: right; border-bottom: 1px solid var(--grid-line);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  table.hourly th { color: var(--muted); font-weight: 500; font-size: .72rem; }
+  table.hourly th:first-child, table.hourly td:first-child { text-align: left; }
+  .table-wrap { overflow-x: auto; }
+
+  .notice {
+    margin-top: 16px; font-size: .74rem; color: var(--text-sub);
+  }
+  .error-card { text-align: center; padding: 32px 16px; }
+  .error-card p { margin: 6px 0 14px; color: var(--text-sub); font-size: .88rem; }
+  .loading { text-align: center; color: var(--text-sub); padding: 40px 0; }
+  .flat-note { color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌊 全国波情報</h1>
+    <div class="header-right">
+      <span id="updated"></span>
+      <button class="btn" id="refreshBtn">更新</button>
+    </div>
+  </header>
+
+  <div class="chips" id="regionChips"></div>
+  <div class="chips" id="dayChips"></div>
+
+  <div id="content"><div class="loading">読み込み中…</div></div>
+
+  <div class="notice">
+    ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
+    実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
+    潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ===== スポット定義 =====
+   facing: ビーチが海に向いている方角（度）。オフショア判定に使用 */
+const SPOTS = [
+  { id:'tomakomai', name:'苫小牧',        pref:'北海道', region:'北海道・東北', lat:42.57, lon:141.62, facing:165 },
+  { id:'sendai',    name:'仙台新港',      pref:'宮城',   region:'北海道・東北', lat:38.27, lon:141.05, facing:115 },
+  { id:'kitaizumi', name:'北泉',          pref:'福島',   region:'北海道・東北', lat:37.72, lon:141.03, facing:95  },
+  { id:'oarai',     name:'大洗',          pref:'茨城',   region:'関東',        lat:36.31, lon:140.60, facing:90  },
+  { id:'ichinomiya',name:'釣ヶ崎（一宮）',pref:'千葉',   region:'関東',        lat:35.34, lon:140.42, facing:115 },
+  { id:'hebara',    name:'部原',          pref:'千葉',   region:'関東',        lat:35.16, lon:140.33, facing:145 },
+  { id:'kugenuma',  name:'鵠沼（湘南）',  pref:'神奈川', region:'関東',        lat:35.30, lon:139.48, facing:185 },
+  { id:'shizunami', name:'静波',          pref:'静岡',   region:'中部・東海',  lat:34.71, lon:138.28, facing:150 },
+  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190 },
+  { id:'kounohama', name:'国府の浜',      pref:'三重',   region:'近畿・四国',  lat:34.42, lon:136.90, facing:100 },
+  { id:'isonoura',  name:'磯ノ浦',        pref:'和歌山', region:'近畿・四国',  lat:34.26, lon:135.08, facing:340 },
+  { id:'ikumi',     name:'生見',          pref:'高知',   region:'近畿・四国',  lat:33.55, lon:134.31, facing:140 },
+  { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州・沖縄',  lat:31.86, lon:131.47, facing:100 },
+  { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州・沖縄',  lat:33.66, lon:130.20, facing:350 },
+  { id:'sunabe',    name:'砂辺',          pref:'沖縄',   region:'九州・沖縄',  lat:26.32, lon:127.74, facing:280 },
+  { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325 },
+  { id:'hatchohama',name:'八丁浜',        pref:'京都',   region:'日本海',      lat:35.68, lon:135.03, facing:355 },
+];
+const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
+
+const CACHE_KEY = 'surf-cache-v1';
+const CACHE_TTL = 60 * 60 * 1000; // 1時間
+const DEMO = new URLSearchParams(location.search).has('demo');
+
+const state = {
+  region: '全国',
+  dayIdx: 0,          // 0=今日
+  expanded: new Set(),
+  data: null,         // { fetchedAt, spots: {id: {daily:[...], hourlyByDate:{...}}} }
+};
+
+/* ===== ユーティリティ ===== */
+const DIR16 = ['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+const dir16 = d => DIR16[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+const angDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+const fmt1 = v => (Math.round(v * 10) / 10).toFixed(1);
+const pad2 = n => String(n).padStart(2, '0');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function sizeLabel(h) {
+  if (h < 0.15) return 'フラット';
+  if (h < 0.3)  return 'スネ〜ヒザ';
+  if (h < 0.5)  return 'ヒザ〜モモ';
+  if (h < 0.7)  return 'モモ〜コシ';
+  if (h < 0.9)  return 'コシ〜ハラ';
+  if (h < 1.1)  return 'ハラ〜ムネ';
+  if (h < 1.3)  return 'ムネ';
+  if (h < 1.5)  return 'ムネ〜カタ';
+  if (h < 1.8)  return 'カタ〜アタマ';
+  if (h < 2.3)  return 'アタマオーバー';
+  if (h < 3.2)  return 'ダブル';
+  return 'ダブル以上';
+}
+function sizeColorVar(h) {
+  if (h < 0.3) return '--sz1';
+  if (h < 0.7) return '--sz2';
+  if (h < 1.1) return '--sz3';
+  if (h < 1.8) return '--sz4';
+  return '--sz5';
+}
+/* 波数（セット頻度の目安）: 周期が長い=間隔が空く、風波優勢=数は多いが乱れる */
+function waveCount(height, period, windRatio) {
+  if (height < 0.15) return { label: '—', hint: 'フラット' };
+  if (period >= 10 && windRatio < 0.4) return { label: '少なめ', hint: 'セット間隔 長め' };
+  if (period < 7 || windRatio > 0.6)   return { label: '多め',   hint: '風波まじり' };
+  return { label: '普通', hint: '' };
+}
+/* 風向(吹いてくる方角)とビーチの向きからオフ/オンショア判定 */
+function windQuality(windFrom, facing) {
+  const fromLand = angDiff(windFrom, (facing + 180) % 360);
+  if (fromLand <= 45)  return { label: 'オフ',     cls: 'w-off'  };
+  if (fromLand <= 90)  return { label: 'サイドオフ', cls: 'w-side' };
+  if (fromLand <= 135) return { label: 'サイドオン', cls: 'w-side' };
+  return { label: 'オン', cls: 'w-on' };
+}
+function rating(h, period, windCls) {
+  let r = 1;
+  if (h >= 0.3) r = 2;
+  if (h >= 0.5 && h <= 1.6) r = 3;
+  if (h > 2.2) r = 2;
+  if (period >= 9 && h >= 0.3) r += 0.5;
+  if (windCls === 'w-off' && h >= 0.3) r += 1;
+  else if (windCls === 'w-on') r -= 0.5;
+  return Math.max(1, Math.min(5, Math.round(r)));
+}
+
+/* ===== データ取得 ===== */
+async function fetchAll(force) {
+  if (!force && !DEMO) {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+      if (c && Date.now() - c.fetchedAt < CACHE_TTL) return c;
+    } catch (e) { /* 壊れたキャッシュは無視 */ }
+  }
+  let marine, wind;
+  if (DEMO) {
+    ({ marine, wind } = demoData());
+  } else {
+    const lats = SPOTS.map(s => s.lat).join(',');
+    const lons = SPOTS.map(s => s.lon).join(',');
+    const mUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lats}&longitude=${lons}`
+      + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_level_height_msl`
+      + `&timezone=Asia%2FTokyo&forecast_days=7&cell_selection=sea`;
+    const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
+      + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=7`;
+    const [mRes, wRes] = await Promise.all([fetch(mUrl), fetch(wUrl)]);
+    if (!mRes.ok || !wRes.ok) throw new Error(`API error (marine:${mRes.status} wind:${wRes.status})`);
+    marine = await mRes.json();
+    wind = await wRes.json();
+    if (!Array.isArray(marine)) marine = [marine];
+    if (!Array.isArray(wind)) wind = [wind];
+  }
+  const data = { fetchedAt: Date.now(), spots: {} };
+  SPOTS.forEach((spot, i) => {
+    data.spots[spot.id] = processSpot(spot, marine[i], wind[i]);
+  });
+  if (!DEMO) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) { /* 容量超過時は諦める */ }
+  }
+  return data;
+}
+
+/* 1スポット分の時系列を日別サマリーに変換 */
+function processSpot(spot, m, w) {
+  const h = m.hourly;
+  const wh = w.hourly;
+  const dates = [...new Set(h.time.map(t => t.slice(0, 10)))].slice(0, 7);
+  const idxByDate = {};
+  h.time.forEach((t, i) => {
+    const d = t.slice(0, 10);
+    (idxByDate[d] = idxByDate[d] || []).push(i);
+  });
+
+  const tides = extractTides(h.time, h.sea_level_height_msl);
+
+  const daily = dates.map(date => {
+    const idx = idxByDate[date];
+    const day = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hr >= 6 && hr <= 18; });
+    const use = day.length ? day : idx;
+
+    const pick = (arr, sel) => sel.map(i => arr[i]).filter(v => v != null);
+    const heights = pick(h.wave_height, use);
+    const maxH = heights.length ? Math.max(...heights) : 0;
+
+    // うねり向き: swell波高の2乗で重み付けした円環平均
+    let sx = 0, sy = 0;
+    use.forEach(i => {
+      const sh = h.swell_wave_height[i] || 0, sd = h.swell_wave_direction[i];
+      if (sd == null) return;
+      const rad = sd * Math.PI / 180, wgt = sh * sh;
+      sx += Math.sin(rad) * wgt; sy += Math.cos(rad) * wgt;
+    });
+    const swellDir = (sx || sy) ? ((Math.atan2(sx, sy) * 180 / Math.PI) + 360) % 360 : null;
+
+    const periods = pick(h.swell_wave_period, use).filter(p => p > 0);
+    const period = periods.length ? periods.reduce((a, b) => a + b) / periods.length : 0;
+    const windWaves = pick(h.wind_wave_height, use);
+    const windRatio = maxH > 0 && windWaves.length
+      ? (windWaves.reduce((a, b) => a + b) / windWaves.length) / maxH : 0;
+
+    const windAt = hours => {
+      const sel = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hours.includes(hr); });
+      if (!sel.length) return null;
+      const sp = sel.map(i => wh.wind_speed_10m[i]).filter(v => v != null);
+      let x = 0, y = 0;
+      sel.forEach(i => {
+        const d = wh.wind_direction_10m[i];
+        if (d == null) return;
+        x += Math.sin(d * Math.PI / 180); y += Math.cos(d * Math.PI / 180);
+      });
+      const dir = ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360;
+      return { speed: sp.length ? sp.reduce((a, b) => a + b) / sp.length : 0, dir };
+    };
+    const am = windAt([6, 7, 8, 9]);
+    const pm = windAt([12, 13, 14, 15]);
+    const amQ = am ? windQuality(am.dir, spot.facing) : null;
+
+    return {
+      date, maxH, swellDir, period, windRatio,
+      wc: waveCount(maxH, period, windRatio),
+      am, pm,
+      amQ, pmQ: pm ? windQuality(pm.dir, spot.facing) : null,
+      stars: rating(maxH, period, amQ ? amQ.cls : ''),
+      tides: tides.filter(t => t.date === date),
+    };
+  });
+
+  // 詳細表示用: 3時間ごとの生データ
+  const hourlyByDate = {};
+  dates.forEach(date => {
+    hourlyByDate[date] = idxByDate[date]
+      .filter(i => +h.time[i].slice(11, 13) % 3 === 0)
+      .map(i => ({
+        time: h.time[i].slice(11, 16),
+        height: h.wave_height[i],
+        dir: h.swell_wave_direction[i],
+        period: h.swell_wave_period[i],
+        windSp: wh.wind_speed_10m[i],
+        windDir: wh.wind_direction_10m[i],
+        sea: h.sea_level_height_msl ? h.sea_level_height_msl[i] : null,
+      }));
+    // 潮位カーブ用: 毎時
+    hourlyByDate[date].sea = idxByDate[date].map(i => ({
+      hr: +h.time[i].slice(11, 13),
+      v: h.sea_level_height_msl ? h.sea_level_height_msl[i] : null,
+    }));
+  });
+
+  return { daily, hourlyByDate };
+}
+
+/* 毎時潮位から満潮・干潮を抽出（2次補間で時刻を推定） */
+function extractTides(times, levels) {
+  const out = [];
+  if (!levels) return out;
+  for (let i = 1; i < levels.length - 1; i++) {
+    const a = levels[i - 1], b = levels[i], c = levels[i + 1];
+    if (a == null || b == null || c == null) continue;
+    const isMax = b >= a && b > c, isMin = b <= a && b < c;
+    if (!isMax && !isMin) continue;
+    const denom = a - 2 * b + c;
+    const frac = denom !== 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (a - c) / denom)) : 0;
+    const level = denom !== 0 ? b - (a - c) * frac / 4 : b;
+    const base = new Date(times[i].replace(' ', 'T'));
+    base.setMinutes(base.getMinutes() + Math.round(frac * 60));
+    out.push({
+      date: `${base.getFullYear()}-${pad2(base.getMonth() + 1)}-${pad2(base.getDate())}`,
+      time: `${pad2(base.getHours())}:${pad2(base.getMinutes())}`,
+      level, type: isMax ? '満' : '干',
+    });
+  }
+  return out;
+}
+
+/* ===== デモデータ（?demo=1 / 表示確認用） ===== */
+function demoData() {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const times = [];
+  for (let d = 0; d < 7; d++) for (let hr = 0; hr < 24; hr++) {
+    const t = new Date(start); t.setDate(t.getDate() + d); t.setHours(hr);
+    times.push(`${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}T${pad2(hr)}:00`);
+  }
+  const marine = [], wind = [];
+  SPOTS.forEach((s, si) => {
+    const n = times.length;
+    const mk = f => Array.from({ length: n }, (_, i) => f(i));
+    const base = 0.3 + ((si * 37) % 17) / 10;
+    const wave = mk(i => Math.max(0.05, base + 0.6 * Math.sin(i / 21 + si) + 0.25 * Math.sin(i / 7 + si * 2)));
+    const swellD = mk(i => (s.facing + 20 * Math.sin(i / 30 + si) + 360) % 360);
+    marine.push({ hourly: {
+      time: times,
+      wave_height: wave,
+      wave_direction: swellD,
+      wave_period: mk(i => 7 + 3 * Math.sin(i / 40 + si)),
+      swell_wave_height: wave.map(v => v * 0.8),
+      swell_wave_direction: swellD,
+      swell_wave_period: mk(i => 8 + 3 * Math.sin(i / 40 + si)),
+      wind_wave_height: wave.map(v => v * 0.3),
+      sea_level_height_msl: mk(i => 0.8 * Math.sin(2 * Math.PI * (i % 24) / 12.42 + si) + 0.3 * Math.sin(2 * Math.PI * (i % 24) / 25 + si)),
+    }});
+    wind.push({ hourly: {
+      time: times,
+      wind_speed_10m: mk(i => 2 + 5 * Math.abs(Math.sin(i / 17 + si))),
+      wind_direction_10m: mk(i => (s.facing + 180 + 120 * Math.sin(i / 13 + si) + 360) % 360),
+    }});
+  });
+  return { marine, wind };
+}
+
+/* ===== 描画 ===== */
+function dayLabel(dateStr, idx) {
+  const d = new Date(dateStr + 'T00:00');
+  const youbi = '日月火水木金土'[d.getDay()];
+  const head = idx === 0 ? '今日' : idx === 1 ? '明日' : `${youbi}曜`;
+  return { head, sub: `${d.getMonth() + 1}/${d.getDate()}` };
+}
+
+function render() {
+  const chips = REGIONS.map(r =>
+    `<button class="chip ${r === state.region ? 'on' : ''}" data-region="${r}">${r}</button>`).join('');
+  document.getElementById('regionChips').innerHTML = chips;
+
+  const first = state.data && state.data.spots[SPOTS[0].id];
+  if (first) {
+    document.getElementById('dayChips').innerHTML = first.daily.map((d, i) => {
+      const l = dayLabel(d.date, i);
+      return `<button class="chip day-chip ${i === state.dayIdx ? 'on' : ''}" data-day="${i}">${l.head}<small>${l.sub}</small></button>`;
+    }).join('');
+  }
+
+  const content = document.getElementById('content');
+  if (!state.data) return;
+  const spots = SPOTS.filter(s => state.region === '全国' || s.region === state.region);
+  content.innerHTML = `<div class="grid">${spots.map(s => spotCard(s)).join('')}</div>`;
+  bindTideHover();
+}
+
+function spotCard(spot) {
+  const sd = state.data.spots[spot.id];
+  const d = sd.daily[state.dayIdx];
+  if (!d) return '';
+  const flat = d.maxH < 0.15;
+  const colorVar = sizeColorVar(d.maxH);
+  const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
+
+  const windHtml = seg => {
+    const wq = seg === 'am' ? d.amQ : d.pmQ;
+    const wv = seg === 'am' ? d.am : d.pm;
+    if (!wv) return `<span class="k">${seg === 'am' ? '午前' : '午後'}</span> —`;
+    return `<span class="k">${seg === 'am' ? '午前' : '午後'}</span> ${dir16(wv.dir)} ${fmt1(wv.speed)}m/s <span class="wtag ${wq.cls}">${wq.label}</span>`;
+  };
+  const tideHtml = type => {
+    const list = d.tides.filter(t => t.type === type);
+    if (!list.length) return '—';
+    return list.map(t => `<b>${t.time}</b>`).join(' / ');
+  };
+  const stars = '★'.repeat(d.stars) + '<span class="off">' + '★'.repeat(5 - d.stars) + '</span>';
+  const expanded = state.expanded.has(spot.id);
+
+  return `<div class="card" data-spot="${spot.id}">
+    <div class="spot-head">
+      <h2 class="spot-name">${esc(spot.name)}</h2>
+      <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
+    </div>
+    <div class="size-row">
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
+        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="stars" title="コンディション目安">${stars}</span>
+    </div>
+    ${flat ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    <div class="fact-grid">
+      <div class="fact"><span class="k">うねり</span>
+        ${d.swellDir != null ? `<span class="arrow" style="display:inline-block;transform:rotate(${arrowRot}deg)">↑</span> <b>${dir16(d.swellDir)}</b>から` : '—'}</div>
+      <div class="fact"><span class="k">周期</span> <b>${fmt1(d.period)}</b>秒</div>
+      <div class="fact"><span class="k">波数</span> <b>${d.wc.label}</b>${d.wc.hint ? `<span class="k">${d.wc.hint}</span>` : ''}</div>
+    </div>
+    <div class="windline">
+      <span>${windHtml('am')}</span><span>${windHtml('pm')}</span>
+    </div>
+    <div class="tideline">
+      <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
+    </div>
+    <div class="weekbars">${weekBarsSvg(sd.daily)}</div>
+    <button class="expand-btn" data-expand="${spot.id}">${expanded ? '▲ 閉じる' : '▼ 潮位グラフ・3時間ごとの詳細'}</button>
+    ${expanded ? detailHtml(spot, sd) : ''}
+  </div>`;
+}
+
+/* 週間波高ミニバー（単一シリーズ・青、選択日を濃色で強調） */
+function weekBarsSvg(daily) {
+  const W = 320, H = 62, top = 14, bottom = 12;
+  const plotH = H - top - bottom;
+  const maxScale = Math.max(1.0, ...daily.map(d => d.maxH));
+  const bw = 18, gap = (W - daily.length * bw) / daily.length;
+  const bars = daily.map((d, i) => {
+    const x = gap / 2 + i * (bw + gap);
+    const bh = Math.max(2, d.maxH / maxScale * plotH);
+    const y = top + plotH - bh;
+    const sel = i === state.dayIdx;
+    const l = dayLabel(d.date, i);
+    return `
+      <rect class="bar" data-day="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3"
+        fill="${sel ? 'var(--accent-deep)' : 'var(--accent)'}" opacity="${sel ? 1 : 0.55}">
+        <title>${l.head} ${l.sub}: ${fmt1(d.maxH)}m</title></rect>
+      ${sel ? `<text class="val" x="${x + bw / 2}" y="${y - 3}" text-anchor="middle">${fmt1(d.maxH)}</text>` : ''}
+      <text x="${x + bw / 2}" y="${H - 2}" text-anchor="middle">${i === 0 ? '今日' : l.sub}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="週間波高(m)">
+    <line x1="0" y1="${top + plotH}" x2="${W}" y2="${top + plotH}" stroke="var(--baseline)" stroke-width="1"/>
+    ${bars}</svg>`;
+}
+
+/* 展開部: 潮位カーブ + 3時間ごとテーブル */
+function detailHtml(spot, sd) {
+  const d = sd.daily[state.dayIdx];
+  const rows = sd.hourlyByDate[d.date] || [];
+  const table = rows.map(r => `<tr>
+      <td>${r.time}</td>
+      <td>${r.height != null ? fmt1(r.height) + 'm' : '—'}</td>
+      <td>${r.dir != null ? dir16(r.dir) : '—'}</td>
+      <td>${r.period != null ? fmt1(r.period) + 's' : '—'}</td>
+      <td>${r.windDir != null ? dir16(r.windDir) + ' ' + fmt1(r.windSp) + 'm/s' : '—'}</td>
+      <td>${r.sea != null ? (r.sea >= 0 ? '+' : '') + fmt1(r.sea) + 'm' : '—'}</td>
+    </tr>`).join('');
+  return `<div class="detail">
+    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}・MSL基準）</h3>
+    ${tideChartSvg(spot.id, sd, d)}
+    <h3>3時間ごと</h3>
+    <div class="table-wrap"><table class="hourly">
+      <thead><tr><th>時刻</th><th>波高</th><th>うねり</th><th>周期</th><th>風</th><th>潮位</th></tr></thead>
+      <tbody>${table}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function tideChartSvg(spotId, sd, d) {
+  const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
+  const pts = sea.filter(p => p.v != null);
+  if (pts.length < 4) return '<div class="flat-note">潮位データがありません（外洋モデル対象外の地点）</div>';
+  const W = 320, H = 110, padL = 6, padR = 6, top = 16, bottom = 16;
+  const vs = pts.map(p => p.v);
+  const min = Math.min(...vs), max = Math.max(...vs);
+  const range = Math.max(0.3, max - min);
+  const x = hr => padL + hr / 23 * (W - padL - padR);
+  const y = v => top + (1 - (v - min) / range) * (H - top - bottom);
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${fmt1(x(p.hr))},${fmt1(y(p.v))}`).join(' ');
+  const area = `${path} L${fmt1(x(pts[pts.length - 1].hr))},${H - bottom} L${fmt1(x(pts[0].hr))},${H - bottom} Z`;
+  const marks = d.tides.map(t => {
+    const [hh, mm] = t.time.split(':').map(Number);
+    const tx = x(hh + mm / 60), ty = y(t.level);
+    const above = t.type === '満';
+    return `<circle cx="${fmt1(tx)}" cy="${fmt1(ty)}" r="3.5" fill="var(--accent-deep)" stroke="var(--card)" stroke-width="2"/>
+      <text class="lbl" x="${fmt1(Math.max(18, Math.min(W - 18, tx)))}" y="${fmt1(above ? ty - 7 : ty + 13)}" text-anchor="middle">${t.type} ${t.time}</text>`;
+  }).join('');
+  const ticks = [0, 6, 12, 18].map(hr =>
+    `<line x1="${fmt1(x(hr))}" y1="${top}" x2="${fmt1(x(hr))}" y2="${H - bottom}" stroke="var(--grid-line)" stroke-width="1"/>
+     <text class="tick" x="${fmt1(Math.max(12, x(hr)))}" y="${H - 4}" text-anchor="middle">${hr}時</text>`).join('');
+  return `<div class="tide-chart" data-tide="${spotId}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="潮位カーブ">
+      ${ticks}
+      <path d="${area}" fill="var(--wave-fill)"/>
+      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      ${marks}
+    </svg>
+    <div class="tide-tip"></div>
+  </div>`;
+}
+
+/* 潮位カーブのホバー/タップで時刻+潮位を表示 */
+function bindTideHover() {
+  document.querySelectorAll('.tide-chart').forEach(el => {
+    const spotId = el.dataset.tide;
+    const tip = el.querySelector('.tide-tip');
+    const svg = el.querySelector('svg');
+    const move = ev => {
+      const rect = svg.getBoundingClientRect();
+      const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+      const hr = Math.max(0, Math.min(23, Math.round((cx / rect.width * 320 - 6) / (320 - 12) * 23)));
+      const sd = state.data.spots[spotId];
+      const d = sd.daily[state.dayIdx];
+      const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
+      const p = sea.find(q => q.hr === hr);
+      if (!p || p.v == null) { tip.style.display = 'none'; return; }
+      tip.textContent = `${pad2(hr)}:00  ${(p.v >= 0 ? '+' : '')}${fmt1(p.v)}m`;
+      tip.style.display = 'block';
+      tip.style.left = `${cx}px`;
+      tip.style.top = `${rect.height * 0.35}px`;
+    };
+    svg.addEventListener('mousemove', move);
+    svg.addEventListener('touchmove', move, { passive: true });
+    svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}
+
+function renderUpdated() {
+  const el = document.getElementById('updated');
+  if (!state.data) { el.textContent = ''; return; }
+  const t = new Date(state.data.fetchedAt);
+  el.textContent = `${DEMO ? '【デモデータ】' : ''}${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())} 取得`;
+}
+
+function renderError(err) {
+  document.getElementById('content').innerHTML = `<div class="card error-card">
+    <h2>波情報を取得できませんでした</h2>
+    <p>ネットワーク接続を確認してもう一度お試しください。<br><span class="flat-note">${esc(err.message || err)}</span></p>
+    <button class="btn btn-primary" id="retryBtn">再試行</button>
+  </div>`;
+  const btn = document.getElementById('retryBtn');
+  if (btn) btn.addEventListener('click', () => load(true));
+}
+
+async function load(force) {
+  document.getElementById('content').innerHTML = '<div class="loading">読み込み中…</div>';
+  try {
+    state.data = await fetchAll(force);
+    renderUpdated();
+    render();
+  } catch (err) {
+    renderError(err);
+  }
+}
+
+/* ===== イベント（委譲） ===== */
+document.addEventListener('click', ev => {
+  const region = ev.target.closest('[data-region]');
+  if (region) { state.region = region.dataset.region; render(); return; }
+  const day = ev.target.closest('[data-day]');
+  if (day) { state.dayIdx = +day.dataset.day; render(); return; }
+  const ex = ev.target.closest('[data-expand]');
+  if (ex) {
+    const id = ex.dataset.expand;
+    state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id);
+    render(); return;
+  }
+});
+document.getElementById('refreshBtn').addEventListener('click', () => load(true));
+
+load(false);
+</script>
+</body>
+</html>
