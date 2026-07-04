@@ -289,7 +289,7 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-05.2';
+const APP_VERSION = '2026-07-05.3';
 
 /* ===== スポット定義 =====
    facing: ビーチが海に向いている方角（度）。オフショア判定に使用
@@ -341,7 +341,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v4';
+const CACHE_KEY = 'surf-cache-v5';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -518,17 +518,20 @@ function processSpot(spot, m, w) {
     const windWaveDir = (wx || wy) ? ((Math.atan2(wx, wy) * 180 / Math.PI) + 360) % 360 : null;
 
     // ブレイクサイズ推定(effH):
-    // - ポイントに届く向きのうねりだけを数える(ビーチの向きとの一致度で減衰)
-    // - 周期が長いほどブレイクは大きく、短い風波は乗れる波になりにくいので半分に割引
+    // - ポイントに届く向きのうねりだけを数える(ビーチの向きとの一致度で減衰。
+    //   横〜裏向きは島や地形に遮られるため急に減衰させる)
+    // - 周期が長いほどブレイクは大きい
+    // - 風波(局地チョップ)は乗れるセットにならないので寄与を小さく(0.2)。
+    //   これをしないと夏の西向きビーチが海風チョップでサイズ過大になる
     const expo = dir => {
-      if (dir == null) return 0.5;
+      if (dir == null) return 0.4;
       const a = angDiff(dir, spot.facing);
-      return a <= 45 ? 1 : a <= 75 ? 0.75 : a <= 105 ? 0.4 : a <= 135 ? 0.15 : 0.05;
+      return a <= 40 ? 1 : a <= 65 ? 0.7 : a <= 90 ? 0.35 : a <= 115 ? 0.12 : 0.03;
     };
     const pBoost = period >= 11 ? 1.15 : period >= 8 ? 1 : period >= 6 ? 0.85 : 0.7;
     const effH = Math.min(
       maxH,
-      (swellH * expo(swellDir) * pBoost + windWaveH * expo(windWaveDir) * 0.5) * (spot.cal || 1)
+      (swellH * expo(swellDir) * pBoost + windWaveH * expo(windWaveDir) * 0.2) * (spot.cal || 1)
     );
 
     const windAt = hours => {
