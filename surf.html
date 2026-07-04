@@ -25,6 +25,7 @@
     --mid: #898781;
     --mid-soft: #eeedea;
     --wave-fill: rgba(42,120,214,.14);
+    --land: #e9e7e1;
     --shadow: 0 1px 3px rgba(0,0,0,.08);
     /* サイズ帯の濃淡（シーケンシャル青・検証済みランプ） */
     --sz1: #cde2fb; --sz2: #9ec5f4; --sz3: #6da7ec; --sz4: #3987e5; --sz5: #1c5cab;
@@ -49,6 +50,7 @@
       --mid: #9aa0a6;
       --mid-soft: #2a2d33;
       --wave-fill: rgba(57,135,229,.20);
+      --land: #2a2d33;
       --shadow: 0 1px 3px rgba(0,0,0,.4);
       --sz1: #0d366b; --sz2: #104281; --sz3: #184f95; --sz4: #1c5cab; --sz5: #3987e5;
     }
@@ -163,6 +165,32 @@
   table.hourly th:first-child, table.hourly td:first-child { text-align: left; }
   .table-wrap { overflow-x: auto; }
 
+  .map-card { margin-top: 14px; padding: 10px 16px 14px; }
+  .map-card summary {
+    cursor: pointer; font-weight: 600; font-size: .92rem; list-style-position: outside;
+  }
+  .map-card summary .k { font-weight: 400; font-size: .76rem; color: var(--text-sub); margin-left: 8px; }
+  #mapWrap { max-width: 470px; margin: 8px auto 0; }
+  #mapWrap svg { width: 100%; height: auto; display: block; }
+  .map-land { fill: var(--land); stroke: var(--border); stroke-width: .7; }
+  .map-inset { fill: none; stroke: var(--border); stroke-width: 1; }
+  .map-dot { cursor: pointer; stroke: var(--accent-deep); stroke-width: 1.2; }
+  .map-hit { fill: transparent; cursor: pointer; }
+  .map-lbl {
+    font-size: 11px; font-weight: 600; fill: var(--text); cursor: pointer;
+    paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round;
+  }
+  .map-legend {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    font-size: .72rem; color: var(--text-sub); margin-top: 6px;
+  }
+  .map-legend i {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    margin-right: 4px; vertical-align: -1px; border: 1px solid var(--accent-deep);
+  }
+  @keyframes flashCard { from { outline-color: var(--accent); } to { outline-color: transparent; } }
+  .card.flash { outline: 3px solid transparent; animation: flashCard 1.8s ease forwards; }
+
   .notice {
     margin-top: 16px; font-size: .74rem; color: var(--text-sub);
   }
@@ -185,6 +213,19 @@
   <div class="chips" id="regionChips"></div>
   <div class="chips" id="dayChips"></div>
 
+  <details class="card map-card" id="mapCard" open>
+    <summary>🗾 地図からポイントを探す<span class="k">名前か●をタップすると波情報へ移動します</span></summary>
+    <div id="mapWrap"></div>
+    <div class="map-legend">
+      <span class="k">●の色 = 選択日のサイズ:</span>
+      <span><i style="background:var(--sz1)"></i>〜ヒザ</span>
+      <span><i style="background:var(--sz2)"></i>〜コシ</span>
+      <span><i style="background:var(--sz3)"></i>〜ムネ</span>
+      <span><i style="background:var(--sz4)"></i>〜アタマ</span>
+      <span><i style="background:var(--sz5)"></i>それ以上</span>
+    </div>
+  </details>
+
   <div id="content"><div class="loading">読み込み中…</div></div>
 
   <div class="notice">
@@ -198,25 +239,26 @@
 'use strict';
 
 /* ===== スポット定義 =====
-   facing: ビーチが海に向いている方角（度）。オフショア判定に使用 */
+   facing: ビーチが海に向いている方角（度）。オフショア判定に使用
+   lbl: 地図上のラベル位置 r=右 l=左 t=上 b=下 */
 const SPOTS = [
-  { id:'tomakomai', name:'苫小牧',        pref:'北海道', region:'北海道・東北', lat:42.57, lon:141.62, facing:165 },
-  { id:'sendai',    name:'仙台新港',      pref:'宮城',   region:'北海道・東北', lat:38.27, lon:141.05, facing:115 },
-  { id:'kitaizumi', name:'北泉',          pref:'福島',   region:'北海道・東北', lat:37.72, lon:141.03, facing:95  },
-  { id:'oarai',     name:'大洗',          pref:'茨城',   region:'関東',        lat:36.31, lon:140.60, facing:90  },
-  { id:'ichinomiya',name:'釣ヶ崎（一宮）',pref:'千葉',   region:'関東',        lat:35.34, lon:140.42, facing:115 },
-  { id:'hebara',    name:'部原',          pref:'千葉',   region:'関東',        lat:35.16, lon:140.33, facing:145 },
-  { id:'kugenuma',  name:'鵠沼（湘南）',  pref:'神奈川', region:'関東',        lat:35.30, lon:139.48, facing:185 },
-  { id:'shizunami', name:'静波',          pref:'静岡',   region:'中部・東海',  lat:34.71, lon:138.28, facing:150 },
-  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190 },
-  { id:'kounohama', name:'国府の浜',      pref:'三重',   region:'近畿・四国',  lat:34.42, lon:136.90, facing:100 },
-  { id:'isonoura',  name:'磯ノ浦',        pref:'和歌山', region:'近畿・四国',  lat:34.26, lon:135.08, facing:340 },
-  { id:'ikumi',     name:'生見',          pref:'高知',   region:'近畿・四国',  lat:33.55, lon:134.31, facing:140 },
-  { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州・沖縄',  lat:31.86, lon:131.47, facing:100 },
-  { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州・沖縄',  lat:33.66, lon:130.20, facing:350 },
-  { id:'sunabe',    name:'砂辺',          pref:'沖縄',   region:'九州・沖縄',  lat:26.32, lon:127.74, facing:280 },
-  { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325 },
-  { id:'hatchohama',name:'八丁浜',        pref:'京都',   region:'日本海',      lat:35.68, lon:135.03, facing:355 },
+  { id:'tomakomai', name:'苫小牧',        pref:'北海道', region:'北海道・東北', lat:42.57, lon:141.62, facing:165, lbl:'b' },
+  { id:'sendai',    name:'仙台新港',      pref:'宮城',   region:'北海道・東北', lat:38.27, lon:141.05, facing:115, lbl:'r' },
+  { id:'kitaizumi', name:'北泉',          pref:'福島',   region:'北海道・東北', lat:37.72, lon:141.03, facing:95,  lbl:'r' },
+  { id:'oarai',     name:'大洗',          pref:'茨城',   region:'関東',        lat:36.31, lon:140.60, facing:90,  lbl:'r' },
+  { id:'ichinomiya',name:'釣ヶ崎（一宮）',pref:'千葉',   region:'関東',        lat:35.34, lon:140.42, facing:115, lbl:'r' },
+  { id:'hebara',    name:'部原',          pref:'千葉',   region:'関東',        lat:35.16, lon:140.33, facing:145, lbl:'b' },
+  { id:'kugenuma',  name:'鵠沼（湘南）',  pref:'神奈川', region:'関東',        lat:35.30, lon:139.48, facing:185, lbl:'l' },
+  { id:'shizunami', name:'静波',          pref:'静岡',   region:'中部・東海',  lat:34.71, lon:138.28, facing:150, lbl:'r' },
+  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190, lbl:'b' },
+  { id:'kounohama', name:'国府の浜',      pref:'三重',   region:'近畿・四国',  lat:34.42, lon:136.90, facing:100, lbl:'t' },
+  { id:'isonoura',  name:'磯ノ浦',        pref:'和歌山', region:'近畿・四国',  lat:34.26, lon:135.08, facing:340, lbl:'l' },
+  { id:'ikumi',     name:'生見',          pref:'高知',   region:'近畿・四国',  lat:33.55, lon:134.31, facing:140, lbl:'b' },
+  { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州・沖縄',  lat:31.86, lon:131.47, facing:100, lbl:'r' },
+  { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州・沖縄',  lat:33.66, lon:130.20, facing:350, lbl:'t' },
+  { id:'sunabe',    name:'砂辺',          pref:'沖縄',   region:'九州・沖縄',  lat:26.32, lon:127.74, facing:280, lbl:'r' },
+  { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
+  { id:'hatchohama',name:'八丁浜',        pref:'京都',   region:'日本海',      lat:35.68, lon:135.03, facing:355, lbl:'t' },
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
@@ -469,6 +511,65 @@ function demoData() {
   return { marine, wind };
 }
 
+/* ===== 地図 =====
+   Natural Earth 50m(world-atlas)由来の日本海岸線をメルカトル投影したもの。
+   main: 本土, oki: 沖縄本島(左下のインセットに表示) */
+const MAPDATA = {"mainPath":"M122,309L121,310L119,309L118,308L119,306L121,305L123,307L122,309ZM241,260L239,260L240,259L240,258L241,256L241,255L239,255L239,252L241,250L244,246L245,245L245,247L244,251L244,253L247,253L245,258L241,260ZM160,365L157,367L155,367L154,366L153,365L156,362L157,359L159,358L160,357L161,357L159,362L160,365ZM57,479L54,479L53,479L51,475L54,473L57,475L58,476L57,479ZM65,475L63,475L63,474L64,470L64,467L66,464L67,463L68,464L67,468L66,471L65,475ZM44,424L42,425L42,424L41,423L42,422L42,421L41,420L42,417L42,415L46,415L47,416L47,421L44,424ZM25,370L23,371L22,369L23,364L26,365L26,366L25,370ZM27,363L27,364L25,363L24,362L26,358L26,356L29,353L29,354L29,355L29,358L27,361L27,363ZM10,408L11,409L12,408L13,408L14,409L15,411L15,412L14,412L13,412L12,414L11,413L10,412L10,411L10,408ZM20,406L19,407L18,404L18,403L19,403L21,398L21,400L22,402L22,403L21,404L20,406ZM30,395L28,397L27,397L28,395L28,394L29,392L31,392L32,391L30,394L30,395ZM372,61L375,61L377,61L379,61L388,66L391,67L394,67L396,67L397,65L403,59L409,53L409,54L409,55L409,57L406,62L404,69L403,72L404,76L406,79L407,82L409,88L411,88L412,88L414,87L417,85L419,85L420,85L418,86L415,88L413,91L413,92L410,92L409,92L406,93L404,95L401,96L399,97L396,98L392,99L389,99L384,98L381,98L376,101L371,106L367,111L363,116L362,119L361,123L361,125L360,127L359,129L358,130L355,129L350,126L341,122L331,115L325,111L315,112L305,119L304,118L300,114L298,112L296,111L294,112L292,112L290,114L289,116L289,118L289,119L289,120L291,123L294,126L295,126L297,126L299,126L303,131L307,135L309,136L307,138L305,138L303,138L301,138L297,136L295,137L293,140L291,144L290,145L287,147L285,148L283,148L282,147L281,145L281,144L281,140L283,136L284,133L282,128L282,127L278,124L277,121L277,117L277,115L278,111L278,109L280,108L281,108L284,106L286,104L289,102L291,99L293,96L290,92L290,90L290,88L293,86L295,87L300,90L301,91L304,91L308,92L311,91L312,91L314,88L315,85L314,81L314,76L316,73L319,67L320,64L321,56L322,52L323,48L324,41L322,33L321,29L319,26L319,22L320,19L320,18L321,17L324,17L325,16L326,15L327,14L328,15L329,16L333,20L339,27L346,37L350,42L354,47L360,51L365,55L368,57L371,60L372,61ZM70,385L73,385L75,385L76,385L78,384L80,383L81,384L82,385L83,386L83,387L80,391L79,394L83,395L87,395L86,397L86,398L87,399L89,400L88,402L88,403L90,404L90,405L89,406L83,413L82,417L80,421L79,424L79,427L78,430L77,433L77,436L77,439L74,447L72,447L69,446L67,446L67,448L68,451L63,455L58,458L58,457L59,456L59,455L60,454L61,451L60,448L59,443L59,442L60,441L61,441L61,439L60,438L59,438L58,438L57,440L55,442L54,445L55,447L55,448L57,451L57,452L56,453L49,451L48,451L47,450L45,447L48,446L49,446L49,445L50,441L48,439L47,438L46,437L47,434L47,432L46,428L47,427L50,426L51,424L53,422L55,417L57,413L55,412L54,412L55,409L55,407L52,403L51,399L49,397L48,397L46,398L45,399L46,401L46,404L46,406L47,406L49,406L50,406L50,407L50,409L50,410L49,411L48,411L46,410L45,409L43,408L41,410L38,413L36,414L37,412L38,410L37,408L34,405L34,404L34,402L34,400L37,402L38,405L40,406L42,406L40,402L39,401L37,399L34,397L32,395L33,392L34,391L35,392L38,393L38,391L38,390L38,389L40,388L44,387L44,386L45,385L46,385L48,385L51,384L52,381L53,379L53,378L58,376L59,375L62,376L65,377L66,380L67,383L70,385ZM146,366L149,367L153,367L153,372L153,374L154,375L154,378L155,378L151,381L147,384L145,387L143,389L142,392L142,395L140,394L137,389L134,388L130,387L129,387L120,392L119,395L117,399L116,401L115,401L114,402L113,406L110,409L109,409L106,408L105,409L107,405L104,404L102,404L102,402L100,400L101,398L101,397L102,396L102,395L102,393L100,393L99,392L100,389L99,389L96,390L92,392L90,392L92,391L97,388L98,387L103,384L105,382L106,379L107,377L108,376L108,373L110,373L112,370L113,371L115,373L117,375L118,375L121,374L122,374L125,374L127,373L129,371L129,369L128,366L129,366L131,366L133,364L136,363L139,363L143,364L146,366ZM310,150L311,151L316,149L315,154L314,159L315,167L315,171L316,174L318,177L320,178L324,184L326,191L327,195L328,198L329,200L329,201L328,204L329,205L328,211L327,218L326,221L325,222L324,223L323,224L321,224L321,225L320,227L320,228L319,230L318,232L317,236L317,240L316,243L314,243L311,243L307,245L304,250L303,253L303,256L304,260L305,264L306,271L305,282L304,285L302,287L301,288L300,290L298,293L296,300L296,302L296,303L295,306L295,308L295,311L296,313L299,319L300,321L302,323L296,325L295,326L292,329L291,333L291,336L290,338L290,339L288,340L285,341L282,343L280,346L279,347L277,347L276,345L277,344L277,342L277,337L277,335L279,334L280,332L282,330L283,328L283,327L282,326L281,325L279,325L277,325L276,326L275,328L276,329L275,330L273,332L273,335L274,336L275,337L275,338L273,340L272,340L271,337L268,335L266,335L263,336L261,338L260,340L260,341L260,345L259,349L257,352L257,353L255,355L253,355L252,354L251,353L252,348L252,345L255,343L253,341L250,341L247,342L246,343L245,345L244,347L241,349L239,352L238,356L233,355L230,354L227,354L222,354L217,355L211,356L211,355L216,353L216,352L216,351L215,351L212,351L210,351L209,350L208,349L208,350L208,352L207,353L206,352L207,350L206,347L206,345L207,343L206,342L205,343L203,343L202,345L199,350L198,353L200,356L205,360L206,361L206,362L206,364L204,365L198,366L193,368L192,370L187,380L183,386L178,388L172,386L171,384L170,381L168,379L166,376L165,373L165,368L164,365L165,364L168,362L169,361L171,359L171,357L171,355L170,354L166,354L162,355L160,354L156,352L155,351L152,351L149,351L146,352L143,352L142,353L139,356L137,358L135,359L130,359L127,360L125,361L124,361L122,362L119,363L117,364L114,364L108,366L105,366L102,365L100,363L97,364L95,367L95,372L93,375L93,378L92,377L84,372L77,373L76,373L74,374L71,375L69,374L67,373L66,373L64,374L63,366L63,365L65,363L66,362L69,361L72,362L74,361L76,360L78,357L80,355L83,354L86,352L89,350L91,347L93,345L96,343L100,340L105,335L106,332L108,331L112,329L117,328L120,328L123,331L124,330L125,330L128,329L131,330L134,330L137,329L143,328L146,327L148,326L159,325L166,322L167,322L168,323L168,325L167,327L168,328L169,329L176,329L178,329L180,328L183,326L186,324L188,322L186,318L186,315L187,311L189,308L192,306L194,304L199,298L202,293L203,286L203,279L205,274L208,273L214,270L217,269L217,270L217,272L213,277L210,278L209,279L207,280L207,281L209,284L210,286L210,288L210,290L212,292L215,292L216,292L217,292L221,287L221,286L231,283L236,280L238,280L241,278L246,273L248,271L250,268L252,265L253,262L254,260L263,255L266,252L267,251L268,247L269,243L270,240L271,237L273,234L275,231L276,228L278,221L279,217L280,216L280,215L281,213L282,212L282,210L283,205L282,201L281,198L280,197L278,197L276,197L275,196L275,195L277,194L278,194L279,193L280,189L281,185L281,183L280,180L279,177L279,175L280,172L282,170L283,170L285,170L286,169L287,168L288,167L289,164L289,162L289,157L289,155L290,155L292,155L293,155L294,155L296,156L296,157L297,165L298,166L299,167L300,167L301,166L302,164L303,164L308,166L309,164L310,162L311,159L311,155L310,154L309,154L308,155L307,156L300,157L300,154L302,148L302,147L303,146L306,147L307,147L310,150Z","okiPath":"M50,35L46,38L44,41L39,42L35,46L31,47L31,50L33,53L30,54L27,57L27,60L28,62L28,63L24,66L20,66L20,63L20,61L24,54L24,47L27,47L29,46L34,41L35,38L32,36L32,34L33,33L37,34L39,36L40,36L42,34L43,32L48,27L50,22L54,26L53,31L50,35Z","main":{"lon0":128.24908649086493,"y0":0.9040150100491811,"k":23.911509402989278,"ky":1370.0285705786685,"W":430,"H":490},"oki":{"lon0":127.24827648276485,"y0":0.4952588108050079,"k":49.86499927223367,"ky":2857.054003721911,"W":74,"H":88}};
+const OKI_INSET = { x: 10, y: MAPDATA.main.H - MAPDATA.oki.H - 10 };
+const mercRad = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+function spotXY(spot) {
+  const isOki = spot.lat < 29;
+  const p = isOki ? MAPDATA.oki : MAPDATA.main;
+  const ox = isOki ? OKI_INSET.x : 0, oy = isOki ? OKI_INSET.y : 0;
+  return {
+    x: (spot.lon - p.lon0) * p.k + ox,
+    y: (p.y0 - mercRad(spot.lat)) * p.ky + oy,
+  };
+}
+function renderMap() {
+  const { main, oki } = MAPDATA;
+  const markers = SPOTS.map(spot => {
+    const { x, y } = spotXY(spot);
+    const d = state.data && state.data.spots[spot.id] && state.data.spots[spot.id].daily[state.dayIdx];
+    const col = d ? `var(${sizeColorVar(d.maxH)})` : 'var(--accent)';
+    const title = d ? `${spot.name} ${sizeLabel(d.maxH)} ${fmt1(d.maxH)}m` : spot.name;
+    const pos = spot.lbl || 'r';
+    const lx = pos === 'r' ? x + 8 : pos === 'l' ? x - 8 : x;
+    const ly = pos === 't' ? y - 9 : pos === 'b' ? y + 16 : y + 4;
+    const anchor = pos === 'r' ? 'start' : pos === 'l' ? 'end' : 'middle';
+    return `<g data-jump="${spot.id}">
+      <title>${esc(title)}</title>
+      <circle class="map-dot" cx="${fmt1(x)}" cy="${fmt1(y)}" r="5" fill="${col}"/>
+      <circle class="map-hit" cx="${fmt1(x)}" cy="${fmt1(y)}" r="13"/>
+      <text class="map-lbl" x="${fmt1(lx)}" y="${fmt1(ly)}" text-anchor="${anchor}">${esc(spot.name)}</text>
+    </g>`;
+  }).join('');
+  document.getElementById('mapWrap').innerHTML =
+    `<svg viewBox="0 0 ${main.W} ${main.H}" role="img" aria-label="日本地図のサーフスポット">
+      <path class="map-land" d="${MAPDATA.mainPath}"/>
+      <g transform="translate(${OKI_INSET.x},${OKI_INSET.y})">
+        <rect class="map-inset" x="-6" y="-6" width="${oki.W + 12}" height="${oki.H + 12}" rx="6"/>
+        <path class="map-land" d="${MAPDATA.okiPath}"/>
+        <text class="tick" x="0" y="${oki.H + 2}" style="font-size:9px;fill:var(--muted)">沖縄</text>
+      </g>
+      ${markers}
+    </svg>`;
+}
+function jumpToSpot(id) {
+  const spot = SPOTS.find(s => s.id === id);
+  if (!spot) return;
+  if (state.region !== '全国' && spot.region !== state.region) {
+    state.region = spot.region;
+    render();
+  }
+  const el = document.querySelector(`[data-spot="${id}"]`);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash');
+  void el.offsetWidth; // アニメーション再始動
+  el.classList.add('flash');
+}
+
 /* ===== 描画 ===== */
 function dayLabel(dateStr, idx) {
   const d = new Date(dateStr + 'T00:00');
@@ -495,6 +596,7 @@ function render() {
   const spots = SPOTS.filter(s => state.region === '全国' || s.region === state.region);
   content.innerHTML = `<div class="grid">${spots.map(s => spotCard(s)).join('')}</div>`;
   bindTideHover();
+  renderMap();
 }
 
 function spotCard(spot) {
@@ -684,6 +786,8 @@ async function load(force) {
 
 /* ===== イベント（委譲） ===== */
 document.addEventListener('click', ev => {
+  const jump = ev.target.closest('[data-jump]');
+  if (jump) { jumpToSpot(jump.dataset.jump); return; }
   const region = ev.target.closest('[data-region]');
   if (region) { state.region = region.dataset.region; render(); return; }
   const day = ev.target.closest('[data-day]');
