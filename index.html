@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイムロガー</title>
+<meta name="description" content="自分専用のタイムロガー。毎日の行動記録を履歴として残せます。">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c1e21;
+    --text-sub: #65676b;
+    --border: #e0e2e6;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --danger: #dc2626;
+    --running: #16a34a;
+    --running-soft: #dcfce7;
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #1f2228;
+      --text: #e8eaed;
+      --text-sub: #9aa0a6;
+      --border: #33363d;
+      --accent: #60a5fa;
+      --accent-soft: #1e3a5f;
+      --danger: #f87171;
+      --running: #4ade80;
+      --running-soft: #143520;
+      --shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 8px 0 4px;
+  }
+  header h1 { font-size: 1.3rem; margin: 0; }
+  #clock { font-size: .9rem; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 1rem; margin: 0 0 10px; }
+
+  input, select, button, textarea {
+    font: inherit;
+    color: inherit;
+  }
+  input[type=text], input[type=datetime-local], input[type=date], select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  label { font-size: .8rem; color: var(--text-sub); display: block; margin-bottom: 2px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 130px; }
+
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  button.danger-btn {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  button.small { padding: 4px 10px; font-size: .8rem; font-weight: 500; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* 進行中バナー */
+  #runningBanner {
+    display: none;
+    background: var(--running-soft);
+    border: 1px solid var(--running);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 12px 0;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  #runningBanner.active { display: flex; }
+  #runningBanner .pulse {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--running);
+    animation: pulse 1.5s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  #runningInfo { flex: 1; min-width: 150px; }
+  #runningActivity { font-weight: 700; }
+  #runningElapsed { font-variant-numeric: tabular-nums; color: var(--text-sub); font-size: .9rem; }
+
+  /* タブ */
+  .tabs { display: flex; gap: 4px; margin: 16px 0 4px; border-bottom: 1px solid var(--border); }
+  .tabs button {
+    background: transparent; color: var(--text-sub);
+    border: none; border-bottom: 2px solid transparent;
+    border-radius: 0; padding: 8px 14px; font-weight: 600;
+  }
+  .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 記録リスト */
+  .entry {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry .time {
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem;
+    color: var(--text-sub);
+    white-space: nowrap;
+    min-width: 96px;
+  }
+  .entry .body { flex: 1; min-width: 0; }
+  .entry .activity { font-weight: 600; overflow-wrap: anywhere; }
+  .entry .note { font-size: .8rem; color: var(--text-sub); overflow-wrap: anywhere; }
+  .entry .dur { font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag {
+    display: inline-block;
+    font-size: .7rem;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .entry .actions { display: flex; gap: 4px; }
+  .icon-btn {
+    background: transparent; border: none; color: var(--text-sub);
+    padding: 4px 6px; border-radius: 6px; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--border); }
+
+  .day-group { margin-bottom: 8px; }
+  .day-head {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+    padding: 10px 4px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .day-head .meta { font-size: .8rem; color: var(--text-sub); font-weight: 500; }
+  .day-body { display: none; }
+  .day-group.open .day-body { display: block; }
+
+  .summary-line {
+    display: flex; justify-content: space-between;
+    font-size: .9rem; padding: 4px 0;
+  }
+  .summary-line .pct { color: var(--text-sub); font-variant-numeric: tabular-nums; }
+
+  .empty { color: var(--text-sub); text-align: center; padding: 24px 0; font-size: .9rem; }
+  .muted { color: var(--text-sub); font-size: .8rem; }
+  footer { text-align: center; padding: 20px 0 32px; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg);
+    padding: 10px 20px; border-radius: 999px;
+    font-size: .85rem; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 10;
+  }
+  #toast.show { opacity: 1; }
+
+  dialog {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    max-width: 480px; width: calc(100% - 32px);
+    padding: 20px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⏱ タイムロガー</h1>
+    <div id="clock"></div>
+  </header>
+
+  <!-- 進行中 -->
+  <div id="runningBanner">
+    <div class="pulse"></div>
+    <div id="runningInfo">
+      <div><span id="runningActivity"></span><span class="tag" id="runningCategory"></span></div>
+      <div id="runningElapsed"></div>
+    </div>
+    <button id="stopBtn">■ 終了する</button>
+  </div>
+
+  <!-- 新規記録 -->
+  <div class="card">
+    <h2>記録する</h2>
+    <div class="row">
+      <div style="flex:2">
+        <label for="actInput">何をする?(していた?)</label>
+        <input type="text" id="actInput" placeholder="例: 仕事、読書、散歩…" list="actSuggest" autocomplete="off">
+        <datalist id="actSuggest"></datalist>
+      </div>
+      <div>
+        <label for="catInput">カテゴリ</label>
+        <input type="text" id="catInput" placeholder="例: 仕事" list="catSuggest" autocomplete="off">
+        <datalist id="catSuggest"></datalist>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="startBtn">▶ 今から開始</button>
+      <button class="secondary" id="manualBtn">🕘 時間を指定して追加</button>
+    </div>
+    <div id="manualForm" style="display:none; margin-top:12px">
+      <div class="row">
+        <div>
+          <label for="manualStart">開始</label>
+          <input type="datetime-local" id="manualStart">
+        </div>
+        <div>
+          <label for="manualEnd">終了</label>
+          <input type="datetime-local" id="manualEnd">
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <label for="manualNote">メモ(任意)</label>
+        <input type="text" id="manualNote" placeholder="メモ">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="manualSaveBtn">追加する</button>
+        <button class="secondary" id="manualCancelBtn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="today" class="active">今日</button>
+    <button data-tab="history">履歴</button>
+    <button data-tab="data">データ管理</button>
+  </div>
+
+  <!-- 今日 -->
+  <div class="tab-panel active" id="tab-today">
+    <div class="card">
+      <h2 id="todayTitle">今日の記録</h2>
+      <div id="todaySummary"></div>
+      <div id="todayList"></div>
+    </div>
+  </div>
+
+  <!-- 履歴 -->
+  <div class="tab-panel" id="tab-history">
+    <div class="card">
+      <div class="row">
+        <div style="flex:2">
+          <label for="searchInput">検索(行動・カテゴリ・メモ)</label>
+          <input type="text" id="searchInput" placeholder="キーワード">
+        </div>
+        <div>
+          <label for="monthFilter">月で絞り込み</label>
+          <select id="monthFilter"><option value="">すべて</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="historyList"></div>
+  </div>
+
+  <!-- データ管理 -->
+  <div class="tab-panel" id="tab-data">
+    <div class="card">
+      <h2>バックアップ</h2>
+      <p class="muted">
+        記録はこのブラウザ(端末)の中に保存されています。ブラウザのデータを消したり端末を変えると記録が消えるため、
+        定期的に <b>JSON エクスポート</b> でバックアップを取ることをおすすめします。
+        別の端末に移すときは、そのファイルをインポートしてください(記録は重複せずに統合されます)。
+      </p>
+      <div class="row">
+        <button id="exportJsonBtn">⬇ JSON エクスポート</button>
+        <button class="secondary" id="exportCsvBtn">⬇ CSV エクスポート</button>
+        <button class="secondary" id="importBtn">⬆ JSON インポート</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+      </div>
+      <p class="muted" id="dataStats" style="margin-top:12px"></p>
+    </div>
+    <div class="card">
+      <h2>危険な操作</h2>
+      <button class="danger-btn" id="wipeBtn">すべての記録を削除する</button>
+    </div>
+  </div>
+
+  <footer class="muted">タイムロガー — データはあなたのブラウザにのみ保存されます</footer>
+</div>
+
+<!-- 編集ダイアログ -->
+<dialog id="editDialog">
+  <h2 style="margin-top:0">記録を編集</h2>
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div>
+      <label for="editActivity">行動</label>
+      <input type="text" id="editActivity">
+    </div>
+    <div>
+      <label for="editCategory">カテゴリ</label>
+      <input type="text" id="editCategory">
+    </div>
+    <div class="row">
+      <div>
+        <label for="editStart">開始</label>
+        <input type="datetime-local" id="editStart">
+      </div>
+      <div>
+        <label for="editEnd">終了</label>
+        <input type="datetime-local" id="editEnd">
+      </div>
+    </div>
+    <div>
+      <label for="editNote">メモ</label>
+      <input type="text" id="editNote">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="editSaveBtn">保存</button>
+      <button class="secondary" id="editCancelBtn">キャンセル</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+(() => {
+  const STORAGE_KEY = 'timelogger.entries.v1';
+
+  /** @type {{id:string, activity:string, category:string, start:string, end:string|null, note:string}[]} */
+  let entries = load();
+  let editingId = null;
+
+  // ---------- ストレージ ----------
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.filter(e => e && e.id && e.start) : [];
+    } catch { return []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ---------- ユーティリティ ----------
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  function dateKey(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtDateJa(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    const w = '日月火水木金土'[new Date(y, m - 1, d).getDay()];
+    return `${y}年${m}月${d}日(${w})`;
+  }
+  function fmtDur(ms) {
+    if (ms < 0) ms = 0;
+    const totalMin = Math.floor(ms / 60000);
+    const h = Math.floor(totalMin / 60), m = totalMin % 60;
+    if (h === 0) return `${m}分`;
+    return m === 0 ? `${h}時間` : `${h}時間${m}分`;
+  }
+  function fmtElapsed(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  }
+  function toLocalInput(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function todayKey() { return dateKey(new Date().toISOString()); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  const running = () => entries.find(e => e.end === null);
+
+  // ---------- 記録の開始/終了 ----------
+  function startEntry() {
+    const activity = $('actInput').value.trim();
+    if (!activity) { toast('行動名を入力してください'); $('actInput').focus(); return; }
+    const r = running();
+    if (r) stopEntry(); // 前の記録を自動終了
+    entries.push({
+      id: uid(),
+      activity,
+      category: $('catInput').value.trim(),
+      start: new Date().toISOString(),
+      end: null,
+      note: ''
+    });
+    save();
+    $('actInput').value = ''; $('catInput').value = '';
+    toast(`「${activity}」を開始しました`);
+    renderAll();
+  }
+  function stopEntry() {
+    const r = running();
+    if (!r) return;
+    r.end = new Date().toISOString();
+    save();
+    toast(`「${r.activity}」を終了しました(${fmtDur(new Date(r.end) - new Date(r.start))})`);
+    renderAll();
+  }
+
+  // ---------- 手動追加 ----------
+  function saveManual() {
+    const activity = $('actInput').value.trim();
+    const startVal = $('manualStart').value;
+    const endVal = $('manualEnd').value;
+    if (!activity) { toast('行動名を入力してください'); return; }
+    if (!startVal || !endVal) { toast('開始と終了の時間を入力してください'); return; }
+    const start = new Date(startVal), end = new Date(endVal);
+    if (end <= start) { toast('終了は開始より後にしてください'); return; }
+    entries.push({
+      id: uid(),
+      activity,
+      category: $('catInput').value.trim(),
+      start: start.toISOString(),
+      end: end.toISOString(),
+      note: $('manualNote').value.trim()
+    });
+    save();
+    $('actInput').value = ''; $('catInput').value = ''; $('manualNote').value = '';
+    $('manualForm').style.display = 'none';
+    toast('記録を追加しました');
+    renderAll();
+  }
+
+  // ---------- 編集/削除 ----------
+  function openEdit(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    editingId = id;
+    $('editActivity').value = e.activity;
+    $('editCategory').value = e.category || '';
+    $('editStart').value = toLocalInput(e.start);
+    $('editEnd').value = e.end ? toLocalInput(e.end) : '';
+    $('editNote').value = e.note || '';
+    $('editEnd').disabled = e.end === null;
+    $('editDialog').showModal();
+  }
+  function saveEdit() {
+    const e = entries.find(x => x.id === editingId);
+    if (!e) return;
+    const activity = $('editActivity').value.trim();
+    if (!activity) { toast('行動名を入力してください'); return; }
+    // 入力欄が未変更なら元の値(秒まで)を保持する
+    const startVal = $('editStart').value;
+    const start = startVal === toLocalInput(e.start) ? new Date(e.start) : new Date(startVal);
+    if (isNaN(start)) { toast('開始時間が不正です'); return; }
+    if (e.end !== null) {
+      const endVal = $('editEnd').value;
+      const end = endVal === toLocalInput(e.end) ? new Date(e.end) : new Date(endVal);
+      if (isNaN(end) || end < start) { toast('終了は開始より後にしてください'); return; }
+      e.end = end.toISOString();
+    }
+    e.activity = activity;
+    e.category = $('editCategory').value.trim();
+    e.start = start.toISOString();
+    e.note = $('editNote').value.trim();
+    save();
+    $('editDialog').close();
+    toast('保存しました');
+    renderAll();
+  }
+  function deleteEntry(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    if (!confirm(`「${e.activity}」の記録を削除しますか?`)) return;
+    entries = entries.filter(x => x.id !== id);
+    save();
+    toast('削除しました');
+    renderAll();
+  }
+
+  // ---------- 描画 ----------
+  function entryHtml(e) {
+    const isRunning = e.end === null;
+    const dur = isRunning ? Date.now() - new Date(e.start) : new Date(e.end) - new Date(e.start);
+    return `
+      <div class="entry" data-id="${e.id}">
+        <div class="time">${fmtTime(e.start)} – ${isRunning ? '進行中' : fmtTime(e.end)}</div>
+        <div class="body">
+          <div class="activity">${escapeHtml(e.activity)}${e.category ? `<span class="tag">${escapeHtml(e.category)}</span>` : ''}</div>
+          ${e.note ? `<div class="note">${escapeHtml(e.note)}</div>` : ''}
+        </div>
+        <div class="dur">${fmtDur(dur)}</div>
+        <div class="actions">
+          <button class="icon-btn" data-act="edit" title="編集">✏️</button>
+          <button class="icon-btn" data-act="del" title="削除">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  function summaryHtml(dayEntries) {
+    const byCat = {};
+    let total = 0;
+    for (const e of dayEntries) {
+      const dur = Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start));
+      const cat = e.category || '(カテゴリなし)';
+      byCat[cat] = (byCat[cat] || 0) + dur;
+      total += dur;
+    }
+    if (total <= 0) return '';
+    const lines = Object.entries(byCat)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, ms]) =>
+        `<div class="summary-line"><span>${escapeHtml(cat)}</span><span class="pct">${fmtDur(ms)}(${Math.round(ms / total * 100)}%)</span></div>`)
+      .join('');
+    return `<div style="border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:4px">
+      <div class="summary-line" style="font-weight:700"><span>合計</span><span>${fmtDur(total)}</span></div>${lines}</div>`;
+  }
+
+  function renderRunning() {
+    const r = running();
+    const banner = $('runningBanner');
+    banner.classList.toggle('active', !!r);
+    if (r) {
+      $('runningActivity').textContent = r.activity;
+      const catEl = $('runningCategory');
+      catEl.textContent = r.category || '';
+      catEl.style.display = r.category ? '' : 'none';
+      $('runningElapsed').textContent = fmtElapsed(Date.now() - new Date(r.start)) + '(' + fmtTime(r.start) + ' 開始)';
+    }
+  }
+
+  function renderToday() {
+    const key = todayKey();
+    $('todayTitle').textContent = `今日の記録 — ${fmtDateJa(key)}`;
+    const list = entries
+      .filter(e => dateKey(e.start) === key)
+      .sort((a, b) => new Date(b.start) - new Date(a.start));
+    $('todaySummary').innerHTML = summaryHtml(list);
+    $('todayList').innerHTML = list.length
+      ? list.map(entryHtml).join('')
+      : '<div class="empty">まだ記録がありません。上のフォームから記録を始めましょう。</div>';
+  }
+
+  function renderHistory() {
+    const q = $('searchInput').value.trim().toLowerCase();
+    const month = $('monthFilter').value;
+    const filtered = entries.filter(e => {
+      if (month && !dateKey(e.start).startsWith(month)) return false;
+      if (!q) return true;
+      return [e.activity, e.category, e.note].some(v => (v || '').toLowerCase().includes(q));
+    });
+    const byDay = {};
+    for (const e of filtered) (byDay[dateKey(e.start)] ||= []).push(e);
+    const days = Object.keys(byDay).sort().reverse();
+
+    if (!days.length) {
+      $('historyList').innerHTML = '<div class="empty">記録が見つかりません。</div>';
+      return;
+    }
+    $('historyList').innerHTML = days.map((day, i) => {
+      const dayEntries = byDay[day].sort((a, b) => new Date(b.start) - new Date(a.start));
+      const total = dayEntries.reduce((s, e) => s + Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start)), 0);
+      return `
+        <div class="day-group${i === 0 ? ' open' : ''}" data-day="${day}">
+          <div class="day-head">
+            <span>${fmtDateJa(day)}</span>
+            <span class="meta">${dayEntries.length}件 / ${fmtDur(total)}</span>
+          </div>
+          <div class="day-body">${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderMonthFilter() {
+    const sel = $('monthFilter');
+    const cur = sel.value;
+    const months = [...new Set(entries.map(e => dateKey(e.start).slice(0, 7)))].sort().reverse();
+    sel.innerHTML = '<option value="">すべて</option>' +
+      months.map(m => `<option value="${m}">${m.replace('-', '年')}月</option>`).join('');
+    if (months.includes(cur)) sel.value = cur;
+  }
+
+  function renderSuggestions() {
+    const acts = [...new Set(entries.map(e => e.activity))].slice(-200).reverse();
+    const cats = [...new Set(entries.map(e => e.category).filter(Boolean))].sort();
+    $('actSuggest').innerHTML = acts.map(a => `<option value="${escapeHtml(a)}">`).join('');
+    $('catSuggest').innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
+  }
+
+  function renderStats() {
+    const days = new Set(entries.map(e => dateKey(e.start)));
+    const first = entries.length ? [...days].sort()[0] : null;
+    $('dataStats').textContent = entries.length
+      ? `現在 ${entries.length} 件の記録(${days.size} 日分、最初の記録: ${first})`
+      : 'まだ記録がありません。';
+  }
+
+  function renderAll() {
+    renderRunning();
+    renderToday();
+    renderHistory();
+    renderMonthFilter();
+    renderSuggestions();
+    renderStats();
+  }
+
+  // ---------- エクスポート/インポート ----------
+  function download(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function stamp() {
+    const d = new Date();
+    return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  }
+  function exportJson() {
+    download(`timelogger-backup-${stamp()}.json`,
+      JSON.stringify({ app: 'timelogger', version: 1, exportedAt: new Date().toISOString(), entries }, null, 2),
+      'application/json');
+    toast('JSON をエクスポートしました');
+  }
+  function exportCsv() {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [['date', 'start', 'end', 'activity', 'category', 'note', 'minutes']];
+    for (const e of [...entries].sort((a, b) => new Date(a.start) - new Date(b.start))) {
+      const min = e.end ? Math.round((new Date(e.end) - new Date(e.start)) / 60000) : '';
+      rows.push([dateKey(e.start), e.start, e.end || '', e.activity, e.category, e.note, min]);
+    }
+    download(`timelogger-${stamp()}.csv`, '﻿' + rows.map(r => r.map(esc).join(',')).join('\n'), 'text/csv');
+    toast('CSV をエクスポートしました');
+  }
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const imported = Array.isArray(data) ? data : data.entries;
+        if (!Array.isArray(imported)) throw new Error('形式が不正');
+        const existing = new Set(entries.map(e => e.id));
+        let added = 0;
+        for (const e of imported) {
+          if (e && e.id && e.start && e.activity !== undefined && !existing.has(e.id)) {
+            entries.push({
+              id: String(e.id),
+              activity: String(e.activity),
+              category: String(e.category || ''),
+              start: e.start,
+              end: e.end ?? null,
+              note: String(e.note || '')
+            });
+            existing.add(e.id);
+            added++;
+          }
+        }
+        save();
+        renderAll();
+        toast(`${added} 件の記録をインポートしました`);
+      } catch {
+        toast('インポートに失敗しました。ファイル形式を確認してください。');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- イベント ----------
+  $('startBtn').addEventListener('click', startEntry);
+  $('stopBtn').addEventListener('click', stopEntry);
+  $('actInput').addEventListener('keydown', e => { if (e.key === 'Enter') startEntry(); });
+
+  $('manualBtn').addEventListener('click', () => {
+    const form = $('manualForm');
+    const show = form.style.display === 'none';
+    form.style.display = show ? 'block' : 'none';
+    if (show) {
+      const now = new Date();
+      $('manualEnd').value = toLocalInput(now.toISOString());
+      $('manualStart').value = toLocalInput(new Date(now - 3600000).toISOString());
+    }
+  });
+  $('manualCancelBtn').addEventListener('click', () => { $('manualForm').style.display = 'none'; });
+  $('manualSaveBtn').addEventListener('click', saveManual);
+
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-panel').forEach(p =>
+        p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
+    });
+  });
+
+  document.body.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-act]');
+    if (btn) {
+      const id = btn.closest('.entry').dataset.id;
+      if (btn.dataset.act === 'edit') openEdit(id);
+      if (btn.dataset.act === 'del') deleteEntry(id);
+      return;
+    }
+    const head = ev.target.closest('.day-head');
+    if (head) head.closest('.day-group').classList.toggle('open');
+  });
+
+  $('searchInput').addEventListener('input', renderHistory);
+  $('monthFilter').addEventListener('change', renderHistory);
+
+  $('editSaveBtn').addEventListener('click', saveEdit);
+  $('editCancelBtn').addEventListener('click', () => $('editDialog').close());
+
+  $('exportJsonBtn').addEventListener('click', exportJson);
+  $('exportCsvBtn').addEventListener('click', exportCsv);
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', ev => {
+    if (ev.target.files[0]) importJson(ev.target.files[0]);
+    ev.target.value = '';
+  });
+  $('wipeBtn').addEventListener('click', () => {
+    if (!confirm('本当にすべての記録を削除しますか?この操作は取り消せません。')) return;
+    if (!confirm('最終確認: 削除する前に JSON エクスポートでバックアップを取りましたか?「OK」で完全に削除します。')) return;
+    entries = [];
+    save();
+    renderAll();
+    toast('すべての記録を削除しました');
+  });
+
+  // 時計 & 経過時間の更新
+  setInterval(() => {
+    const d = new Date();
+    $('clock').textContent = `${fmtDateJa(dateKey(d.toISOString()))} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    if (running()) renderRunning();
+  }, 1000);
+
+  // 日付が変わったら「今日」を更新
+  let lastDay = todayKey();
+  setInterval(() => {
+    if (todayKey() !== lastDay) { lastDay = todayKey(); renderAll(); }
+  }, 30000);
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
