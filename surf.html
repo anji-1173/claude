@@ -261,7 +261,8 @@
     ※ <b>サイズ</b>はうねりの向きとビーチの向きの一致度・周期から推定した<b>ブレイクサイズの目安</b>です（届かない向きのうねりや短周期の風波は割り引いて計算）。「沖合 ○m」はモデルの沖合有義波高そのままの参考値です。<br>
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
-    潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。<br>
+    潮位は<b>予報期間中の最低潮位を0cmとした概算</b>（気象庁潮位表のcm値とおおむね対応しますが完全一致はしません）で、
+    グラフの<span style="color:var(--poor);font-weight:700">120cm破線</span>はリーフポイントのエントリー目安です。風向は「吹いてくる方角」。データは1時間キャッシュされます。<br>
     ※ <b>台風について</b>: 波浪モデルは台風を含む風の予報にもとづくため台風うねりも反映されますが、予報期間（8日）より先や進路変更は反映されません。
     うねりが急に上がる日には <span class="surge-tag">⚠急上昇</span> を表示します。台風接近時は必ず
     <a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁の台風情報</a>・海上警報を確認してください。
@@ -321,7 +322,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v2';
+const CACHE_KEY = 'surf-cache-v3';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -565,7 +566,11 @@ function processSpot(spot, m, w) {
     }));
   });
 
-  return { daily, hourlyByDate };
+  // 潮位表基準の近似: 期間中の最低潮位を0cmとみなす(潮位表のcm値とおおむね対応)
+  const seaAll = (h.sea_level_height_msl || []).filter(v => v != null);
+  const seaBase = seaAll.length ? Math.min(...seaAll) : null;
+
+  return { daily, hourlyByDate, seaBase };
 }
 
 /* 毎時潮位から満潮・干潮を抽出（2次補間で時刻を推定） */
@@ -904,10 +909,10 @@ function detailHtml(spot, sd) {
       <td>${r.dir != null ? dir16(r.dir) : '—'}</td>
       <td>${r.period != null ? fmt1(r.period) + 's' : '—'}</td>
       <td>${r.windDir != null ? dir16(r.windDir) + ' ' + fmt1(r.windSp) + 'm/s' : '—'}</td>
-      <td>${r.sea != null ? (r.sea >= 0 ? '+' : '') + fmt1(r.sea) + 'm' : '—'}</td>
+      <td>${r.sea != null && sd.seaBase != null ? Math.round((r.sea - sd.seaBase) * 100) + 'cm' : '—'}</td>
     </tr>`).join('');
   return `<div class="detail">
-    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}・MSL基準）</h3>
+    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}・期間最低潮位=0cmの概算）</h3>
     ${tideChartSvg(spot.id, sd, d)}
     <h3>3時間ごと</h3>
     <div class="table-wrap"><table class="hourly">
@@ -917,32 +922,43 @@ function detailHtml(spot, sd) {
   </div>`;
 }
 
+const TIDE_REF_CM = 120; // リーフポイントのエントリー目安ライン
 function tideChartSvg(spotId, sd, d) {
   const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
   const pts = sea.filter(p => p.v != null);
-  if (pts.length < 4) return '<div class="flat-note">潮位データがありません（外洋モデル対象外の地点）</div>';
-  const W = 320, H = 110, padL = 6, padR = 6, top = 16, bottom = 16;
-  const vs = pts.map(p => p.v);
-  const min = Math.min(...vs), max = Math.max(...vs);
-  const range = Math.max(0.3, max - min);
+  if (pts.length < 4 || sd.seaBase == null) return '<div class="flat-note">潮位データがありません（外洋モデル対象外の地点）</div>';
+  const toCm = v => (v - sd.seaBase) * 100;
+  const W = 320, H = 118, padL = 6, padR = 34, top = 16, bottom = 16;
+  const cms = pts.map(p => toCm(p.v));
+  const lo = Math.min(0, ...cms);
+  const hi = Math.max(TIDE_REF_CM + 20, ...cms.map(c => c + 15));
   const x = hr => padL + hr / 23 * (W - padL - padR);
-  const y = v => top + (1 - (v - min) / range) * (H - top - bottom);
-  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${fmt1(x(p.hr))},${fmt1(y(p.v))}`).join(' ');
-  const area = `${path} L${fmt1(x(pts[pts.length - 1].hr))},${H - bottom} L${fmt1(x(pts[0].hr))},${H - bottom} Z`;
+  const y = cm => top + (1 - (cm - lo) / (hi - lo)) * (H - top - bottom);
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${fmt1(x(p.hr))},${fmt1(y(toCm(p.v)))}`).join(' ');
+  const area = `${path} L${fmt1(x(pts[pts.length - 1].hr))},${fmt1(y(lo))} L${fmt1(x(pts[0].hr))},${fmt1(y(lo))} Z`;
   const marks = d.tides.map(t => {
     const [hh, mm] = t.time.split(':').map(Number);
-    const tx = x(hh + mm / 60), ty = y(t.level);
+    const cm = Math.round(toCm(t.level));
+    const tx = x(hh + mm / 60), ty = y(toCm(t.level));
     const above = t.type === '満';
-    return `<circle cx="${fmt1(tx)}" cy="${fmt1(ty)}" r="3.5" fill="var(--accent-deep)" stroke="var(--card)" stroke-width="2"/>
-      <text class="lbl" x="${fmt1(Math.max(18, Math.min(W - 18, tx)))}" y="${fmt1(above ? ty - 7 : ty + 13)}" text-anchor="middle">${t.type} ${t.time}</text>`;
+    return `<circle cx="${fmt1(tx)}" cy="${fmt1(ty)}" r="3.5" fill="var(--accent-deep)" stroke="var(--card)" stroke-width="2">
+        <title>${t.type}潮 ${t.time} ${cm}cm</title></circle>
+      <text class="lbl" x="${fmt1(Math.max(18, Math.min(W - padR - 18, tx)))}" y="${fmt1(above ? ty - 7 : ty + 13)}" text-anchor="middle">${t.type} ${t.time}<tspan style="fill:var(--muted)"> ${cm}</tspan></text>`;
   }).join('');
   const ticks = [0, 6, 12, 18].map(hr =>
-    `<line x1="${fmt1(x(hr))}" y1="${top}" x2="${fmt1(x(hr))}" y2="${H - bottom}" stroke="var(--grid-line)" stroke-width="1"/>
+    `<line x1="${fmt1(x(hr))}" y1="${top}" x2="${fmt1(x(hr))}" y2="${fmt1(y(lo))}" stroke="var(--grid-line)" stroke-width="1"/>
      <text class="tick" x="${fmt1(Math.max(12, x(hr)))}" y="${H - 4}" text-anchor="middle">${hr}時</text>`).join('');
+  const refY = y(TIDE_REF_CM);
+  const refLine = `
+    <line x1="${padL}" y1="${fmt1(refY)}" x2="${W - padR}" y2="${fmt1(refY)}"
+      stroke="var(--poor)" stroke-width="1.2" stroke-dasharray="5 4"/>
+    <text x="${W - padR + 3}" y="${fmt1(refY + 3)}" style="font-size:9.5px;font-weight:700;fill:var(--poor)">${TIDE_REF_CM}cm</text>
+    <text x="${W - padR + 3}" y="${fmt1(y(0) + 3)}" class="tick">0cm</text>`;
   return `<div class="tide-chart" data-tide="${spotId}">
-    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="潮位カーブ">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="潮位カーブ(${TIDE_REF_CM}cmライン付き)">
       ${ticks}
       <path d="${area}" fill="var(--wave-fill)"/>
+      ${refLine}
       <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
       ${marks}
     </svg>
@@ -964,8 +980,8 @@ function bindTideHover() {
       const d = sd.daily[state.dayIdx];
       const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
       const p = sea.find(q => q.hr === hr);
-      if (!p || p.v == null) { tip.style.display = 'none'; return; }
-      tip.textContent = `${pad2(hr)}:00  ${(p.v >= 0 ? '+' : '')}${fmt1(p.v)}m`;
+      if (!p || p.v == null || sd.seaBase == null) { tip.style.display = 'none'; return; }
+      tip.textContent = `${pad2(hr)}:00  ${Math.round((p.v - sd.seaBase) * 100)}cm`;
       tip.style.display = 'block';
       tip.style.left = `${cx}px`;
       tip.style.top = `${rect.height * 0.35}px`;
