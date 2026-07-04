@@ -224,10 +224,20 @@
   .error-card p { margin: 6px 0 14px; color: var(--text-sub); font-size: .88rem; }
   .loading { text-align: center; color: var(--text-sub); padding: 40px 0; }
   .flat-note { color: var(--muted); font-size: .8rem; }
+  .update-bar {
+    display: flex; align-items: center; gap: 10px; justify-content: center;
+    background: var(--good-soft); color: var(--good); font-weight: 600;
+    border: 1px solid var(--good); border-radius: 10px; padding: 8px 12px;
+    margin-bottom: 10px; font-size: .86rem;
+  }
+  .update-bar .btn { background: var(--good); border-color: var(--good); color: #fff; }
 </style>
 </head>
 <body>
 <div class="container">
+  <div id="updateBar" class="update-bar" style="display:none">
+    🆕 新しいバージョンがあります <button class="btn" id="reloadBtn">今すぐ更新</button>
+  </div>
   <header>
     <h1>🌊 全国波情報</h1>
     <div class="header-right">
@@ -271,6 +281,10 @@
 
 <script>
 'use strict';
+
+/* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
+   ホーム画面アプリ等でキャッシュされていても新版を検知する */
+const APP_VERSION = '2026-07-05.1';
 
 /* ===== スポット定義 =====
    facing: ビーチが海に向いている方角（度）。オフショア判定に使用
@@ -1034,9 +1048,28 @@ document.addEventListener('click', ev => {
   if (day) { state.dayIdx = +day.dataset.day; render(); return; }
 });
 document.getElementById('refreshBtn').addEventListener('click', () => load(true));
+document.getElementById('reloadBtn').addEventListener('click', () => {
+  // キャッシュを無視して再取得(ホーム画面アプリでも確実に新版を読む)
+  location.replace(location.pathname + '?v=' + Date.now() + location.hash);
+});
+
+/* 自分自身を取得して APP_VERSION を比較。新版が出ていれば更新バーを表示 */
+async function checkForUpdate() {
+  if (DEMO) return;
+  try {
+    const res = await fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const html = await res.text();
+    const m = html.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    if (m && m[1] !== APP_VERSION) {
+      document.getElementById('updateBar').style.display = 'flex';
+    }
+  } catch (e) { /* オフライン等は無視 */ }
+}
 
 state.spotView = spotFromHash();
 load(false);
+checkForUpdate();
 </script>
 </body>
 </html>
