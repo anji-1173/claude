@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全国波情報</title>
+<meta name="description" content="全国主要サーフスポットの波情報。波のサイズ・波数・うねりの向き・周期・風・満潮干潮時間を毎日チェック。">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c1e21;
+    --text-sub: #65676b;
+    --muted: #898781;
+    --border: #e0e2e6;
+    --accent: #2a78d6;
+    --accent-deep: #1c5cab;
+    --accent-soft: #dbeafe;
+    --grid-line: #e1e0d9;
+    --baseline: #c3c2b7;
+    --good: #0ca30c;
+    --good-soft: #e2f4e2;
+    --bad: #d03b3b;
+    --bad-soft: #fbe7e7;
+    --mid: #898781;
+    --mid-soft: #eeedea;
+    --poor: #b45a35;
+    --poor-soft: #fbeade;
+    --wave-fill: rgba(42,120,214,.14);
+    --land: #e9e7e1;
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+    /* サイズ帯: アタマ未満は青3段階+フラットはグレー、アタマ級からは警戒色(アンバー→赤) */
+    --sz0: #b9b7b0; --sz1: #86b6ef; --sz2: #3987e5; --sz3: #1c5cab;
+    --sz4: #eda100; --sz5: #d03b3b;
+    --dot-stroke: rgba(28,30,33,.45);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #1f2228;
+      --text: #e8eaed;
+      --text-sub: #9aa0a6;
+      --muted: #898781;
+      --border: #33363d;
+      --accent: #3987e5;
+      --accent-deep: #86b6ef;
+      --accent-soft: #1e3a5f;
+      --grid-line: #2c2c2a;
+      --baseline: #383835;
+      --good: #0ca30c;
+      --good-soft: #143520;
+      --bad: #e66767;
+      --bad-soft: #3d1a1a;
+      --mid: #9aa0a6;
+      --mid-soft: #2a2d33;
+      --poor: #ec835a;
+      --poor-soft: #3a2418;
+      --wave-fill: rgba(57,135,229,.20);
+      --land: #2a2d33;
+      --shadow: 0 1px 3px rgba(0,0,0,.4);
+      --sz0: #5b5a54; --sz1: #9ec5f4; --sz2: #5598e7; --sz3: #2a78d6;
+      --sz4: #c98500; --sz5: #e66767;
+      --dot-stroke: rgba(232,234,237,.5);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; padding: 8px 0 4px;
+  }
+  header h1 { font-size: 1.35rem; margin: 0; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  #updated { font-size: .8rem; color: var(--text-sub); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  .btn {
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 14px; font-size: .85rem;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; }
+  .chip {
+    background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+    padding: 3px 13px; font-size: .84rem; color: var(--text-sub);
+  }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .day-chip { min-width: 62px; text-align: center; line-height: 1.3; padding: 4px 8px; }
+  .day-chip small { display: block; font-size: .68rem; opacity: .85; }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 12px; margin-top: 14px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .spot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; cursor: pointer; }
+  .spot-head:hover .spot-name { color: var(--accent); }
+  .view-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sec-h { font-size: .86rem; margin: 16px 0 6px; color: var(--text-sub); font-weight: 600; }
+  table.week tbody tr { cursor: pointer; }
+  table.week tbody tr:hover td { background: var(--mid-soft); }
+  table.week tbody tr.sel td { background: var(--accent-soft); }
+  .detail-page { margin-top: 14px; }
+  .spot-name { font-size: 1.02rem; font-weight: 700; margin: 0; }
+  .spot-region { font-size: .72rem; color: var(--text-sub); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
+
+  .size-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+  .size-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 8px; padding: 3px 10px; font-weight: 700; font-size: 1.05rem;
+    color: var(--text);
+    border-left: 6px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .size-m { font-size: .82rem; color: var(--text-sub); font-weight: 400; }
+  .cond {
+    font-weight: 700; font-size: .92rem; border-radius: 8px; padding: 2px 10px;
+    white-space: nowrap;
+  }
+  .c-best { background: var(--good-soft); color: var(--good); }
+  .c-good { background: var(--accent-soft); color: var(--accent-deep); }
+  .c-mid  { background: var(--mid-soft); color: var(--mid); }
+  .c-poor { background: var(--poor-soft); color: var(--poor); }
+  .c-bad  { background: var(--bad-soft); color: var(--bad); }
+
+  .fact-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px;
+    font-size: .84rem; margin: 6px 0;
+  }
+  .fact { display: flex; align-items: baseline; gap: 6px; min-width: 0; flex-wrap: wrap; }
+  .fact b { font-weight: 600; white-space: nowrap; }
+  .fact .k { color: var(--muted); font-size: .74rem; white-space: nowrap; }
+  .arrow { display: inline-block; font-weight: 700; color: var(--accent-deep); }
+
+  .windline { display: flex; gap: 10px; font-size: .82rem; margin: 2px 0; flex-wrap: wrap; }
+  .wtag {
+    border-radius: 6px; padding: 0 7px; font-size: .74rem; font-weight: 600;
+  }
+  .w-off  { background: var(--good-soft); color: var(--good); }
+  .w-on   { background: var(--bad-soft);  color: var(--bad); }
+  .w-side { background: var(--mid-soft);  color: var(--mid); }
+
+  .tideline { font-size: .82rem; color: var(--text); margin: 2px 0 6px; }
+  .tideline .k { color: var(--muted); font-size: .74rem; }
+  .tideline b { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .weekbars { margin-top: 6px; }
+  .weekbars svg { display: block; width: 100%; height: 62px; }
+  .weekbars text { font-size: 9px; fill: var(--muted); }
+  .weekbars .val { fill: var(--text); font-weight: 600; }
+  .weekbars rect.bar { cursor: pointer; }
+
+  .expand-btn {
+    width: 100%; margin-top: 10px; background: none; border: none;
+    border-top: 1px solid var(--border); color: var(--text-sub);
+    font-size: .78rem; padding: 7px 0 0;
+  }
+  .detail { margin-top: 8px; }
+  .detail h3 { font-size: .82rem; margin: 10px 0 4px; color: var(--text-sub); font-weight: 600; }
+  .tide-chart { position: relative; }
+  .tide-chart svg { display: block; width: 100%; height: 110px; }
+  .tide-chart .tick { font-size: 9px; fill: var(--muted); }
+  .tide-chart .lbl { font-size: 9.5px; fill: var(--text); font-weight: 600; }
+  .tide-tip {
+    position: absolute; pointer-events: none; display: none;
+    background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: var(--shadow); font-size: .72rem; padding: 2px 8px; white-space: nowrap;
+    transform: translate(-50%, -130%);
+  }
+  table.hourly { width: 100%; border-collapse: collapse; font-size: .78rem; }
+  table.hourly th, table.hourly td {
+    padding: 3px 4px; text-align: right; border-bottom: 1px solid var(--grid-line);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  table.hourly th { color: var(--muted); font-weight: 500; font-size: .72rem; }
+  table.hourly th:first-child, table.hourly td:first-child { text-align: left; }
+  .table-wrap { overflow-x: auto; }
+
+  .map-card { margin-top: 14px; padding: 10px 16px 14px; }
+  .map-card summary {
+    cursor: pointer; font-weight: 600; font-size: .92rem; list-style-position: outside;
+  }
+  .map-card summary .k { font-weight: 400; font-size: .76rem; color: var(--text-sub); margin-left: 8px; }
+  #mapWrap { max-width: 560px; margin: 8px auto 0; }
+  #mapWrap svg { width: 100%; height: auto; display: block; }
+  .map-land { fill: var(--land); stroke: var(--border); stroke-width: .7; }
+  .map-inset { fill: none; stroke: var(--border); stroke-width: 1; }
+  .map-dot { cursor: pointer; stroke: var(--dot-stroke); stroke-width: 1.2; }
+  .map-hit { fill: transparent; cursor: pointer; }
+  .map-lbl {
+    font-size: 10px; font-weight: 600; fill: var(--text); cursor: pointer;
+    paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round;
+  }
+  .map-legend {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    font-size: .72rem; color: var(--text-sub); margin-top: 6px;
+  }
+  .map-legend i {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    margin-right: 4px; vertical-align: -1px; border: 1px solid var(--dot-stroke);
+  }
+  .surge-note {
+    margin: 6px 0; padding: 4px 10px; border-radius: 8px; font-size: .78rem;
+    background: var(--poor-soft); color: var(--poor); font-weight: 600;
+  }
+  .surge-note a { color: inherit; }
+  .surge-tag { color: var(--poor); font-size: .72rem; font-weight: 700; white-space: nowrap; }
+
+  .notice {
+    margin-top: 16px; font-size: .74rem; color: var(--text-sub);
+  }
+  .error-card { text-align: center; padding: 32px 16px; }
+  .error-card p { margin: 6px 0 14px; color: var(--text-sub); font-size: .88rem; }
+  .loading { text-align: center; color: var(--text-sub); padding: 40px 0; }
+  .flat-note { color: var(--muted); font-size: .8rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🌊 全国波情報</h1>
+    <div class="header-right">
+      <span id="updated"></span>
+      <button class="btn" id="refreshBtn">更新</button>
+    </div>
+  </header>
+
+  <div class="chips" id="regionChips"></div>
+  <div class="chips" id="dayChips"></div>
+
+  <details class="card map-card" id="mapCard" open>
+    <summary>🗾 地図からポイントを探す<span class="k">名前か●をタップすると波情報へ移動します</span></summary>
+    <div id="mapWrap"></div>
+    <div class="map-legend">
+      <span class="k">●の色 = 選択日のサイズ:</span>
+      <span><i style="background:var(--sz0)"></i>〜スネ</span>
+      <span><i style="background:var(--sz1)"></i>ヒザ〜コシ</span>
+      <span><i style="background:var(--sz2)"></i>コシ〜ムネ</span>
+      <span><i style="background:var(--sz3)"></i>ムネ〜カタ</span>
+      <span><i style="background:var(--sz4)"></i>アタマ級（上級者）</span>
+      <span><i style="background:var(--sz5)"></i>ダブル級〜（プロ級）</span>
+    </div>
+  </details>
+
+  <div id="content"><div class="loading">読み込み中…</div></div>
+
+  <div class="notice">
+    ※ 評価の見方: <b>◎最高 ○良い △普通 ▽イマイチ ×ダメ</b>。サイズ・風向〈オフ/サイド/オンショア〉・風速・うねりの周期から算出した目安で、
+    モモ〜コシ以下のサイズは風が良くても▽止まり、スネ以下やクローズ級は×になります。<br>
+    ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
+    実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
+    潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。<br>
+    ※ <b>台風について</b>: 波浪モデルは台風を含む風の予報にもとづくため台風うねりも反映されますが、予報期間（8日）より先や進路変更は反映されません。
+    うねりが急に上がる日には <span class="surge-tag">⚠急上昇</span> を表示します。台風接近時は必ず
+    <a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁の台風情報</a>・海上警報を確認してください。
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ===== スポット定義 =====
+   facing: ビーチが海に向いている方角（度）。オフショア判定に使用
+   lbl: 地図上のラベル位置 r=右 l=左 t=上 b=下 */
+const SPOTS = [
+  // 北海道・東北
+  { id:'itanki',    name:'イタンキ浜',    pref:'室蘭',   region:'北海道・東北', lat:42.32, lon:141.04, facing:140, lbl:'l' },
+  { id:'hamaatsuma',name:'浜厚真',        pref:'厚真',   region:'北海道・東北', lat:42.55, lon:141.87, facing:155, lbl:'r' },
+  { id:'hachinohe', name:'八戸',          pref:'青森',   region:'北海道・東北', lat:40.48, lon:141.63, facing:90,  lbl:'r' },
+  { id:'sendai',    name:'仙台新港',      pref:'宮城',   region:'北海道・東北', lat:38.27, lon:141.05, facing:115, lbl:'r' },
+  { id:'kitaizumi', name:'北泉',          pref:'福島',   region:'北海道・東北', lat:37.72, lon:141.03, facing:95,  lbl:'r' },
+  { id:'toyoma',    name:'豊間',          pref:'福島',   region:'北海道・東北', lat:37.02, lon:140.99, facing:100, lbl:'r' },
+  // 関東
+  { id:'oarai',     name:'大洗',          pref:'茨城',   region:'関東',        lat:36.31, lon:140.60, facing:90,  lbl:'r' },
+  { id:'hokota',    name:'鉾田',          pref:'茨城',   region:'関東',        lat:36.10, lon:140.57, facing:105, lbl:'r' },
+  { id:'katakai',   name:'片貝',          pref:'千葉',   region:'関東',        lat:35.55, lon:140.47, facing:95,  lbl:'r' },
+  { id:'ichinomiya',name:'釣ヶ崎（一宮）',pref:'千葉',   region:'関東',        lat:35.34, lon:140.42, facing:115, lbl:'r' },
+  { id:'hebara',    name:'部原',          pref:'千葉',   region:'関東',        lat:35.16, lon:140.33, facing:145, lbl:'b' },
+  { id:'maruki',    name:'鴨川マルキ',    pref:'千葉',   region:'関東',        lat:35.09, lon:140.11, facing:130, lbl:'b' },
+  { id:'chikura',   name:'千倉',          pref:'千葉',   region:'関東',        lat:34.95, lon:139.96, facing:120, lbl:'b' },
+  { id:'kugenuma',  name:'鵠沼（湘南）',  pref:'神奈川', region:'関東',        lat:35.30, lon:139.48, facing:185, lbl:'l' },
+  { id:'yoshihama', name:'吉浜',          pref:'神奈川', region:'関東',        lat:35.14, lon:139.11, facing:150, lbl:'l' },
+  // 中部・東海
+  { id:'shirahama', name:'白浜（伊豆）',  pref:'静岡',   region:'中部・東海',  lat:34.69, lon:138.96, facing:120, lbl:'b', mapDx:4, mapDy:4 },
+  { id:'shizunami', name:'静波',          pref:'静岡',   region:'中部・東海',  lat:34.71, lon:138.28, facing:150, lbl:'r', mapDx:2, mapDy:-3 },
+  { id:'omaezaki',  name:'御前崎',        pref:'静岡',   region:'中部・東海',  lat:34.60, lon:138.22, facing:145, lbl:'b', mapDx:-2, mapDy:3 },
+  { id:'akabane',   name:'赤羽根',        pref:'愛知',   region:'中部・東海',  lat:34.60, lon:137.19, facing:175, lbl:'b' },
+  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190, lbl:'b' },
+  // 近畿・四国
+  { id:'kounohama', name:'国府の浜',      pref:'三重',   region:'近畿・四国',  lat:34.42, lon:136.90, facing:100, lbl:'t' },
+  { id:'isonoura',  name:'磯ノ浦',        pref:'和歌山', region:'近畿・四国',  lat:34.26, lon:135.08, facing:340, lbl:'l' },
+  { id:'komatsu',   name:'小松海岸',      pref:'徳島',   region:'近畿・四国',  lat:34.10, lon:134.63, facing:75,  lbl:'r' },
+  { id:'ikumi',     name:'生見',          pref:'高知',   region:'近畿・四国',  lat:33.55, lon:134.31, facing:140, lbl:'b' },
+  { id:'niyodo',    name:'仁淀川河口',    pref:'高知',   region:'近畿・四国',  lat:33.49, lon:133.44, facing:165, lbl:'b' },
+  // 九州
+  { id:'okuragahama',name:'お倉ヶ浜',     pref:'宮崎',   region:'九州',        lat:32.40, lon:131.66, facing:95,  lbl:'r' },
+  { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州',        lat:31.86, lon:131.47, facing:100, lbl:'r' },
+  { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州',        lat:33.66, lon:130.20, facing:350, lbl:'t' },
+  // 沖縄
+  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3 },
+  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3 },
+  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b' },
+  // 日本海
+  { id:'yunohama',  name:'湯野浜',        pref:'山形',   region:'日本海',      lat:38.77, lon:139.73, facing:290, lbl:'t' },
+  { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
+  { id:'uchinada',  name:'内灘',          pref:'石川',   region:'日本海',      lat:36.65, lon:136.62, facing:300, lbl:'t' },
+  { id:'ozomi',     name:'小沢見',        pref:'鳥取',   region:'日本海',      lat:35.52, lon:134.12, facing:350, lbl:'t' },
+  { id:'hatchohama',name:'八丁浜',        pref:'京都',   region:'日本海',      lat:35.68, lon:135.03, facing:355, lbl:'t' },
+];
+const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
+
+const CACHE_KEY = 'surf-cache-v1';
+const CACHE_TTL = 60 * 60 * 1000; // 1時間
+const DEMO = new URLSearchParams(location.search).has('demo');
+
+const state = {
+  region: '全国',
+  dayIdx: 0,          // 0=今日
+  spotView: null,     // 詳細画面表示中のスポットid(URLハッシュ #spot=... と同期)
+  data: null,         // { fetchedAt, spots: {id: {daily:[...], hourlyByDate:{...}}} }
+};
+
+/* ===== ユーティリティ ===== */
+const DIR16 = ['北','北北東','北東','東北東','東','東南東','南東','南南東','南','南南西','南西','西南西','西','西北西','北西','北北西'];
+const dir16 = d => DIR16[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+const angDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+const fmt1 = v => (Math.round(v * 10) / 10).toFixed(1);
+const pad2 = n => String(n).padStart(2, '0');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function sizeLabel(h) {
+  if (h < 0.15) return 'フラット';
+  if (h < 0.3)  return 'スネ〜ヒザ';
+  if (h < 0.5)  return 'ヒザ〜モモ';
+  if (h < 0.7)  return 'モモ〜コシ';
+  if (h < 0.9)  return 'コシ〜ハラ';
+  if (h < 1.1)  return 'ハラ〜ムネ';
+  if (h < 1.3)  return 'ムネ';
+  if (h < 1.5)  return 'ムネ〜カタ';
+  if (h < 1.8)  return 'カタ〜アタマ';
+  if (h < 2.3)  return 'アタマオーバー';
+  if (h < 3.2)  return 'ダブル';
+  return 'ダブル以上';
+}
+function sizeColorVar(h) {
+  if (h < 0.3) return '--sz0';   // フラット〜スネ
+  if (h < 0.7) return '--sz1';   // ヒザ〜コシ
+  if (h < 1.1) return '--sz2';   // コシ〜ムネ
+  if (h < 1.5) return '--sz3';   // ムネ〜カタ
+  if (h < 2.3) return '--sz4';   // アタマ級(上級者)
+  return '--sz5';                // ダブル級〜(プロ級・クローズ注意)
+}
+/* 波数（セット頻度の目安）: 周期が長い=間隔が空く、風波優勢=数は多いが乱れる */
+function waveCount(height, period, windRatio) {
+  if (height < 0.15) return { label: '—', hint: 'フラット' };
+  if (period >= 10 && windRatio < 0.4) return { label: '少なめ', hint: 'セット間隔 長め' };
+  if (period < 7 || windRatio > 0.6)   return { label: '多め',   hint: '風波まじり' };
+  return { label: '普通', hint: '' };
+}
+/* 風向(吹いてくる方角)とビーチの向きからオフ/オンショア判定 */
+function windQuality(windFrom, facing) {
+  const fromLand = angDiff(windFrom, (facing + 180) % 360);
+  if (fromLand <= 45)  return { label: 'オフ',     cls: 'w-off'  };
+  if (fromLand <= 90)  return { label: 'サイドオフ', cls: 'w-side' };
+  if (fromLand <= 135) return { label: 'サイドオン', cls: 'w-side' };
+  return { label: 'オン', cls: 'w-on' };
+}
+/* コンディション評価: ◎○△▽× の5段階。
+   サイズによる上限(スネ以下=×、モモ〜コシ以下=▽まで)を先に決め、
+   そのうえで風(オフ/サイド/オン・風速)と周期で評価する */
+const COND_RANKS = [
+  { sym: '×', text: 'ダメ',   cls: 'c-bad'  },
+  { sym: '▽', text: 'イマイチ', cls: 'c-poor' },
+  { sym: '△', text: '普通',   cls: 'c-mid'  },
+  { sym: '○', text: '良い',   cls: 'c-good' },
+  { sym: '◎', text: '最高',   cls: 'c-best' },
+];
+function condition(h, period, windQ, windSpeed) {
+  if (h < 0.15) return { sym: '×', text: 'フラット', cls: 'c-bad' };
+  if (h > 3.0)  return { sym: '×', text: 'クローズ気味', cls: 'c-bad' };
+  let cap = 4;
+  if (h < 0.3) cap = 0;        // スネ〜ヒザ弱
+  else if (h < 0.7) cap = 1;   // ヒザ〜モモ〜コシ: 最高でも▽
+  else if (h > 2.4) cap = 2;   // ダブル近くは上級者向け
+  let wp = 2; // 風データなしは中立
+  if (windQ) {
+    const sp = windSpeed || 0;
+    if (windQ.label === 'オフ') wp = period >= 8 ? 4 : 3;
+    else if (windQ.label === 'サイドオフ') wp = period >= 8 ? 3 : 2;
+    else if (windQ.label === 'サイドオン') wp = sp >= 7 ? 1 : 2;
+    else wp = sp >= 8 ? 0 : sp >= 4 ? 1 : 2; // オンショア
+  } else if (period >= 9) {
+    wp = 3;
+  }
+  return COND_RANKS[Math.min(cap, wp)];
+}
+
+/* ===== データ取得 ===== */
+async function fetchAll(force) {
+  if (!force && !DEMO) {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY));
+      if (c && Date.now() - c.fetchedAt < CACHE_TTL) return c;
+    } catch (e) { /* 壊れたキャッシュは無視 */ }
+  }
+  let marine, wind;
+  if (DEMO) {
+    ({ marine, wind } = demoData());
+  } else {
+    const lats = SPOTS.map(s => s.lat).join(',');
+    const lons = SPOTS.map(s => s.lon).join(',');
+    const mUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lats}&longitude=${lons}`
+      + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_level_height_msl`
+      + `&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`;
+    const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
+      + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=8`;
+    const [mRes, wRes] = await Promise.all([fetch(mUrl), fetch(wUrl)]);
+    if (!mRes.ok || !wRes.ok) throw new Error(`API error (marine:${mRes.status} wind:${wRes.status})`);
+    marine = await mRes.json();
+    wind = await wRes.json();
+    if (!Array.isArray(marine)) marine = [marine];
+    if (!Array.isArray(wind)) wind = [wind];
+  }
+  const data = { fetchedAt: Date.now(), spots: {} };
+  SPOTS.forEach((spot, i) => {
+    data.spots[spot.id] = processSpot(spot, marine[i], wind[i]);
+  });
+  if (!DEMO) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) { /* 容量超過時は諦める */ }
+  }
+  return data;
+}
+
+/* 1スポット分の時系列を日別サマリーに変換 */
+function processSpot(spot, m, w) {
+  const h = m.hourly;
+  const wh = w.hourly;
+  const dates = [...new Set(h.time.map(t => t.slice(0, 10)))].slice(0, 8);
+  const idxByDate = {};
+  h.time.forEach((t, i) => {
+    const d = t.slice(0, 10);
+    (idxByDate[d] = idxByDate[d] || []).push(i);
+  });
+
+  const tides = extractTides(h.time, h.sea_level_height_msl);
+
+  let daily = dates.map(date => {
+    const idx = idxByDate[date];
+    const day = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hr >= 6 && hr <= 18; });
+    const use = day.length ? day : idx;
+
+    const pick = (arr, sel) => sel.map(i => arr[i]).filter(v => v != null);
+    const heights = pick(h.wave_height, use);
+    const maxH = heights.length ? Math.max(...heights) : 0;
+    const swellHs = pick(h.swell_wave_height, use);
+    const swellH = swellHs.length ? Math.max(...swellHs) : 0;
+
+    // うねり向き: swell波高の2乗で重み付けした円環平均
+    let sx = 0, sy = 0;
+    use.forEach(i => {
+      const sh = h.swell_wave_height[i] || 0, sd = h.swell_wave_direction[i];
+      if (sd == null) return;
+      const rad = sd * Math.PI / 180, wgt = sh * sh;
+      sx += Math.sin(rad) * wgt; sy += Math.cos(rad) * wgt;
+    });
+    const swellDir = (sx || sy) ? ((Math.atan2(sx, sy) * 180 / Math.PI) + 360) % 360 : null;
+
+    const periods = pick(h.swell_wave_period, use).filter(p => p > 0);
+    const period = periods.length ? periods.reduce((a, b) => a + b) / periods.length : 0;
+    const windWaves = pick(h.wind_wave_height, use);
+    const windRatio = maxH > 0 && windWaves.length
+      ? (windWaves.reduce((a, b) => a + b) / windWaves.length) / maxH : 0;
+
+    const windAt = hours => {
+      const sel = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hours.includes(hr); });
+      if (!sel.length) return null;
+      const sp = sel.map(i => wh.wind_speed_10m[i]).filter(v => v != null);
+      let x = 0, y = 0;
+      sel.forEach(i => {
+        const d = wh.wind_direction_10m[i];
+        if (d == null) return;
+        x += Math.sin(d * Math.PI / 180); y += Math.cos(d * Math.PI / 180);
+      });
+      const dir = ((Math.atan2(x, y) * 180 / Math.PI) + 360) % 360;
+      return { speed: sp.length ? sp.reduce((a, b) => a + b) / sp.length : 0, dir };
+    };
+    const am = windAt([6, 7, 8, 9]);
+    const pm = windAt([12, 13, 14, 15]);
+    const amQ = am ? windQuality(am.dir, spot.facing) : null;
+
+    return {
+      date, maxH, swellH, swellDir, period, windRatio,
+      wc: waveCount(maxH, period, windRatio),
+      am, pm,
+      amQ, pmQ: pm ? windQuality(pm.dir, spot.facing) : null,
+      cond: condition(maxH, period, amQ, am ? am.speed : null),
+      tides: tides.filter(t => t.date === date),
+    };
+  });
+
+  // うねり急上昇の検出: 前日比+0.6m以上かつうねり1.0m以上、または周期12秒以上の長周期うねり
+  // (台風・遠方の低気圧からのうねりが波浪モデルに現れたサイン)
+  daily = daily.map((d, i) => ({
+    ...d,
+    surge: (i > 0 && d.swellH - daily[i - 1].swellH >= 0.6 && d.swellH >= 1.0)
+      || (d.period >= 12 && d.swellH >= 0.8),
+  }));
+
+  // 詳細表示用: 3時間ごとの生データ
+  const hourlyByDate = {};
+  dates.forEach(date => {
+    hourlyByDate[date] = idxByDate[date]
+      .filter(i => +h.time[i].slice(11, 13) % 3 === 0)
+      .map(i => ({
+        time: h.time[i].slice(11, 16),
+        height: h.wave_height[i],
+        dir: h.swell_wave_direction[i],
+        period: h.swell_wave_period[i],
+        windSp: wh.wind_speed_10m[i],
+        windDir: wh.wind_direction_10m[i],
+        sea: h.sea_level_height_msl ? h.sea_level_height_msl[i] : null,
+      }));
+    // 潮位カーブ用: 毎時
+    hourlyByDate[date].sea = idxByDate[date].map(i => ({
+      hr: +h.time[i].slice(11, 13),
+      v: h.sea_level_height_msl ? h.sea_level_height_msl[i] : null,
+    }));
+  });
+
+  return { daily, hourlyByDate };
+}
+
+/* 毎時潮位から満潮・干潮を抽出（2次補間で時刻を推定） */
+function extractTides(times, levels) {
+  const out = [];
+  if (!levels) return out;
+  for (let i = 1; i < levels.length - 1; i++) {
+    const a = levels[i - 1], b = levels[i], c = levels[i + 1];
+    if (a == null || b == null || c == null) continue;
+    const isMax = b >= a && b > c, isMin = b <= a && b < c;
+    if (!isMax && !isMin) continue;
+    const denom = a - 2 * b + c;
+    const frac = denom !== 0 ? Math.max(-0.5, Math.min(0.5, 0.5 * (a - c) / denom)) : 0;
+    const level = denom !== 0 ? b - (a - c) * frac / 4 : b;
+    const base = new Date(times[i].replace(' ', 'T'));
+    base.setMinutes(base.getMinutes() + Math.round(frac * 60));
+    out.push({
+      date: `${base.getFullYear()}-${pad2(base.getMonth() + 1)}-${pad2(base.getDate())}`,
+      time: `${pad2(base.getHours())}:${pad2(base.getMinutes())}`,
+      level, type: isMax ? '満' : '干',
+    });
+  }
+  return out;
+}
+
+/* ===== デモデータ（?demo=1 / 表示確認用） ===== */
+function demoData() {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  const times = [];
+  for (let d = 0; d < 8; d++) for (let hr = 0; hr < 24; hr++) {
+    const t = new Date(start); t.setDate(t.getDate() + d); t.setHours(hr);
+    times.push(`${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}T${pad2(hr)}:00`);
+  }
+  const marine = [], wind = [];
+  SPOTS.forEach(s => {
+    const n = times.length;
+    const mk = f => Array.from({ length: n }, (_, i) => f(i));
+    // 沖縄は夏場うねりが入りにくいのでデモ値も小さめにする。
+    // 変動の種は位置ベース: 隣接ポイントには近い値が出る(並び順依存だと隣同士で不自然に食い違う)
+    const seasonal = s.region === '沖縄' ? 0.4 : 1;
+    const seed = Math.round((s.lat + s.lon) * 5) / 5; // 約0.1度単位で丸め
+    const base = 0.3 + ((Math.round(seed * 5) * 7) % 17) / 10;
+    // 台風接近の模擬: 沖縄は期間終盤にうねりが立ち上がる(急上昇アラートのデモ)
+    const typhoon = i => s.region === '沖縄' ? Math.max(0, i / 24 - 5.5) * 0.55 : 0;
+    const wave = mk(i => Math.max(0.05, seasonal * (base + 0.6 * Math.sin(i / 21 + seed) + 0.25 * Math.sin(i / 7 + seed * 2)) + typhoon(i)));
+    const swellD = mk(i => (s.facing + 20 * Math.sin(i / 30 + seed) + 360) % 360);
+    marine.push({ hourly: {
+      time: times,
+      wave_height: wave,
+      wave_direction: swellD,
+      wave_period: mk(i => 7 + 3 * Math.sin(i / 40 + seed)),
+      swell_wave_height: wave.map(v => v * 0.8),
+      swell_wave_direction: swellD,
+      swell_wave_period: mk(i => 8 + 3 * Math.sin(i / 40 + seed)),
+      wind_wave_height: wave.map(v => v * 0.3),
+      sea_level_height_msl: mk(i => 0.8 * Math.sin(2 * Math.PI * (i % 24) / 12.42 + seed) + 0.3 * Math.sin(2 * Math.PI * (i % 24) / 25 + seed)),
+    }});
+    wind.push({ hourly: {
+      time: times,
+      wind_speed_10m: mk(i => 2 + 5 * Math.abs(Math.sin(i / 17 + seed))),
+      wind_direction_10m: mk(i => (s.facing + 180 + 120 * Math.sin(i / 13 + seed) + 360) % 360),
+    }});
+  });
+  return { marine, wind };
+}
+
+/* ===== 地図 =====
+   Natural Earth 50m(world-atlas)由来の日本海岸線をメルカトル投影したもの。
+   main: 本土, oki: 沖縄本島(左下のインセットに表示) */
+const MAPDATA = {"mainPath":"M159,402L158,403L155,403L154,401L154,399L157,397L160,400L159,402ZM314,339L311,339L312,338L313,336L314,333L314,332L311,332L311,329L313,326L318,320L319,319L320,322L318,327L318,329L322,329L319,336L314,339ZM208,475L205,478L202,478L200,477L200,475L203,472L205,468L207,466L209,465L210,465L207,471L208,475ZM74,623L70,624L68,623L67,619L70,616L75,619L75,620L74,623ZM84,619L82,619L82,617L84,612L84,609L86,604L87,603L88,603L88,604L87,610L85,614L84,619ZM57,552L55,553L54,552L53,551L55,549L54,547L55,543L55,541L60,540L61,542L61,548L57,552ZM32,481L30,483L29,481L30,474L34,475L34,477L32,481ZM35,473L35,474L33,473L32,472L34,466L33,464L34,463L37,460L38,461L38,463L38,466L35,470L35,473ZM13,531L14,532L16,532L17,532L18,532L20,535L20,536L18,536L17,537L16,539L14,538L13,537L12,536L13,531ZM26,529L25,530L24,526L23,525L24,524L27,518L27,521L28,523L29,524L28,525L27,526L26,529ZM39,515L37,517L35,517L36,515L37,514L38,511L40,510L41,510L39,513L39,515ZM485,79L489,79L491,79L494,80L506,86L509,87L513,87L515,87L518,85L525,77L532,70L533,70L533,72L533,74L529,81L526,90L525,94L526,99L528,102L530,107L532,114L535,115L537,115L540,113L543,110L545,110L548,111L544,112L541,115L538,119L537,120L534,119L532,119L529,121L526,123L523,126L519,127L516,127L510,129L507,129L500,128L497,128L490,132L483,138L477,144L473,152L471,156L470,160L470,163L469,166L468,168L467,169L463,168L456,164L444,158L431,149L424,145L410,146L397,155L395,154L390,148L388,146L385,145L383,145L381,146L378,149L377,151L376,153L376,155L376,157L379,161L382,164L384,164L387,164L389,164L394,170L400,176L402,177L400,179L397,180L394,180L391,179L386,177L384,179L381,183L379,187L378,189L374,192L371,193L369,193L367,191L366,189L366,187L367,182L369,177L369,173L368,166L367,165L363,161L361,158L360,153L361,150L362,145L363,142L364,141L366,140L370,138L373,136L376,133L379,129L381,125L378,120L378,117L378,114L381,113L384,114L390,118L391,118L396,118L401,119L405,119L406,118L409,115L410,111L409,105L409,100L411,95L416,88L417,83L418,73L419,68L421,63L421,53L420,43L417,38L415,34L416,29L417,25L417,24L418,23L421,22L423,21L424,19L426,18L428,19L429,21L434,26L441,35L450,48L456,55L462,61L468,67L475,72L480,74L483,78L485,79ZM91,501L95,502L97,502L99,502L101,500L104,499L106,500L107,501L108,503L108,505L105,509L102,513L108,514L114,514L112,517L112,519L114,520L115,522L115,523L114,524L117,526L117,528L116,529L108,538L106,543L105,548L103,552L102,556L101,560L100,564L100,568L100,572L96,582L93,582L90,581L88,581L87,583L89,587L83,593L76,596L76,595L76,593L77,592L78,591L79,587L79,583L77,578L76,576L78,575L79,575L79,574L79,572L79,571L77,571L75,571L74,572L72,576L71,580L71,582L72,584L75,587L74,589L73,590L64,587L62,587L61,586L59,582L63,581L64,580L64,579L65,575L63,571L62,570L60,569L61,566L61,562L61,557L61,556L64,555L67,552L69,549L72,543L74,537L72,537L70,536L72,533L72,530L68,525L66,520L63,518L62,517L60,518L58,519L60,523L60,526L60,529L61,529L63,528L65,529L65,530L66,532L65,534L64,535L62,535L61,534L59,533L56,532L53,534L50,537L47,539L49,536L49,533L48,531L45,528L44,526L44,523L45,521L48,524L49,527L51,529L54,529L52,524L51,522L48,520L44,516L41,515L42,510L44,510L45,510L50,511L50,509L49,508L49,507L52,505L57,504L58,503L59,502L60,501L63,501L66,500L68,496L69,494L70,492L75,489L77,489L81,489L84,491L86,494L87,498L91,501ZM190,476L195,478L199,477L199,484L199,487L201,489L200,492L202,493L196,496L191,501L189,504L187,507L185,510L185,514L183,513L178,507L175,505L169,504L168,504L157,510L155,514L152,520L151,522L150,523L148,524L147,529L144,532L142,532L138,532L137,532L139,527L136,526L132,526L132,523L130,521L132,519L132,517L133,515L133,514L133,512L131,512L129,511L130,507L128,507L126,508L120,511L118,511L120,509L126,506L128,504L134,500L137,498L139,494L139,491L140,489L141,486L143,485L146,482L148,483L150,486L152,489L154,488L157,487L159,487L163,487L166,485L168,483L168,481L167,477L168,477L170,477L174,474L177,473L181,472L186,474L190,476ZM404,195L405,196L411,194L410,200L410,207L410,217L410,222L411,227L414,230L417,232L422,240L424,249L426,253L427,258L428,260L428,262L428,265L428,268L427,275L425,283L425,288L423,289L422,291L421,291L420,292L419,292L418,293L417,295L416,298L415,299L414,302L413,307L413,312L412,316L409,317L405,317L400,319L399,320L396,326L395,330L395,334L396,339L397,344L398,353L397,367L396,371L394,374L392,375L391,377L389,382L385,390L385,393L385,395L384,398L384,401L384,404L385,408L390,416L391,418L393,421L386,423L385,424L380,429L379,433L379,438L378,440L377,441L376,442L371,445L368,447L365,450L363,452L361,451L360,450L361,448L361,445L361,439L361,437L363,435L364,432L367,430L369,428L369,426L367,424L366,423L363,423L361,423L359,425L359,427L359,428L359,429L355,433L356,436L357,438L358,439L358,440L356,442L355,443L352,439L350,437L346,437L343,438L340,440L339,442L338,444L339,450L337,454L335,458L334,460L332,462L330,463L328,461L327,460L329,453L329,449L332,447L329,445L326,443L322,445L320,447L320,449L317,451L314,454L312,458L310,463L303,462L299,461L296,462L289,461L282,462L274,464L275,463L282,459L282,458L281,457L279,457L276,457L274,457L273,455L271,454L271,455L271,459L270,459L269,458L269,456L268,452L268,449L269,447L268,446L266,446L264,447L263,449L259,456L258,460L261,464L268,468L269,470L269,472L268,474L266,475L258,476L252,479L250,482L244,494L239,502L232,505L224,503L223,500L221,496L218,493L216,490L214,486L214,479L213,475L214,474L219,472L220,470L222,467L223,465L223,463L221,461L216,461L212,462L208,461L203,458L202,457L197,457L194,457L190,459L187,459L186,460L181,464L178,466L175,467L169,468L166,468L163,470L162,470L158,471L154,473L152,475L149,474L141,476L137,477L133,475L130,473L127,474L124,477L123,485L122,488L121,492L120,491L109,484L100,485L98,486L96,487L93,488L90,487L88,485L86,486L83,487L82,476L83,475L84,473L86,471L90,471L94,471L97,470L99,468L102,465L105,463L109,461L112,459L116,455L119,452L122,449L125,447L130,442L136,436L139,432L140,431L146,429L153,427L156,427L160,431L162,430L163,429L167,429L171,429L175,429L178,429L186,428L190,426L193,424L207,423L216,420L217,420L219,421L219,423L218,426L219,427L220,428L229,428L231,429L235,427L238,425L242,422L244,419L242,415L242,410L244,405L246,401L250,399L253,396L259,388L263,381L265,373L264,363L268,356L271,355L279,352L283,351L283,352L283,354L277,360L274,363L272,363L270,364L269,367L272,370L273,373L273,375L273,378L276,380L280,381L282,381L283,380L288,374L288,373L301,369L307,365L310,364L314,363L321,356L323,353L326,349L328,345L329,341L331,338L342,332L346,328L347,326L349,321L350,316L351,312L353,308L355,304L358,301L360,297L362,288L363,283L364,281L365,280L366,278L367,276L367,273L368,267L368,262L366,258L364,256L363,256L360,257L358,255L358,253L361,253L362,252L363,251L365,246L366,241L366,239L365,235L364,230L364,227L365,224L367,222L369,221L371,221L372,220L374,219L375,217L376,213L377,211L376,204L377,202L378,201L380,202L381,202L384,202L385,203L386,204L387,215L388,217L389,218L391,218L392,216L393,214L395,213L401,216L403,214L404,211L405,207L405,202L403,201L402,201L401,202L399,203L391,205L391,200L393,193L394,191L395,190L399,191L400,192L404,195Z","okiPath":"M75,52L68,56L65,61L58,62L52,69L46,70L46,75L49,79L45,80L40,85L40,89L41,92L41,94L36,98L30,99L30,94L30,90L36,81L36,70L41,69L42,68L50,60L52,57L48,54L48,51L49,49L55,50L58,53L59,53L63,51L65,48L72,40L75,33L80,39L79,47L75,52Z","main":{"lon0":128.24908649086493,"y0":0.9040150100491811,"k":31.140570385288363,"ky":1784.223254707103,"W":560,"H":639},"oki":{"lon0":127.24827648276485,"y0":0.4952588108050079,"k":74.12364756683382,"ky":4246.972167694732,"W":110,"H":132}};
+const OKI_INSET = { x: 285, y: MAPDATA.main.H - MAPDATA.oki.H - 12 };
+const mercRad = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360));
+function spotXY(spot) {
+  const isOki = spot.lat < 29;
+  const p = isOki ? MAPDATA.oki : MAPDATA.main;
+  const ox = isOki ? OKI_INSET.x : 0, oy = isOki ? OKI_INSET.y : 0;
+  return {
+    x: (spot.lon - p.lon0) * p.k + ox + (spot.mapDx || 0),
+    y: (p.y0 - mercRad(spot.lat)) * p.ky + oy + (spot.mapDy || 0),
+  };
+}
+/* ラベルの矩形(位置候補×オフセット)。フォント10px前提の概算。
+   off>7 のときは引き出し線(leader)でドットと結ぶ */
+function labelRect(x, y, pos, name, off) {
+  const w = name.length * 10 + 4, hgt = 11;
+  if (pos === 'r') return { x1: x + off, y1: y - 6, x2: x + off + w, y2: y + 6, lx: x + off + 1, ly: y + 4, anchor: 'start',
+    leader: off > 7 ? [x + 6, y, x + off - 1, y] : null };
+  if (pos === 'l') return { x1: x - off - w, y1: y - 6, x2: x - off, y2: y + 6, lx: x - off - 1, ly: y + 4, anchor: 'end',
+    leader: off > 7 ? [x - 6, y, x - off + 1, y] : null };
+  if (pos === 't') return { x1: x - w / 2, y1: y - off - 2 - hgt, x2: x + w / 2, y2: y - off, lx: x, ly: y - off - 2, anchor: 'middle',
+    leader: off > 7 ? [x, y - 6, x, y - off + 1] : null };
+  return { x1: x - w / 2, y1: y + off, x2: x + w / 2, y2: y + off + hgt, lx: x, ly: y + off + 9, anchor: 'middle',
+    leader: off > 7 ? [x, y + 6, x, y + off - 1] : null };
+}
+function renderMap() {
+  const { main, oki } = MAPDATA;
+  const placed = []; // 決定済みラベル矩形(重なり回避)。全ドットも障害物として先に登録
+  SPOTS.forEach(s => {
+    const p = spotXY(s);
+    placed.push({ x1: p.x - 6, y1: p.y - 6, x2: p.x + 6, y2: p.y + 6 });
+  });
+  const collides = r => placed.some(p => r.x1 < p.x2 && r.x2 > p.x1 && r.y1 < p.y2 && r.y2 > p.y1)
+    || r.x1 < 0 || r.x2 > main.W || r.y1 < 0 || r.y2 > main.H;
+  const markers = SPOTS.map(spot => {
+    const { x, y } = spotXY(spot);
+    const d = state.data && state.data.spots[spot.id] && state.data.spots[spot.id].daily[state.dayIdx];
+    const col = d ? `var(${sizeColorVar(d.maxH)})` : 'var(--accent)';
+    const title = d ? `${spot.name} ${sizeLabel(d.maxH)} ${fmt1(d.maxH)}m ${d.cond.sym}${d.cond.text}` : spot.name;
+    // 希望位置→他の位置の順、近い→遠いオフセットの順に試し、空きに置く(全滅ならドットのみ)
+    let rect = null;
+    const posOrder = [...new Set([spot.lbl || 'r', 'r', 'l', 'b', 't'])];
+    outer: for (const off of [7, 22, 38, 56, 74]) {
+      for (const pos of posOrder) {
+        const cand = labelRect(x, y, pos, spot.name, off);
+        if (!collides(cand)) { rect = cand; placed.push(cand); break outer; }
+      }
+    }
+    return `<g data-jump="${spot.id}">
+      <title>${esc(title)}</title>
+      ${rect && rect.leader ? `<line x1="${fmt1(rect.leader[0])}" y1="${fmt1(rect.leader[1])}" x2="${fmt1(rect.leader[2])}" y2="${fmt1(rect.leader[3])}" stroke="var(--muted)" stroke-width="0.8"/>` : ''}
+      <circle class="map-dot" cx="${fmt1(x)}" cy="${fmt1(y)}" r="5" fill="${col}"/>
+      <circle class="map-hit" cx="${fmt1(x)}" cy="${fmt1(y)}" r="13"/>
+      ${rect ? `<text class="map-lbl" x="${fmt1(rect.lx)}" y="${fmt1(rect.ly)}" text-anchor="${rect.anchor}">${esc(spot.name)}</text>` : ''}
+    </g>`;
+  }).join('');
+  document.getElementById('mapWrap').innerHTML =
+    `<svg viewBox="0 0 ${main.W} ${main.H}" role="img" aria-label="日本地図のサーフスポット">
+      <path class="map-land" d="${MAPDATA.mainPath}"/>
+      <g transform="translate(${OKI_INSET.x},${OKI_INSET.y})">
+        <rect class="map-inset" x="-6" y="-6" width="${oki.W + 12}" height="${oki.H + 12}" rx="6"/>
+        <path class="map-land" d="${MAPDATA.okiPath}"/>
+        <text class="tick" x="0" y="${oki.H + 2}" style="font-size:9px;fill:var(--muted)">沖縄</text>
+      </g>
+      ${markers}
+    </svg>`;
+}
+/* 詳細画面への遷移はURLハッシュ経由(ブラウザの戻る/進むが効く) */
+function openSpot(id) { location.hash = 'spot=' + id; }
+function spotFromHash() {
+  const m = location.hash.match(/spot=([\w-]+)/);
+  return m && SPOTS.some(s => s.id === m[1]) ? m[1] : null;
+}
+window.addEventListener('hashchange', () => {
+  state.spotView = spotFromHash();
+  render();
+  window.scrollTo(0, 0);
+});
+
+/* ===== 描画 ===== */
+function dayLabel(dateStr, idx) {
+  const d = new Date(dateStr + 'T00:00');
+  const youbi = '日月火水木金土'[d.getDay()];
+  const head = idx === 0 ? '今日' : idx === 1 ? '明日' : `${youbi}曜`;
+  return { head, sub: `${d.getMonth() + 1}/${d.getDate()}` };
+}
+
+function render() {
+  const chips = REGIONS.map(r =>
+    `<button class="chip ${r === state.region ? 'on' : ''}" data-region="${r}">${r}</button>`).join('');
+  document.getElementById('regionChips').innerHTML = chips;
+
+  const first = state.data && state.data.spots[SPOTS[0].id];
+  if (first) {
+    document.getElementById('dayChips').innerHTML = first.daily.map((d, i) => {
+      const l = dayLabel(d.date, i);
+      return `<button class="chip day-chip ${i === state.dayIdx ? 'on' : ''}" data-day="${i}">${l.head}<small>${l.sub}</small></button>`;
+    }).join('');
+  }
+
+  const content = document.getElementById('content');
+  if (!state.data) return;
+
+  // 詳細画面(地図・地域タブは隠し、日付タブは共有)
+  const detailSpot = state.spotView && SPOTS.find(s => s.id === state.spotView);
+  document.getElementById('regionChips').style.display = detailSpot ? 'none' : '';
+  document.getElementById('mapCard').style.display = detailSpot ? 'none' : '';
+  if (detailSpot) {
+    content.innerHTML = spotDetailPage(detailSpot);
+    bindTideHover();
+    return;
+  }
+
+  const spots = SPOTS.filter(s => state.region === '全国' || s.region === state.region);
+  content.innerHTML = `<div class="grid">${spots.map(s => spotCard(s)).join('')}</div>`;
+  renderMap();
+}
+
+/* スポット詳細画面: 選択日の詳細 + 週間コンディション評価 + 潮位・3時間ごと */
+function spotDetailPage(spot) {
+  const sd = state.data.spots[spot.id];
+  const d = sd.daily[state.dayIdx];
+  if (!d) return '';
+  const colorVar = sizeColorVar(d.maxH);
+  const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
+  const windHtml = (label, wv, wq) => wv
+    ? `<span class="k">${label}</span> ${dir16(wv.dir)} ${fmt1(wv.speed)}m/s <span class="wtag ${wq.cls}">${wq.label}</span>`
+    : `<span class="k">${label}</span> —`;
+  const tideHtml = type => {
+    const list = d.tides.filter(t => t.type === type);
+    return list.length ? list.map(t => `<b>${t.time}</b>`).join(' / ') : '—';
+  };
+  const weekRows = sd.daily.map((w, i) => {
+    const l = dayLabel(w.date, i);
+    return `<tr data-day="${i}" class="${i === state.dayIdx ? 'sel' : ''}">
+      <td>${l.head} ${l.sub}</td>
+      <td><span class="cond ${w.cond.cls}" style="font-size:.76rem;padding:0 7px">${w.cond.sym} ${w.cond.text}</span></td>
+      <td>${sizeLabel(w.maxH)} <span class="k">${fmt1(w.maxH)}m</span></td>
+      <td>${w.swellDir != null ? dir16(w.swellDir) : '—'} ${fmt1(w.swellH)}m${w.surge ? ' <span class="surge-tag">⚠急上昇</span>' : ''}</td>
+      <td>${fmt1(w.period)}s</td>
+      <td>${w.am ? `${dir16(w.am.dir)} ${fmt1(w.am.speed)}m/s <span class="wtag ${w.amQ.cls}">${w.amQ.label}</span>` : '—'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="card detail-page">
+    <div class="view-bar">
+      <button class="btn" data-back>← 一覧へ</button>
+      <h2 class="spot-name" style="font-size:1.2rem">${esc(spot.name)}</h2>
+      <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
+    </div>
+    <div class="size-row" style="margin-top:12px">
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
+        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
+    </div>
+    ${d.maxH < 0.15 ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    ${d.surge ? '<div class="surge-note">⚠ うねりが急上昇する予想です（台風・低気圧うねりの可能性）。最新の<a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁 台風情報</a>も確認してください</div>' : ''}
+    <div class="fact-grid" style="max-width:560px">
+      <div class="fact"><span class="k">うねり</span>
+        ${d.swellDir != null ? `<span class="arrow" style="display:inline-block;transform:rotate(${arrowRot}deg)">↑</span> <b>${dir16(d.swellDir)}</b>から` : '—'}</div>
+      <div class="fact"><span class="k">うねり高</span> <b>${fmt1(d.swellH)}</b>m</div>
+      <div class="fact"><span class="k">周期</span> <b>${fmt1(d.period)}</b>秒</div>
+      <div class="fact"><span class="k">波数</span> <b>${d.wc.label}</b>${d.wc.hint ? `<span class="k">${d.wc.hint}</span>` : ''}</div>
+    </div>
+    <div class="windline">
+      <span>${windHtml('午前', d.am, d.amQ)}</span><span>${windHtml('午後', d.pm, d.pmQ)}</span>
+    </div>
+    <div class="tideline">
+      <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
+    </div>
+    <h3 class="sec-h">週間コンディション（風・波浪予報から評価。行をタップで日付切替）</h3>
+    <div class="table-wrap"><table class="hourly week">
+      <thead><tr><th>日</th><th>評価</th><th>サイズ</th><th>うねり</th><th>周期</th><th>風（午前）</th></tr></thead>
+      <tbody>${weekRows}</tbody>
+    </table></div>
+    ${detailHtml(spot, sd)}
+  </div>`;
+}
+
+function spotCard(spot) {
+  const sd = state.data.spots[spot.id];
+  const d = sd.daily[state.dayIdx];
+  if (!d) return '';
+  const flat = d.maxH < 0.15;
+  const colorVar = sizeColorVar(d.maxH);
+  const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
+
+  const windHtml = seg => {
+    const wq = seg === 'am' ? d.amQ : d.pmQ;
+    const wv = seg === 'am' ? d.am : d.pm;
+    if (!wv) return `<span class="k">${seg === 'am' ? '午前' : '午後'}</span> —`;
+    return `<span class="k">${seg === 'am' ? '午前' : '午後'}</span> ${dir16(wv.dir)} ${fmt1(wv.speed)}m/s <span class="wtag ${wq.cls}">${wq.label}</span>`;
+  };
+  const tideHtml = type => {
+    const list = d.tides.filter(t => t.type === type);
+    if (!list.length) return '—';
+    return list.map(t => `<b>${t.time}</b>`).join(' / ');
+  };
+  return `<div class="card" data-spot="${spot.id}">
+    <div class="spot-head" data-detail="${spot.id}">
+      <h2 class="spot-name">${esc(spot.name)}</h2>
+      <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
+    </div>
+    <div class="size-row">
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
+        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
+    </div>
+    ${flat ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    <div class="fact-grid">
+      <div class="fact"><span class="k">うねり</span>
+        ${d.swellDir != null ? `<span class="arrow" style="display:inline-block;transform:rotate(${arrowRot}deg)">↑</span> <b>${dir16(d.swellDir)}</b>から` : '—'}</div>
+      <div class="fact"><span class="k">うねり高</span> <b>${fmt1(d.swellH)}</b>m</div>
+      <div class="fact"><span class="k">周期</span> <b>${fmt1(d.period)}</b>秒</div>
+      <div class="fact"><span class="k">波数</span> <b>${d.wc.label}</b>${d.wc.hint ? `<span class="k">${d.wc.hint}</span>` : ''}</div>
+    </div>
+    <div class="windline">
+      <span>${windHtml('am')}</span><span>${windHtml('pm')}</span>
+    </div>
+    <div class="tideline">
+      <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
+    </div>
+    ${sd.daily.some(w => w.surge) ? '<div class="surge-note">⚠ 期間中にうねりの急上昇予想あり（台風・低気圧うねりの可能性）</div>' : ''}
+    <div class="weekbars">${weekBarsSvg(sd.daily)}</div>
+    <button class="expand-btn" data-detail="${spot.id}">▶ 詳細ページ（週間評価・潮位グラフ・3時間ごと）</button>
+  </div>`;
+}
+
+/* 週間波高ミニバー（単一シリーズ・青、選択日を濃色で強調）。
+   上段に各日のコンディション評価(◎○△▽×)を表示 */
+const COND_COLOR = {
+  'c-best': 'var(--good)', 'c-good': 'var(--accent)', 'c-mid': 'var(--mid)',
+  'c-poor': 'var(--poor)', 'c-bad': 'var(--bad)',
+};
+function weekBarsSvg(daily) {
+  const W = 320, H = 76, top = 28, bottom = 12;
+  const plotH = H - top - bottom;
+  const maxScale = Math.max(1.0, ...daily.map(d => d.maxH));
+  const bw = 18, gap = (W - daily.length * bw) / daily.length;
+  const bars = daily.map((d, i) => {
+    const x = gap / 2 + i * (bw + gap);
+    const bh = Math.max(2, d.maxH / maxScale * plotH);
+    const y = top + plotH - bh;
+    const sel = i === state.dayIdx;
+    const l = dayLabel(d.date, i);
+    return `
+      <text x="${x + bw / 2}" y="11" text-anchor="middle" style="font-size:11px;font-weight:700"
+        fill="${COND_COLOR[d.cond.cls]}">${d.cond.sym}</text>
+      <rect class="bar" data-day="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3"
+        fill="${sel ? 'var(--accent-deep)' : 'var(--accent)'}" opacity="${sel ? 1 : 0.55}">
+        <title>${l.head} ${l.sub}: ${fmt1(d.maxH)}m ${d.cond.sym}${d.cond.text}</title></rect>
+      ${sel ? `<text class="val" x="${x + bw / 2}" y="${y - 3}" text-anchor="middle">${fmt1(d.maxH)}</text>` : ''}
+      <text x="${x + bw / 2}" y="${H - 2}" text-anchor="middle">${i === 0 ? '今日' : l.sub}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="週間波高(m)と評価">
+    <line x1="0" y1="${top + plotH}" x2="${W}" y2="${top + plotH}" stroke="var(--baseline)" stroke-width="1"/>
+    ${bars}</svg>`;
+}
+
+/* 展開部: 潮位カーブ + 3時間ごとテーブル */
+function detailHtml(spot, sd) {
+  const d = sd.daily[state.dayIdx];
+  const rows = sd.hourlyByDate[d.date] || [];
+  const table = rows.map(r => `<tr>
+      <td>${r.time}</td>
+      <td>${r.height != null ? fmt1(r.height) + 'm' : '—'}</td>
+      <td>${r.dir != null ? dir16(r.dir) : '—'}</td>
+      <td>${r.period != null ? fmt1(r.period) + 's' : '—'}</td>
+      <td>${r.windDir != null ? dir16(r.windDir) + ' ' + fmt1(r.windSp) + 'm/s' : '—'}</td>
+      <td>${r.sea != null ? (r.sea >= 0 ? '+' : '') + fmt1(r.sea) + 'm' : '—'}</td>
+    </tr>`).join('');
+  return `<div class="detail">
+    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}・MSL基準）</h3>
+    ${tideChartSvg(spot.id, sd, d)}
+    <h3>3時間ごと</h3>
+    <div class="table-wrap"><table class="hourly">
+      <thead><tr><th>時刻</th><th>波高</th><th>うねり</th><th>周期</th><th>風</th><th>潮位</th></tr></thead>
+      <tbody>${table}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function tideChartSvg(spotId, sd, d) {
+  const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
+  const pts = sea.filter(p => p.v != null);
+  if (pts.length < 4) return '<div class="flat-note">潮位データがありません（外洋モデル対象外の地点）</div>';
+  const W = 320, H = 110, padL = 6, padR = 6, top = 16, bottom = 16;
+  const vs = pts.map(p => p.v);
+  const min = Math.min(...vs), max = Math.max(...vs);
+  const range = Math.max(0.3, max - min);
+  const x = hr => padL + hr / 23 * (W - padL - padR);
+  const y = v => top + (1 - (v - min) / range) * (H - top - bottom);
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${fmt1(x(p.hr))},${fmt1(y(p.v))}`).join(' ');
+  const area = `${path} L${fmt1(x(pts[pts.length - 1].hr))},${H - bottom} L${fmt1(x(pts[0].hr))},${H - bottom} Z`;
+  const marks = d.tides.map(t => {
+    const [hh, mm] = t.time.split(':').map(Number);
+    const tx = x(hh + mm / 60), ty = y(t.level);
+    const above = t.type === '満';
+    return `<circle cx="${fmt1(tx)}" cy="${fmt1(ty)}" r="3.5" fill="var(--accent-deep)" stroke="var(--card)" stroke-width="2"/>
+      <text class="lbl" x="${fmt1(Math.max(18, Math.min(W - 18, tx)))}" y="${fmt1(above ? ty - 7 : ty + 13)}" text-anchor="middle">${t.type} ${t.time}</text>`;
+  }).join('');
+  const ticks = [0, 6, 12, 18].map(hr =>
+    `<line x1="${fmt1(x(hr))}" y1="${top}" x2="${fmt1(x(hr))}" y2="${H - bottom}" stroke="var(--grid-line)" stroke-width="1"/>
+     <text class="tick" x="${fmt1(Math.max(12, x(hr)))}" y="${H - 4}" text-anchor="middle">${hr}時</text>`).join('');
+  return `<div class="tide-chart" data-tide="${spotId}">
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="潮位カーブ">
+      ${ticks}
+      <path d="${area}" fill="var(--wave-fill)"/>
+      <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      ${marks}
+    </svg>
+    <div class="tide-tip"></div>
+  </div>`;
+}
+
+/* 潮位カーブのホバー/タップで時刻+潮位を表示 */
+function bindTideHover() {
+  document.querySelectorAll('.tide-chart').forEach(el => {
+    const spotId = el.dataset.tide;
+    const tip = el.querySelector('.tide-tip');
+    const svg = el.querySelector('svg');
+    const move = ev => {
+      const rect = svg.getBoundingClientRect();
+      const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+      const hr = Math.max(0, Math.min(23, Math.round((cx / rect.width * 320 - 6) / (320 - 12) * 23)));
+      const sd = state.data.spots[spotId];
+      const d = sd.daily[state.dayIdx];
+      const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
+      const p = sea.find(q => q.hr === hr);
+      if (!p || p.v == null) { tip.style.display = 'none'; return; }
+      tip.textContent = `${pad2(hr)}:00  ${(p.v >= 0 ? '+' : '')}${fmt1(p.v)}m`;
+      tip.style.display = 'block';
+      tip.style.left = `${cx}px`;
+      tip.style.top = `${rect.height * 0.35}px`;
+    };
+    svg.addEventListener('mousemove', move);
+    svg.addEventListener('touchmove', move, { passive: true });
+    svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  });
+}
+
+function renderUpdated() {
+  const el = document.getElementById('updated');
+  if (!state.data) { el.textContent = ''; return; }
+  const t = new Date(state.data.fetchedAt);
+  el.textContent = `${DEMO ? '【デモデータ】' : ''}${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())} 取得`;
+}
+
+function renderError(err) {
+  document.getElementById('content').innerHTML = `<div class="card error-card">
+    <h2>波情報を取得できませんでした</h2>
+    <p>ネットワーク接続を確認してもう一度お試しください。<br><span class="flat-note">${esc(err.message || err)}</span></p>
+    <button class="btn btn-primary" id="retryBtn">再試行</button>
+  </div>`;
+  const btn = document.getElementById('retryBtn');
+  if (btn) btn.addEventListener('click', () => load(true));
+}
+
+async function load(force) {
+  document.getElementById('content').innerHTML = '<div class="loading">読み込み中…</div>';
+  try {
+    state.data = await fetchAll(force);
+    renderUpdated();
+    render();
+  } catch (err) {
+    renderError(err);
+  }
+}
+
+/* ===== イベント（委譲） ===== */
+document.addEventListener('click', ev => {
+  const jump = ev.target.closest('[data-jump]');
+  if (jump) { openSpot(jump.dataset.jump); return; }
+  const detail = ev.target.closest('[data-detail]');
+  if (detail) { openSpot(detail.dataset.detail); return; }
+  const back = ev.target.closest('[data-back]');
+  if (back) { location.hash = ''; return; }
+  const region = ev.target.closest('[data-region]');
+  if (region) { state.region = region.dataset.region; render(); return; }
+  const day = ev.target.closest('[data-day]');
+  if (day) { state.dayIdx = +day.dataset.day; render(); return; }
+});
+document.getElementById('refreshBtn').addEventListener('click', () => load(true));
+
+state.spotView = spotFromHash();
+load(false);
+</script>
+</body>
+</html>
