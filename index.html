@@ -18,6 +18,13 @@
     --running: #16a34a;
     --running-soft: #dcfce7;
     --shadow: 0 1px 3px rgba(0,0,0,.08);
+    /* カテゴリ色(検証済みパレット) */
+    --s1: #2a78d6; --s2: #1baf7a; --s3: #eda100; --s4: #008300;
+    --s5: #4a3aa7; --s6: #e34948; --s7: #e87ba4; --s8: #eb6834;
+    --s-other: #898781;
+    /* カレンダーの濃淡(記録時間) */
+    --heat1: #cde2fb; --heat2: #9ec5f4; --heat3: #6da7ec; --heat4: #3987e5;
+    --grid: #e9eaee;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -32,6 +39,12 @@
       --running: #4ade80;
       --running-soft: #143520;
       --shadow: 0 1px 3px rgba(0,0,0,.4);
+      /* ダーク面用に選び直したカテゴリ色 */
+      --s1: #3987e5; --s2: #199e70; --s3: #c98500; --s4: #008300;
+      --s5: #9085e9; --s6: #e66767; --s7: #d55181; --s8: #d95926;
+      --s-other: #898781;
+      --heat1: #0d366b; --heat2: #104281; --heat3: #184f95; --heat4: #1c5cab;
+      --grid: #2c2f36;
     }
   }
   * { box-sizing: border-box; }
@@ -181,10 +194,100 @@
   .day-group.open .day-body { display: block; }
 
   .summary-line {
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center;
     font-size: .9rem; padding: 4px 0;
   }
   .summary-line .pct { color: var(--text-sub); font-variant-numeric: tabular-nums; }
+  .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+    margin-right: 8px; vertical-align: -1px; flex-shrink: 0;
+  }
+  .summary-line .cat-name { display: flex; align-items: center; min-width: 0; }
+
+  /* 一日のタイムライン(0〜24時) */
+  .tl { margin: 4px 0 14px; }
+  .tl-track {
+    position: relative; height: 34px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .tl-grid {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: var(--grid);
+  }
+  .tl-block {
+    position: absolute; top: 3px; bottom: 3px;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px var(--card);
+    cursor: pointer;
+    min-width: 2px;
+  }
+  .tl-block.tl-running { animation: pulse 1.5s infinite; }
+  .tl-axis {
+    position: relative; height: 16px;
+    font-size: .68rem; color: var(--text-sub);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-axis span { position: absolute; transform: translateX(-50%); }
+  .tl-axis span:first-child { transform: none; }
+  .tl-axis span:last-child { transform: translateX(-100%); }
+  @media (prefers-reduced-motion: reduce) {
+    .tl-block.tl-running, #runningBanner .pulse { animation: none; }
+  }
+
+  /* 履歴の表示切替 */
+  .view-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+  .view-toggle button {
+    background: transparent; color: var(--text-sub);
+    border: 1px solid var(--border);
+    font-weight: 600; font-size: .85rem; padding: 6px 14px;
+  }
+  .view-toggle button.active {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
+  }
+
+  /* カレンダー */
+  .cal-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .cal-nav .cal-title { font-weight: 700; font-size: 1.05rem; }
+  .cal-nav button {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 4px 14px; font-size: .9rem;
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+  .cal-wd {
+    text-align: center; font-size: .7rem; color: var(--text-sub); padding: 2px 0;
+  }
+  .cal-wd.sun { color: var(--danger); }
+  .cal-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px;
+    font-size: .85rem; font-variant-numeric: tabular-nums;
+    background: var(--bg);
+    min-width: 0;
+  }
+  .cal-cell.blank { background: transparent; }
+  .cal-cell.has-log { cursor: pointer; }
+  .cal-cell .cal-hours { font-size: .62rem; opacity: .85; }
+  .cal-cell.heat0 .cal-hours { color: var(--text-sub); }
+  .cal-cell.heat1 { background: var(--heat1); }
+  .cal-cell.heat2 { background: var(--heat2); }
+  .cal-cell.heat3 { background: var(--heat3); }
+  .cal-cell.heat4 { background: var(--heat4); }
+  .cal-cell.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .cal-cell.today .cal-date { font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  #calDayDetail { margin-top: 16px; }
+  #calDayDetail h3 { font-size: .95rem; margin: 0 0 8px; }
 
   .empty { color: var(--text-sub); text-align: center; padding: 24px 0; font-size: .9rem; }
   .muted { color: var(--text-sub); font-size: .8rem; }
@@ -278,6 +381,7 @@
   <div class="tab-panel active" id="tab-today">
     <div class="card">
       <h2 id="todayTitle">今日の記録</h2>
+      <div id="todayTimeline"></div>
       <div id="todaySummary"></div>
       <div id="todayList"></div>
     </div>
@@ -286,18 +390,37 @@
   <!-- 履歴 -->
   <div class="tab-panel" id="tab-history">
     <div class="card">
-      <div class="row">
-        <div style="flex:2">
-          <label for="searchInput">検索(行動・カテゴリ・メモ)</label>
-          <input type="text" id="searchInput" placeholder="キーワード">
+      <div class="view-toggle">
+        <button data-view="calendar" class="active">📅 カレンダー</button>
+        <button data-view="list">📋 リスト</button>
+      </div>
+
+      <!-- カレンダー表示 -->
+      <div id="histCalendar">
+        <div class="cal-nav">
+          <button id="calPrevBtn" aria-label="前の月">◀ 前月</button>
+          <span class="cal-title" id="calTitle"></span>
+          <button id="calNextBtn" aria-label="次の月">翌月 ▶</button>
         </div>
-        <div>
-          <label for="monthFilter">月で絞り込み</label>
-          <select id="monthFilter"><option value="">すべて</option></select>
+        <div class="cal-grid" id="calGrid"></div>
+        <div id="calDayDetail"></div>
+      </div>
+
+      <!-- リスト表示 -->
+      <div id="histList" style="display:none">
+        <div class="row" style="margin-bottom:8px">
+          <div style="flex:2">
+            <label for="searchInput">検索(行動・カテゴリ・メモ)</label>
+            <input type="text" id="searchInput" placeholder="キーワード">
+          </div>
+          <div>
+            <label for="monthFilter">月で絞り込み</label>
+            <select id="monthFilter"><option value="">すべて</option></select>
+          </div>
         </div>
+        <div id="historyList"></div>
       </div>
     </div>
-    <div class="card" id="historyList"></div>
   </div>
 
   <!-- データ管理 -->
@@ -548,23 +671,66 @@
       </div>`;
   }
 
+  // カテゴリ → 色。初出順に固定スロットを割り当て(9個目以降とカテゴリなしはグレー)
+  function catColors() {
+    const map = new Map();
+    for (const e of [...entries].sort((a, b) => new Date(a.start) - new Date(b.start))) {
+      const c = e.category || '';
+      if (c && !map.has(c)) map.set(c, map.size < 8 ? `var(--s${map.size + 1})` : 'var(--s-other)');
+    }
+    map.set('', 'var(--s-other)');
+    return map;
+  }
+
   function summaryHtml(dayEntries) {
     const byCat = {};
     let total = 0;
     for (const e of dayEntries) {
       const dur = Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start));
-      const cat = e.category || '(カテゴリなし)';
+      const cat = e.category || '';
       byCat[cat] = (byCat[cat] || 0) + dur;
       total += dur;
     }
     if (total <= 0) return '';
+    const colors = catColors();
     const lines = Object.entries(byCat)
       .sort((a, b) => b[1] - a[1])
       .map(([cat, ms]) =>
-        `<div class="summary-line"><span>${escapeHtml(cat)}</span><span class="pct">${fmtDur(ms)}(${Math.round(ms / total * 100)}%)</span></div>`)
+        `<div class="summary-line">
+          <span class="cat-name"><span class="dot" style="background:${colors.get(cat)}"></span>${cat ? escapeHtml(cat) : '(カテゴリなし)'}</span>
+          <span class="pct">${fmtDur(ms)}(${Math.round(ms / total * 100)}%)</span>
+        </div>`)
       .join('');
     return `<div style="border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:4px">
       <div class="summary-line" style="font-weight:700"><span>合計</span><span>${fmtDur(total)}</span></div>${lines}</div>`;
+  }
+
+  // 一日の時間軸バー(0〜24時)。日をまたぐ記録はその日の分だけ切り出して表示
+  function timelineHtml(dayKey) {
+    const dayStart = new Date(dayKey + 'T00:00:00').getTime();
+    const dayEnd = dayStart + 86400000;
+    const segs = [];
+    for (const e of entries) {
+      const s = new Date(e.start).getTime();
+      const en = e.end ? new Date(e.end).getTime() : Date.now();
+      if (s < dayEnd && en > dayStart && en > s) {
+        segs.push({ e, s: Math.max(s, dayStart), en: Math.min(en, dayEnd) });
+      }
+    }
+    if (!segs.length) return '';
+    const colors = catColors();
+    const blocks = segs.map(({ e, s, en }) => {
+      const left = (s - dayStart) / 864000;      // % (86400000ms / 100)
+      const width = Math.max((en - s) / 864000, .3);
+      const tip = `${fmtTime(new Date(s).toISOString())}–${e.end ? fmtTime(new Date(en).toISOString()) : '進行中'} ${e.activity}${e.category ? ` [${e.category}]` : ''}`;
+      return `<div class="tl-block${e.end ? '' : ' tl-running'}" data-id="${e.id}"
+        style="left:${left.toFixed(3)}%;width:${width.toFixed(3)}%;background:${colors.get(e.category || '')}"
+        title="${escapeHtml(tip)}"></div>`;
+    }).join('');
+    const grid = [25, 50, 75].map(p => `<div class="tl-grid" style="left:${p}%"></div>`).join('');
+    const axis = [0, 6, 12, 18, 24].map((h, i) =>
+      `<span style="left:${i * 25}%">${h}${h === 12 ? '時' : ''}</span>`).join('');
+    return `<div class="tl"><div class="tl-track">${grid}${blocks}</div><div class="tl-axis">${axis}</div></div>`;
   }
 
   function renderRunning() {
@@ -586,6 +752,7 @@
     const list = entries
       .filter(e => dateKey(e.start) === key)
       .sort((a, b) => new Date(b.start) - new Date(a.start));
+    $('todayTimeline').innerHTML = timelineHtml(key);
     $('todaySummary').innerHTML = summaryHtml(list);
     $('todayList').innerHTML = list.length
       ? list.map(entryHtml).join('')
@@ -617,9 +784,63 @@
             <span>${fmtDateJa(day)}</span>
             <span class="meta">${dayEntries.length}件 / ${fmtDur(total)}</span>
           </div>
-          <div class="day-body">${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}</div>
+          <div class="day-body">${timelineHtml(day)}${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}</div>
         </div>`;
     }).join('');
+  }
+
+  // ---------- カレンダー ----------
+  const now0 = new Date();
+  let calYear = now0.getFullYear();
+  let calMonth = now0.getMonth();      // 0-11
+  let selectedDay = todayKey();
+
+  function renderCalendar() {
+    $('calTitle').textContent = `${calYear}年${calMonth + 1}月`;
+
+    // 日ごとの合計時間(開始日でグループ)
+    const totals = {};
+    for (const e of entries) {
+      const k = dateKey(e.start);
+      totals[k] = (totals[k] || 0) + Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start));
+    }
+
+    const first = new Date(calYear, calMonth, 1);
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const tKey = todayKey();
+    let cells = '日月火水木金土'.split('').map((w, i) =>
+      `<div class="cal-wd${i === 0 ? ' sun' : ''}">${w}</div>`).join('');
+    for (let i = 0; i < first.getDay(); i++) cells += '<div class="cal-cell blank"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${calYear}-${pad(calMonth + 1)}-${pad(d)}`;
+      const ms = totals[key] || 0;
+      const hours = ms / 3600000;
+      const heat = ms <= 0 ? 0 : hours < 2 ? 1 : hours < 4 ? 2 : hours < 8 ? 3 : 4;
+      const cls = ['cal-cell', `heat${heat}`];
+      if (ms > 0) cls.push('has-log');
+      if (key === tKey) cls.push('today');
+      if (key === selectedDay) cls.push('selected');
+      const hoursLabel = ms > 0
+        ? `<span class="cal-hours">${hours >= 1 ? (Math.round(hours * 10) / 10) + 'h' : Math.round(ms / 60000) + 'm'}</span>`
+        : '';
+      cells += `<div class="${cls.join(' ')}" data-day="${key}"><span class="cal-date">${d}</span>${hoursLabel}</div>`;
+    }
+    $('calGrid').innerHTML = cells;
+    renderCalDayDetail();
+  }
+
+  function renderCalDayDetail() {
+    const box = $('calDayDetail');
+    if (!selectedDay) { box.innerHTML = '<div class="empty">日付をタップすると、その日の記録が表示されます。</div>'; return; }
+    const dayEntries = entries
+      .filter(e => dateKey(e.start) === selectedDay)
+      .sort((a, b) => new Date(b.start) - new Date(a.start));
+    const tl = timelineHtml(selectedDay);
+    if (!dayEntries.length && !tl) {
+      box.innerHTML = `<h3>${fmtDateJa(selectedDay)}</h3><div class="empty">この日の記録はありません。</div>`;
+      return;
+    }
+    box.innerHTML = `<h3>${fmtDateJa(selectedDay)}</h3>${tl}${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}`;
   }
 
   function renderMonthFilter() {
@@ -649,6 +870,7 @@
   function renderAll() {
     renderRunning();
     renderToday();
+    renderCalendar();
     renderHistory();
     renderMonthFilter();
     renderSuggestions();
@@ -751,8 +973,35 @@
       if (btn.dataset.act === 'del') deleteEntry(id);
       return;
     }
+    const block = ev.target.closest('.tl-block');
+    if (block) { openEdit(block.dataset.id); return; }
+    const cell = ev.target.closest('.cal-cell[data-day]');
+    if (cell) {
+      selectedDay = cell.dataset.day;
+      renderCalendar();
+      return;
+    }
     const head = ev.target.closest('.day-head');
     if (head) head.closest('.day-group').classList.toggle('open');
+  });
+
+  // 履歴: カレンダー/リスト切替と月ナビゲーション
+  document.querySelectorAll('.view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+      $('histCalendar').style.display = btn.dataset.view === 'calendar' ? '' : 'none';
+      $('histList').style.display = btn.dataset.view === 'list' ? '' : 'none';
+    });
+  });
+  $('calPrevBtn').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  $('calNextBtn').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
   });
 
   $('searchInput').addEventListener('input', renderHistory);
