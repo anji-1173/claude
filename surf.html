@@ -29,8 +29,10 @@
     --wave-fill: rgba(42,120,214,.14);
     --land: #e9e7e1;
     --shadow: 0 1px 3px rgba(0,0,0,.08);
-    /* サイズ帯の濃淡（シーケンシャル青・検証済みランプ） */
-    --sz1: #cde2fb; --sz2: #9ec5f4; --sz3: #6da7ec; --sz4: #3987e5; --sz5: #1c5cab;
+    /* サイズ帯: アタマ未満は青3段階+フラットはグレー、アタマ級からは警戒色(アンバー→赤) */
+    --sz0: #b9b7b0; --sz1: #86b6ef; --sz2: #3987e5; --sz3: #1c5cab;
+    --sz4: #eda100; --sz5: #d03b3b;
+    --dot-stroke: rgba(28,30,33,.45);
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -56,7 +58,9 @@
       --wave-fill: rgba(57,135,229,.20);
       --land: #2a2d33;
       --shadow: 0 1px 3px rgba(0,0,0,.4);
-      --sz1: #0d366b; --sz2: #104281; --sz3: #184f95; --sz4: #1c5cab; --sz5: #3987e5;
+      --sz0: #5b5a54; --sz1: #9ec5f4; --sz2: #5598e7; --sz3: #2a78d6;
+      --sz4: #c98500; --sz5: #e66767;
+      --dot-stroke: rgba(232,234,237,.5);
     }
   }
   * { box-sizing: border-box; }
@@ -185,7 +189,7 @@
   #mapWrap svg { width: 100%; height: auto; display: block; }
   .map-land { fill: var(--land); stroke: var(--border); stroke-width: .7; }
   .map-inset { fill: none; stroke: var(--border); stroke-width: 1; }
-  .map-dot { cursor: pointer; stroke: var(--accent-deep); stroke-width: 1.2; }
+  .map-dot { cursor: pointer; stroke: var(--dot-stroke); stroke-width: 1.2; }
   .map-hit { fill: transparent; cursor: pointer; }
   .map-lbl {
     font-size: 10px; font-weight: 600; fill: var(--text); cursor: pointer;
@@ -197,7 +201,7 @@
   }
   .map-legend i {
     display: inline-block; width: 10px; height: 10px; border-radius: 50%;
-    margin-right: 4px; vertical-align: -1px; border: 1px solid var(--accent-deep);
+    margin-right: 4px; vertical-align: -1px; border: 1px solid var(--dot-stroke);
   }
   @keyframes flashCard { from { outline-color: var(--accent); } to { outline-color: transparent; } }
   .card.flash { outline: 3px solid transparent; animation: flashCard 1.8s ease forwards; }
@@ -229,11 +233,12 @@
     <div id="mapWrap"></div>
     <div class="map-legend">
       <span class="k">●の色 = 選択日のサイズ:</span>
-      <span><i style="background:var(--sz1)"></i>〜ヒザ</span>
-      <span><i style="background:var(--sz2)"></i>〜コシ</span>
-      <span><i style="background:var(--sz3)"></i>〜ムネ</span>
-      <span><i style="background:var(--sz4)"></i>〜アタマ</span>
-      <span><i style="background:var(--sz5)"></i>それ以上</span>
+      <span><i style="background:var(--sz0)"></i>〜スネ</span>
+      <span><i style="background:var(--sz1)"></i>ヒザ〜コシ</span>
+      <span><i style="background:var(--sz2)"></i>コシ〜ムネ</span>
+      <span><i style="background:var(--sz3)"></i>ムネ〜カタ</span>
+      <span><i style="background:var(--sz4)"></i>アタマ級（上級者）</span>
+      <span><i style="background:var(--sz5)"></i>ダブル級〜（プロ級）</span>
     </div>
   </details>
 
@@ -335,11 +340,12 @@ function sizeLabel(h) {
   return 'ダブル以上';
 }
 function sizeColorVar(h) {
-  if (h < 0.3) return '--sz1';
-  if (h < 0.7) return '--sz2';
-  if (h < 1.1) return '--sz3';
-  if (h < 1.8) return '--sz4';
-  return '--sz5';
+  if (h < 0.3) return '--sz0';   // フラット〜スネ
+  if (h < 0.7) return '--sz1';   // ヒザ〜コシ
+  if (h < 1.1) return '--sz2';   // コシ〜ムネ
+  if (h < 1.5) return '--sz3';   // ムネ〜カタ
+  if (h < 2.3) return '--sz4';   // アタマ級(上級者)
+  return '--sz5';                // ダブル級〜(プロ級・クローズ注意)
 }
 /* 波数（セット頻度の目安）: 周期が長い=間隔が空く、風波優勢=数は多いが乱れる */
 function waveCount(height, period, windRatio) {
