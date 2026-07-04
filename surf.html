@@ -256,8 +256,8 @@
    lbl: 地図上のラベル位置 r=右 l=左 t=上 b=下 */
 const SPOTS = [
   // 北海道・東北
-  { id:'tomakomai', name:'苫小牧',        pref:'北海道', region:'北海道・東北', lat:42.57, lon:141.62, facing:165, lbl:'l' },
-  { id:'hamaatsuma',name:'浜厚真',        pref:'北海道', region:'北海道・東北', lat:42.55, lon:141.87, facing:155, lbl:'r' },
+  { id:'itanki',    name:'イタンキ浜',    pref:'室蘭',   region:'北海道・東北', lat:42.32, lon:141.04, facing:140, lbl:'l' },
+  { id:'hamaatsuma',name:'浜厚真',        pref:'厚真',   region:'北海道・東北', lat:42.55, lon:141.87, facing:155, lbl:'r' },
   { id:'hachinohe', name:'八戸',          pref:'青森',   region:'北海道・東北', lat:40.48, lon:141.63, facing:90,  lbl:'r' },
   { id:'sendai',    name:'仙台新港',      pref:'宮城',   region:'北海道・東北', lat:38.27, lon:141.05, facing:115, lbl:'r' },
   { id:'kitaizumi', name:'北泉',          pref:'福島',   region:'北海道・東北', lat:37.72, lon:141.03, facing:95,  lbl:'r' },
@@ -291,8 +291,7 @@ const SPOTS = [
   // 沖縄
   { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3 },
   { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3 },
-  { id:'suicide',   name:'スーサイド',    pref:'豊見城', region:'沖縄',        lat:26.17, lon:127.64, facing:250, lbl:'l' },
-  { id:'komesu',    name:'米須',          pref:'糸満',   region:'沖縄',        lat:26.09, lon:127.70, facing:190, lbl:'b' },
+  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b' },
   // 日本海
   { id:'yunohama',  name:'湯野浜',        pref:'山形',   region:'日本海',      lat:38.77, lon:139.73, facing:290, lbl:'t' },
   { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
@@ -546,29 +545,31 @@ function demoData() {
     times.push(`${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}T${pad2(hr)}:00`);
   }
   const marine = [], wind = [];
-  SPOTS.forEach((s, si) => {
+  SPOTS.forEach(s => {
     const n = times.length;
     const mk = f => Array.from({ length: n }, (_, i) => f(i));
-    // 沖縄は夏場うねりが入りにくいのでデモ値も小さめにする
+    // 沖縄は夏場うねりが入りにくいのでデモ値も小さめにする。
+    // 変動の種は位置ベース: 隣接ポイントには近い値が出る(並び順依存だと隣同士で不自然に食い違う)
     const seasonal = s.region === '沖縄' ? 0.4 : 1;
-    const base = 0.3 + ((si * 37) % 17) / 10;
-    const wave = mk(i => Math.max(0.05, seasonal * (base + 0.6 * Math.sin(i / 21 + si) + 0.25 * Math.sin(i / 7 + si * 2))));
-    const swellD = mk(i => (s.facing + 20 * Math.sin(i / 30 + si) + 360) % 360);
+    const seed = Math.round((s.lat + s.lon) * 5) / 5; // 約0.1度単位で丸め
+    const base = 0.3 + ((Math.round(seed * 5) * 7) % 17) / 10;
+    const wave = mk(i => Math.max(0.05, seasonal * (base + 0.6 * Math.sin(i / 21 + seed) + 0.25 * Math.sin(i / 7 + seed * 2))));
+    const swellD = mk(i => (s.facing + 20 * Math.sin(i / 30 + seed) + 360) % 360);
     marine.push({ hourly: {
       time: times,
       wave_height: wave,
       wave_direction: swellD,
-      wave_period: mk(i => 7 + 3 * Math.sin(i / 40 + si)),
+      wave_period: mk(i => 7 + 3 * Math.sin(i / 40 + seed)),
       swell_wave_height: wave.map(v => v * 0.8),
       swell_wave_direction: swellD,
-      swell_wave_period: mk(i => 8 + 3 * Math.sin(i / 40 + si)),
+      swell_wave_period: mk(i => 8 + 3 * Math.sin(i / 40 + seed)),
       wind_wave_height: wave.map(v => v * 0.3),
-      sea_level_height_msl: mk(i => 0.8 * Math.sin(2 * Math.PI * (i % 24) / 12.42 + si) + 0.3 * Math.sin(2 * Math.PI * (i % 24) / 25 + si)),
+      sea_level_height_msl: mk(i => 0.8 * Math.sin(2 * Math.PI * (i % 24) / 12.42 + seed) + 0.3 * Math.sin(2 * Math.PI * (i % 24) / 25 + seed)),
     }});
     wind.push({ hourly: {
       time: times,
-      wind_speed_10m: mk(i => 2 + 5 * Math.abs(Math.sin(i / 17 + si))),
-      wind_direction_10m: mk(i => (s.facing + 180 + 120 * Math.sin(i / 13 + si) + 360) % 360),
+      wind_speed_10m: mk(i => 2 + 5 * Math.abs(Math.sin(i / 17 + seed))),
+      wind_direction_10m: mk(i => (s.facing + 180 + 120 * Math.sin(i / 13 + seed) + 360) % 360),
     }});
   });
   return { marine, wind };
