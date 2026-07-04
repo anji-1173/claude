@@ -104,7 +104,14 @@
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
     padding: 14px 16px; box-shadow: var(--shadow);
   }
-  .spot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .spot-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; cursor: pointer; }
+  .spot-head:hover .spot-name { color: var(--accent); }
+  .view-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sec-h { font-size: .86rem; margin: 16px 0 6px; color: var(--text-sub); font-weight: 600; }
+  table.week tbody tr { cursor: pointer; }
+  table.week tbody tr:hover td { background: var(--mid-soft); }
+  table.week tbody tr.sel td { background: var(--accent-soft); }
+  .detail-page { margin-top: 14px; }
   .spot-name { font-size: 1.02rem; font-weight: 700; margin: 0; }
   .spot-region { font-size: .72rem; color: var(--text-sub); border: 1px solid var(--border); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
 
@@ -313,7 +320,7 @@ const DEMO = new URLSearchParams(location.search).has('demo');
 const state = {
   region: '全国',
   dayIdx: 0,          // 0=今日
-  expanded: new Set(),
+  spotView: null,     // 詳細画面表示中のスポットid(URLハッシュ #spot=... と同期)
   data: null,         // { fetchedAt, spots: {id: {daily:[...], hourlyByDate:{...}}} }
 };
 
@@ -651,20 +658,17 @@ function renderMap() {
       ${markers}
     </svg>`;
 }
-function jumpToSpot(id) {
-  const spot = SPOTS.find(s => s.id === id);
-  if (!spot) return;
-  if (state.region !== '全国' && spot.region !== state.region) {
-    state.region = spot.region;
-    render();
-  }
-  const el = document.querySelector(`[data-spot="${id}"]`);
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.remove('flash');
-  void el.offsetWidth; // アニメーション再始動
-  el.classList.add('flash');
+/* 詳細画面への遷移はURLハッシュ経由(ブラウザの戻る/進むが効く) */
+function openSpot(id) { location.hash = 'spot=' + id; }
+function spotFromHash() {
+  const m = location.hash.match(/spot=([\w-]+)/);
+  return m && SPOTS.some(s => s.id === m[1]) ? m[1] : null;
 }
+window.addEventListener('hashchange', () => {
+  state.spotView = spotFromHash();
+  render();
+  window.scrollTo(0, 0);
+});
 
 /* ===== 描画 ===== */
 function dayLabel(dateStr, idx) {
@@ -689,10 +693,79 @@ function render() {
 
   const content = document.getElementById('content');
   if (!state.data) return;
+
+  // 詳細画面(地図・地域タブは隠し、日付タブは共有)
+  const detailSpot = state.spotView && SPOTS.find(s => s.id === state.spotView);
+  document.getElementById('regionChips').style.display = detailSpot ? 'none' : '';
+  document.getElementById('mapCard').style.display = detailSpot ? 'none' : '';
+  if (detailSpot) {
+    content.innerHTML = spotDetailPage(detailSpot);
+    bindTideHover();
+    return;
+  }
+
   const spots = SPOTS.filter(s => state.region === '全国' || s.region === state.region);
   content.innerHTML = `<div class="grid">${spots.map(s => spotCard(s)).join('')}</div>`;
-  bindTideHover();
   renderMap();
+}
+
+/* スポット詳細画面: 選択日の詳細 + 週間コンディション評価 + 潮位・3時間ごと */
+function spotDetailPage(spot) {
+  const sd = state.data.spots[spot.id];
+  const d = sd.daily[state.dayIdx];
+  if (!d) return '';
+  const colorVar = sizeColorVar(d.maxH);
+  const arrowRot = d.swellDir != null ? (d.swellDir + 180) % 360 : 0;
+  const windHtml = (label, wv, wq) => wv
+    ? `<span class="k">${label}</span> ${dir16(wv.dir)} ${fmt1(wv.speed)}m/s <span class="wtag ${wq.cls}">${wq.label}</span>`
+    : `<span class="k">${label}</span> —`;
+  const tideHtml = type => {
+    const list = d.tides.filter(t => t.type === type);
+    return list.length ? list.map(t => `<b>${t.time}</b>`).join(' / ') : '—';
+  };
+  const weekRows = sd.daily.map((w, i) => {
+    const l = dayLabel(w.date, i);
+    return `<tr data-day="${i}" class="${i === state.dayIdx ? 'sel' : ''}">
+      <td>${l.head} ${l.sub}</td>
+      <td><span class="cond ${w.cond.cls}" style="font-size:.76rem;padding:0 7px">${w.cond.sym} ${w.cond.text}</span></td>
+      <td>${sizeLabel(w.maxH)} <span class="k">${fmt1(w.maxH)}m</span></td>
+      <td>${w.swellDir != null ? dir16(w.swellDir) : '—'} ${fmt1(w.swellH)}m</td>
+      <td>${fmt1(w.period)}s</td>
+      <td>${w.am ? `${dir16(w.am.dir)} ${fmt1(w.am.speed)}m/s <span class="wtag ${w.amQ.cls}">${w.amQ.label}</span>` : '—'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="card detail-page">
+    <div class="view-bar">
+      <button class="btn" data-back>← 一覧へ</button>
+      <h2 class="spot-name" style="font-size:1.2rem">${esc(spot.name)}</h2>
+      <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
+    </div>
+    <div class="size-row" style="margin-top:12px">
+      <span class="size-badge" style="border-left-color: var(${colorVar})">${sizeLabel(d.maxH)}
+        <span class="size-m">${fmt1(d.maxH)}m</span></span>
+      <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
+    </div>
+    ${d.maxH < 0.15 ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    <div class="fact-grid" style="max-width:560px">
+      <div class="fact"><span class="k">うねり</span>
+        ${d.swellDir != null ? `<span class="arrow" style="display:inline-block;transform:rotate(${arrowRot}deg)">↑</span> <b>${dir16(d.swellDir)}</b>から` : '—'}</div>
+      <div class="fact"><span class="k">うねり高</span> <b>${fmt1(d.swellH)}</b>m</div>
+      <div class="fact"><span class="k">周期</span> <b>${fmt1(d.period)}</b>秒</div>
+      <div class="fact"><span class="k">波数</span> <b>${d.wc.label}</b>${d.wc.hint ? `<span class="k">${d.wc.hint}</span>` : ''}</div>
+    </div>
+    <div class="windline">
+      <span>${windHtml('午前', d.am, d.amQ)}</span><span>${windHtml('午後', d.pm, d.pmQ)}</span>
+    </div>
+    <div class="tideline">
+      <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
+    </div>
+    <h3 class="sec-h">週間コンディション（風・波浪予報から評価。行をタップで日付切替）</h3>
+    <div class="table-wrap"><table class="hourly week">
+      <thead><tr><th>日</th><th>評価</th><th>サイズ</th><th>うねり</th><th>周期</th><th>風（午前）</th></tr></thead>
+      <tbody>${weekRows}</tbody>
+    </table></div>
+    ${detailHtml(spot, sd)}
+  </div>`;
 }
 
 function spotCard(spot) {
@@ -714,10 +787,8 @@ function spotCard(spot) {
     if (!list.length) return '—';
     return list.map(t => `<b>${t.time}</b>`).join(' / ');
   };
-  const expanded = state.expanded.has(spot.id);
-
   return `<div class="card" data-spot="${spot.id}">
-    <div class="spot-head">
+    <div class="spot-head" data-detail="${spot.id}">
       <h2 class="spot-name">${esc(spot.name)}</h2>
       <span class="spot-region">${esc(spot.pref)}｜${esc(spot.region)}</span>
     </div>
@@ -741,14 +812,18 @@ function spotCard(spot) {
       <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
     </div>
     <div class="weekbars">${weekBarsSvg(sd.daily)}</div>
-    <button class="expand-btn" data-expand="${spot.id}">${expanded ? '▲ 閉じる' : '▼ 潮位グラフ・3時間ごとの詳細'}</button>
-    ${expanded ? detailHtml(spot, sd) : ''}
+    <button class="expand-btn" data-detail="${spot.id}">▶ 詳細ページ（週間評価・潮位グラフ・3時間ごと）</button>
   </div>`;
 }
 
-/* 週間波高ミニバー（単一シリーズ・青、選択日を濃色で強調） */
+/* 週間波高ミニバー（単一シリーズ・青、選択日を濃色で強調）。
+   上段に各日のコンディション評価(◎○△▽×)を表示 */
+const COND_COLOR = {
+  'c-best': 'var(--good)', 'c-good': 'var(--accent)', 'c-mid': 'var(--mid)',
+  'c-poor': 'var(--poor)', 'c-bad': 'var(--bad)',
+};
 function weekBarsSvg(daily) {
-  const W = 320, H = 62, top = 14, bottom = 12;
+  const W = 320, H = 76, top = 28, bottom = 12;
   const plotH = H - top - bottom;
   const maxScale = Math.max(1.0, ...daily.map(d => d.maxH));
   const bw = 18, gap = (W - daily.length * bw) / daily.length;
@@ -759,13 +834,15 @@ function weekBarsSvg(daily) {
     const sel = i === state.dayIdx;
     const l = dayLabel(d.date, i);
     return `
+      <text x="${x + bw / 2}" y="11" text-anchor="middle" style="font-size:11px;font-weight:700"
+        fill="${COND_COLOR[d.cond.cls]}">${d.cond.sym}</text>
       <rect class="bar" data-day="${i}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="3"
         fill="${sel ? 'var(--accent-deep)' : 'var(--accent)'}" opacity="${sel ? 1 : 0.55}">
-        <title>${l.head} ${l.sub}: ${fmt1(d.maxH)}m</title></rect>
+        <title>${l.head} ${l.sub}: ${fmt1(d.maxH)}m ${d.cond.sym}${d.cond.text}</title></rect>
       ${sel ? `<text class="val" x="${x + bw / 2}" y="${y - 3}" text-anchor="middle">${fmt1(d.maxH)}</text>` : ''}
       <text x="${x + bw / 2}" y="${H - 2}" text-anchor="middle">${i === 0 ? '今日' : l.sub}</text>`;
   }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="週間波高(m)">
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="週間波高(m)と評価">
     <line x1="0" y1="${top + plotH}" x2="${W}" y2="${top + plotH}" stroke="var(--baseline)" stroke-width="1"/>
     ${bars}</svg>`;
 }
@@ -883,20 +960,19 @@ async function load(force) {
 /* ===== イベント（委譲） ===== */
 document.addEventListener('click', ev => {
   const jump = ev.target.closest('[data-jump]');
-  if (jump) { jumpToSpot(jump.dataset.jump); return; }
+  if (jump) { openSpot(jump.dataset.jump); return; }
+  const detail = ev.target.closest('[data-detail]');
+  if (detail) { openSpot(detail.dataset.detail); return; }
+  const back = ev.target.closest('[data-back]');
+  if (back) { location.hash = ''; return; }
   const region = ev.target.closest('[data-region]');
   if (region) { state.region = region.dataset.region; render(); return; }
   const day = ev.target.closest('[data-day]');
   if (day) { state.dayIdx = +day.dataset.day; render(); return; }
-  const ex = ev.target.closest('[data-expand]');
-  if (ex) {
-    const id = ex.dataset.expand;
-    state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id);
-    render(); return;
-  }
 });
 document.getElementById('refreshBtn').addEventListener('click', () => load(true));
 
+state.spotView = spotFromHash();
 load(false);
 </script>
 </body>
