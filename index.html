@@ -125,6 +125,30 @@
     color: var(--accent);
     background: var(--accent-soft);
   }
+  .preset-btn.preset-add {
+    border-style: dashed;
+    color: var(--text-sub);
+    font-weight: 500;
+  }
+  .presets.editing .preset-btn:not(.preset-add) {
+    border-color: var(--accent);
+    padding-right: 8px;
+  }
+  .preset-del {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--danger);
+    font-weight: 800;
+    padding: 0 4px;
+  }
+  .presets-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .presets-head button {
+    background: transparent; border: none; color: var(--accent);
+    font-size: .8rem; font-weight: 600; padding: 0 4px;
+  }
 
   /* 進行中バナー */
   #runningBanner {
@@ -361,7 +385,10 @@
   <!-- 新規記録 -->
   <div class="card">
     <h2>記録する</h2>
-    <label>よく使う行動(タップですぐ開始)</label>
+    <div class="presets-head">
+      <label style="margin:0">よく使う行動(タップですぐ開始)</label>
+      <button id="presetEditToggle">編集</button>
+    </div>
     <div class="presets" id="presets"></div>
     <div class="row">
       <div style="flex:2">
@@ -512,6 +539,31 @@
   </div>
 </dialog>
 
+<!-- ボタン追加/編集ダイアログ -->
+<dialog id="presetDialog">
+  <h2 style="margin-top:0" id="presetDialogTitle">ボタンを追加</h2>
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div class="row">
+      <div style="flex:0 0 90px; min-width:90px">
+        <label for="presetIcon">絵文字(任意)</label>
+        <input type="text" id="presetIcon" placeholder="🎾" maxlength="4">
+      </div>
+      <div>
+        <label for="presetName">行動名</label>
+        <input type="text" id="presetName" placeholder="例: テニス">
+      </div>
+    </div>
+    <div>
+      <label for="presetCat">カテゴリ(任意)</label>
+      <input type="text" id="presetCat" placeholder="例: 運動" list="catSuggest">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="presetSaveBtn">保存</button>
+      <button class="secondary" id="presetCancelBtn">キャンセル</button>
+    </div>
+  </div>
+</dialog>
+
 <div id="toast"></div>
 
 <script>
@@ -583,8 +635,9 @@
 
   const running = () => entries.find(e => e.end === null);
 
-  // よく使う行動(ワンタップで開始)
-  const PRESETS = [
+  // よく使う行動(ワンタップで開始)。構成は localStorage に保存され、画面から追加・編集できる
+  const PRESETS_KEY = 'timelogger.presets.v1';
+  const DEFAULT_PRESETS = [
     { icon: '🚃', name: '移動', cat: '移動' },
     { icon: '🍽️', name: '食事', cat: '生活' },
     { icon: '🚶', name: 'ウォーキング', cat: '運動' },
@@ -596,6 +649,18 @@
     { icon: '✏️', name: '勉強', cat: '勉強' },
     { icon: '💼', name: '仕事', cat: '仕事' },
   ];
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (!raw) return [...DEFAULT_PRESETS];
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.filter(p => p && p.name) : [...DEFAULT_PRESETS];
+    } catch { return [...DEFAULT_PRESETS]; }
+  }
+  let presets = loadPresets();
+  let presetEditing = false;      // 編集モード
+  let presetEditIndex = null;     // null = 新規追加
+  function savePresets() { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }
 
   // ---------- 記録の開始/終了 ----------
   function startActivity(activity, category) {
@@ -803,8 +868,35 @@
   }
 
   function renderPresets() {
-    $('presets').innerHTML = PRESETS.map((p, i) =>
-      `<button class="preset-btn" data-preset="${i}">${p.icon} ${p.name}</button>`).join('');
+    const box = $('presets');
+    box.classList.toggle('editing', presetEditing);
+    $('presetEditToggle').textContent = presetEditing ? '完了' : '編集';
+    box.innerHTML = presets.map((p, i) =>
+      `<button class="preset-btn" data-preset="${i}">${p.icon ? escapeHtml(p.icon) + ' ' : ''}${escapeHtml(p.name)}${
+        presetEditing ? '<span class="preset-del" data-del="' + i + '" title="削除">×</span>' : ''
+      }</button>`).join('') +
+      `<button class="preset-btn preset-add" id="presetAddBtn">+ ボタンを追加</button>`;
+  }
+
+  function openPresetDialog(index) {
+    presetEditIndex = index;
+    const p = index === null ? { icon: '', name: '', cat: '' } : presets[index];
+    $('presetDialogTitle').textContent = index === null ? 'ボタンを追加' : 'ボタンを編集';
+    $('presetIcon').value = p.icon || '';
+    $('presetName').value = p.name;
+    $('presetCat').value = p.cat || '';
+    $('presetDialog').showModal();
+  }
+  function savePresetDialog() {
+    const name = $('presetName').value.trim();
+    if (!name) { toast('行動名を入力してください'); $('presetName').focus(); return; }
+    const p = { icon: $('presetIcon').value.trim(), name, cat: $('presetCat').value.trim() };
+    if (presetEditIndex === null) presets.push(p);
+    else presets[presetEditIndex] = p;
+    savePresets();
+    $('presetDialog').close();
+    renderPresets();
+    toast(presetEditIndex === null ? `「${name}」ボタンを追加しました` : '保存しました');
   }
 
   function renderToday() {
@@ -1007,11 +1099,31 @@
 
   // よく使う行動ボタン
   $('presets').addEventListener('click', ev => {
+    const del = ev.target.closest('[data-del]');
+    if (del) {
+      const i = Number(del.dataset.del);
+      if (confirm(`「${presets[i].name}」ボタンを削除しますか?(過去の記録は消えません)`)) {
+        presets.splice(i, 1);
+        savePresets();
+        renderPresets();
+      }
+      return;
+    }
+    if (ev.target.closest('#presetAddBtn')) { openPresetDialog(null); return; }
     const btn = ev.target.closest('[data-preset]');
     if (!btn) return;
-    const p = PRESETS[Number(btn.dataset.preset)];
+    const i = Number(btn.dataset.preset);
+    if (presetEditing) { openPresetDialog(i); return; }
+    const p = presets[i];
     startActivity(p.name, p.cat);
   });
+  $('presetEditToggle').addEventListener('click', () => {
+    presetEditing = !presetEditing;
+    renderPresets();
+  });
+  $('presetSaveBtn').addEventListener('click', savePresetDialog);
+  $('presetCancelBtn').addEventListener('click', () => $('presetDialog').close());
+  $('presetName').addEventListener('keydown', ev => { if (ev.key === 'Enter') savePresetDialog(); });
 
   // 進行中の記録へのメモ(入力するたびに保存)
   $('runningNote').addEventListener('input', ev => {
