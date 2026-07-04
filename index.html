@@ -110,6 +110,22 @@
   button.small { padding: 4px 10px; font-size: .8rem; font-weight: 500; }
   button:disabled { opacity: .5; cursor: not-allowed; }
 
+  /* よく使う行動ボタン */
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 600; font-size: .9rem;
+    padding: 8px 14px;
+    border-radius: 999px;
+  }
+  .preset-btn:hover, .preset-btn:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
   /* 進行中バナー */
   #runningBanner {
     display: none;
@@ -133,6 +149,15 @@
   #runningInfo { flex: 1; min-width: 150px; }
   #runningActivity { font-weight: 700; }
   #runningElapsed { font-variant-numeric: tabular-nums; color: var(--text-sub); font-size: .9rem; }
+  .running-note { flex-basis: 100%; }
+  .running-note input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: .9rem;
+  }
 
   /* タブ */
   .tabs { display: flex; gap: 4px; margin: 16px 0 4px; border-bottom: 1px solid var(--border); }
@@ -328,11 +353,16 @@
       <div id="runningElapsed"></div>
     </div>
     <button id="stopBtn">■ 終了する</button>
+    <div class="running-note">
+      <input type="text" id="runningNote" placeholder="✏️ メモを追加(この記録に保存されます)">
+    </div>
   </div>
 
   <!-- 新規記録 -->
   <div class="card">
     <h2>記録する</h2>
+    <label>よく使う行動(タップですぐ開始)</label>
+    <div class="presets" id="presets"></div>
     <div class="row">
       <div style="flex:2">
         <label for="actInput">何をする?(していた?)</label>
@@ -553,24 +583,42 @@
 
   const running = () => entries.find(e => e.end === null);
 
+  // よく使う行動(ワンタップで開始)
+  const PRESETS = [
+    { icon: '🚃', name: '移動', cat: '移動' },
+    { icon: '🍽️', name: '食事', cat: '生活' },
+    { icon: '🚶', name: 'ウォーキング', cat: '運動' },
+    { icon: '🏄', name: 'サーフィン', cat: '運動' },
+    { icon: '🏐', name: 'バレーボール', cat: '運動' },
+    { icon: '🍻', name: '飲み', cat: '交際' },
+    { icon: '🚿', name: 'シャワー', cat: '生活' },
+    { icon: '📚', name: '読書', cat: '趣味' },
+    { icon: '✏️', name: '勉強', cat: '勉強' },
+    { icon: '💼', name: '仕事', cat: '仕事' },
+  ];
+
   // ---------- 記録の開始/終了 ----------
-  function startEntry() {
-    const activity = $('actInput').value.trim();
-    if (!activity) { toast('行動名を入力してください'); $('actInput').focus(); return; }
+  function startActivity(activity, category) {
     const r = running();
     if (r) stopEntry(); // 前の記録を自動終了
     entries.push({
       id: uid(),
       activity,
-      category: $('catInput').value.trim(),
+      category,
       start: new Date().toISOString(),
       end: null,
       note: ''
     });
     save();
-    $('actInput').value = ''; $('catInput').value = '';
     toast(`「${activity}」を開始しました`);
     renderAll();
+    $('runningNote').focus({ preventScroll: true });
+  }
+  function startEntry() {
+    const activity = $('actInput').value.trim();
+    if (!activity) { toast('行動名を入力してください'); $('actInput').focus(); return; }
+    startActivity(activity, $('catInput').value.trim());
+    $('actInput').value = ''; $('catInput').value = '';
   }
   function stopEntry() {
     const r = running();
@@ -733,6 +781,7 @@
     return `<div class="tl"><div class="tl-track">${grid}${blocks}</div><div class="tl-axis">${axis}</div></div>`;
   }
 
+  let shownRunningId = null;
   function renderRunning() {
     const r = running();
     const banner = $('runningBanner');
@@ -743,7 +792,19 @@
       catEl.textContent = r.category || '';
       catEl.style.display = r.category ? '' : 'none';
       $('runningElapsed').textContent = fmtElapsed(Date.now() - new Date(r.start)) + '(' + fmtTime(r.start) + ' 開始)';
+      // 別の記録に切り替わったときだけメモ欄を入れ替える(入力中は触らない)
+      if (shownRunningId !== r.id) {
+        shownRunningId = r.id;
+        $('runningNote').value = r.note || '';
+      }
+    } else {
+      shownRunningId = null;
     }
+  }
+
+  function renderPresets() {
+    $('presets').innerHTML = PRESETS.map((p, i) =>
+      `<button class="preset-btn" data-preset="${i}">${p.icon} ${p.name}</button>`).join('');
   }
 
   function renderToday() {
@@ -944,6 +1005,23 @@
   $('stopBtn').addEventListener('click', stopEntry);
   $('actInput').addEventListener('keydown', e => { if (e.key === 'Enter') startEntry(); });
 
+  // よく使う行動ボタン
+  $('presets').addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-preset]');
+    if (!btn) return;
+    const p = PRESETS[Number(btn.dataset.preset)];
+    startActivity(p.name, p.cat);
+  });
+
+  // 進行中の記録へのメモ(入力するたびに保存)
+  $('runningNote').addEventListener('input', ev => {
+    const r = running();
+    if (r) { r.note = ev.target.value.trim(); save(); }
+  });
+  $('runningNote').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter') { ev.target.blur(); toast('メモを保存しました'); }
+  });
+
   $('manualBtn').addEventListener('click', () => {
     const form = $('manualForm');
     const show = form.style.display === 'none';
@@ -1039,6 +1117,7 @@
     if (todayKey() !== lastDay) { lastDay = todayKey(); renderAll(); }
   }, 30000);
 
+  renderPresets();
   renderAll();
 })();
 </script>
