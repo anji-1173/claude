@@ -210,8 +210,12 @@
     display: inline-block; width: 10px; height: 10px; border-radius: 50%;
     margin-right: 4px; vertical-align: -1px; border: 1px solid var(--dot-stroke);
   }
-  @keyframes flashCard { from { outline-color: var(--accent); } to { outline-color: transparent; } }
-  .card.flash { outline: 3px solid transparent; animation: flashCard 1.8s ease forwards; }
+  .surge-note {
+    margin: 6px 0; padding: 4px 10px; border-radius: 8px; font-size: .78rem;
+    background: var(--poor-soft); color: var(--poor); font-weight: 600;
+  }
+  .surge-note a { color: inherit; }
+  .surge-tag { color: var(--poor); font-size: .72rem; font-weight: 700; white-space: nowrap; }
 
   .notice {
     margin-top: 16px; font-size: .74rem; color: var(--text-sub);
@@ -256,7 +260,10 @@
     モモ〜コシ以下のサイズは風が良くても▽止まり、スネ以下やクローズ級は×になります。<br>
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
-    潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。
+    潮位は平均海面（MSL）基準、風向は「吹いてくる方角」です。データは1時間キャッシュされます。<br>
+    ※ <b>台風について</b>: 波浪モデルは台風を含む風の予報にもとづくため台風うねりも反映されますが、予報期間（8日）より先や進路変更は反映されません。
+    うねりが急に上がる日には <span class="surge-tag">⚠急上昇</span> を表示します。台風接近時は必ず
+    <a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁の台風情報</a>・海上警報を確認してください。
   </div>
 </div>
 
@@ -415,9 +422,9 @@ async function fetchAll(force) {
     const lons = SPOTS.map(s => s.lon).join(',');
     const mUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lats}&longitude=${lons}`
       + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,sea_level_height_msl`
-      + `&timezone=Asia%2FTokyo&forecast_days=7&cell_selection=sea`;
+      + `&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`;
     const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
-      + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=7`;
+      + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=8`;
     const [mRes, wRes] = await Promise.all([fetch(mUrl), fetch(wUrl)]);
     if (!mRes.ok || !wRes.ok) throw new Error(`API error (marine:${mRes.status} wind:${wRes.status})`);
     marine = await mRes.json();
@@ -439,7 +446,7 @@ async function fetchAll(force) {
 function processSpot(spot, m, w) {
   const h = m.hourly;
   const wh = w.hourly;
-  const dates = [...new Set(h.time.map(t => t.slice(0, 10)))].slice(0, 7);
+  const dates = [...new Set(h.time.map(t => t.slice(0, 10)))].slice(0, 8);
   const idxByDate = {};
   h.time.forEach((t, i) => {
     const d = t.slice(0, 10);
@@ -448,7 +455,7 @@ function processSpot(spot, m, w) {
 
   const tides = extractTides(h.time, h.sea_level_height_msl);
 
-  const daily = dates.map(date => {
+  let daily = dates.map(date => {
     const idx = idxByDate[date];
     const day = idx.filter(i => { const hr = +h.time[i].slice(11, 13); return hr >= 6 && hr <= 18; });
     const use = day.length ? day : idx;
@@ -502,6 +509,14 @@ function processSpot(spot, m, w) {
     };
   });
 
+  // うねり急上昇の検出: 前日比+0.6m以上かつうねり1.0m以上、または周期12秒以上の長周期うねり
+  // (台風・遠方の低気圧からのうねりが波浪モデルに現れたサイン)
+  daily = daily.map((d, i) => ({
+    ...d,
+    surge: (i > 0 && d.swellH - daily[i - 1].swellH >= 0.6 && d.swellH >= 1.0)
+      || (d.period >= 12 && d.swellH >= 0.8),
+  }));
+
   // 詳細表示用: 3時間ごとの生データ
   const hourlyByDate = {};
   dates.forEach(date => {
@@ -553,7 +568,7 @@ function extractTides(times, levels) {
 function demoData() {
   const start = new Date(); start.setHours(0, 0, 0, 0);
   const times = [];
-  for (let d = 0; d < 7; d++) for (let hr = 0; hr < 24; hr++) {
+  for (let d = 0; d < 8; d++) for (let hr = 0; hr < 24; hr++) {
     const t = new Date(start); t.setDate(t.getDate() + d); t.setHours(hr);
     times.push(`${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}T${pad2(hr)}:00`);
   }
@@ -566,7 +581,9 @@ function demoData() {
     const seasonal = s.region === '沖縄' ? 0.4 : 1;
     const seed = Math.round((s.lat + s.lon) * 5) / 5; // 約0.1度単位で丸め
     const base = 0.3 + ((Math.round(seed * 5) * 7) % 17) / 10;
-    const wave = mk(i => Math.max(0.05, seasonal * (base + 0.6 * Math.sin(i / 21 + seed) + 0.25 * Math.sin(i / 7 + seed * 2))));
+    // 台風接近の模擬: 沖縄は期間終盤にうねりが立ち上がる(急上昇アラートのデモ)
+    const typhoon = i => s.region === '沖縄' ? Math.max(0, i / 24 - 5.5) * 0.55 : 0;
+    const wave = mk(i => Math.max(0.05, seasonal * (base + 0.6 * Math.sin(i / 21 + seed) + 0.25 * Math.sin(i / 7 + seed * 2)) + typhoon(i)));
     const swellD = mk(i => (s.facing + 20 * Math.sin(i / 30 + seed) + 360) % 360);
     marine.push({ hourly: {
       time: times,
@@ -729,7 +746,7 @@ function spotDetailPage(spot) {
       <td>${l.head} ${l.sub}</td>
       <td><span class="cond ${w.cond.cls}" style="font-size:.76rem;padding:0 7px">${w.cond.sym} ${w.cond.text}</span></td>
       <td>${sizeLabel(w.maxH)} <span class="k">${fmt1(w.maxH)}m</span></td>
-      <td>${w.swellDir != null ? dir16(w.swellDir) : '—'} ${fmt1(w.swellH)}m</td>
+      <td>${w.swellDir != null ? dir16(w.swellDir) : '—'} ${fmt1(w.swellH)}m${w.surge ? ' <span class="surge-tag">⚠急上昇</span>' : ''}</td>
       <td>${fmt1(w.period)}s</td>
       <td>${w.am ? `${dir16(w.am.dir)} ${fmt1(w.am.speed)}m/s <span class="wtag ${w.amQ.cls}">${w.amQ.label}</span>` : '—'}</td>
     </tr>`;
@@ -746,6 +763,7 @@ function spotDetailPage(spot) {
       <span class="cond ${d.cond.cls}" title="サイズ・風向・周期からの目安">${d.cond.sym} ${d.cond.text}</span>
     </div>
     ${d.maxH < 0.15 ? '<div class="flat-note">ほぼフラットです</div>' : ''}
+    ${d.surge ? '<div class="surge-note">⚠ うねりが急上昇する予想です（台風・低気圧うねりの可能性）。最新の<a href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noopener">気象庁 台風情報</a>も確認してください</div>' : ''}
     <div class="fact-grid" style="max-width:560px">
       <div class="fact"><span class="k">うねり</span>
         ${d.swellDir != null ? `<span class="arrow" style="display:inline-block;transform:rotate(${arrowRot}deg)">↑</span> <b>${dir16(d.swellDir)}</b>から` : '—'}</div>
@@ -811,6 +829,7 @@ function spotCard(spot) {
     <div class="tideline">
       <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
     </div>
+    ${sd.daily.some(w => w.surge) ? '<div class="surge-note">⚠ 期間中にうねりの急上昇予想あり（台風・低気圧うねりの可能性）</div>' : ''}
     <div class="weekbars">${weekBarsSvg(sd.daily)}</div>
     <button class="expand-btn" data-detail="${spot.id}">▶ 詳細ページ（週間評価・潮位グラフ・3時間ごと）</button>
   </div>`;
