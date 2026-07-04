@@ -1,0 +1,16 @@
+{
+  "name": "タイムロガー",
+  "short_name": "タイムロガー",
+  "description": "毎日の行動記録を履歴として残せる自分専用のタイムロガー",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b2a6b",
+  "theme_color": "#2456d6",
+  "icons": [
+    { "src": "tl-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "tl-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
