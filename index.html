@@ -150,29 +150,34 @@
     font-size: .8rem; font-weight: 600; padding: 0 4px;
   }
 
-  /* 進行中バナー */
+  /* 進行中バナー(複数の記録を並行して表示) */
   #runningBanner {
     display: none;
     background: var(--running-soft);
     border: 1px solid var(--running);
     border-radius: 12px;
-    padding: 14px 16px;
+    padding: 4px 16px;
     margin: 12px 0;
+  }
+  #runningBanner.active { display: block; }
+  .running-item {
+    display: flex;
     align-items: center;
     gap: 12px;
     flex-wrap: wrap;
+    padding: 10px 0;
   }
-  #runningBanner.active { display: flex; }
-  #runningBanner .pulse {
+  .running-item + .running-item { border-top: 1px dashed var(--running); }
+  .running-item .pulse {
     width: 10px; height: 10px; border-radius: 50%;
     background: var(--running);
     animation: pulse 1.5s infinite;
     flex-shrink: 0;
   }
   @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
-  #runningInfo { flex: 1; min-width: 150px; }
-  #runningActivity { font-weight: 700; }
-  #runningElapsed { font-variant-numeric: tabular-nums; color: var(--text-sub); font-size: .9rem; }
+  .running-info { flex: 1; min-width: 150px; }
+  .running-info .r-act { font-weight: 700; }
+  .running-info .r-elapsed { font-variant-numeric: tabular-nums; color: var(--text-sub); font-size: .9rem; }
   .running-note { flex-basis: 100%; }
   .running-note input {
     width: 100%;
@@ -369,17 +374,9 @@
     <div id="clock"></div>
   </header>
 
-  <!-- 進行中 -->
+  <!-- 進行中(複数並行OK) -->
   <div id="runningBanner">
-    <div class="pulse"></div>
-    <div id="runningInfo">
-      <div><span id="runningActivity"></span><span class="tag" id="runningCategory"></span></div>
-      <div id="runningElapsed"></div>
-    </div>
-    <button id="stopBtn">■ 終了する</button>
-    <div class="running-note">
-      <input type="text" id="runningNote" placeholder="✏️ メモを追加(この記録に保存されます)">
-    </div>
+    <div id="runningList"></div>
   </div>
 
   <!-- 新規記録 -->
@@ -633,7 +630,9 @@
     toast._t = setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  const running = () => entries.find(e => e.end === null);
+  // 進行中の記録(複数並行できる)。開始が古い順に表示する
+  const runningAll = () => entries.filter(e => e.end === null)
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
 
   // よく使う行動(ワンタップで開始)。構成は localStorage に保存され、画面から追加・編集できる
   const PRESETS_KEY = 'timelogger.presets.v1';
@@ -664,10 +663,9 @@
 
   // ---------- 記録の開始/終了 ----------
   function startActivity(activity, category) {
-    const r = running();
-    if (r) stopEntry(); // 前の記録を自動終了
+    const id = uid();
     entries.push({
-      id: uid(),
+      id,
       activity,
       category,
       start: new Date().toISOString(),
@@ -677,7 +675,8 @@
     save();
     toast(`「${activity}」を開始しました`);
     renderAll();
-    $('runningNote').focus({ preventScroll: true });
+    const noteInput = document.querySelector(`#runningList input[data-note="${id}"]`);
+    if (noteInput) noteInput.focus({ preventScroll: true });
   }
   function startEntry() {
     const activity = $('actInput').value.trim();
@@ -685,8 +684,8 @@
     startActivity(activity, $('catInput').value.trim());
     $('actInput').value = ''; $('catInput').value = '';
   }
-  function stopEntry() {
-    const r = running();
+  function stopEntry(id) {
+    const r = entries.find(e => e.id === id && e.end === null);
     if (!r) return;
     r.end = new Date().toISOString();
     save();
@@ -846,24 +845,32 @@
     return `<div class="tl"><div class="tl-track">${grid}${blocks}</div><div class="tl-axis">${axis}</div></div>`;
   }
 
-  let shownRunningId = null;
+  let shownRunningIds = '';
   function renderRunning() {
-    const r = running();
+    const rs = runningAll();
     const banner = $('runningBanner');
-    banner.classList.toggle('active', !!r);
-    if (r) {
-      $('runningActivity').textContent = r.activity;
-      const catEl = $('runningCategory');
-      catEl.textContent = r.category || '';
-      catEl.style.display = r.category ? '' : 'none';
-      $('runningElapsed').textContent = fmtElapsed(Date.now() - new Date(r.start)) + '(' + fmtTime(r.start) + ' 開始)';
-      // 別の記録に切り替わったときだけメモ欄を入れ替える(入力中は触らない)
-      if (shownRunningId !== r.id) {
-        shownRunningId = r.id;
-        $('runningNote').value = r.note || '';
-      }
-    } else {
-      shownRunningId = null;
+    banner.classList.toggle('active', rs.length > 0);
+    // 進行中の顔ぶれが変わったときだけDOMを作り直す(メモ入力中に消えないように)。
+    // 経過時間の数字だけは毎回その場で書き換える
+    const sig = rs.map(r => r.id).join(',');
+    if (sig !== shownRunningIds) {
+      shownRunningIds = sig;
+      $('runningList').innerHTML = rs.map(r => `
+        <div class="running-item" data-id="${r.id}">
+          <div class="pulse"></div>
+          <div class="running-info">
+            <div><span class="r-act">${escapeHtml(r.activity)}</span>${r.category ? `<span class="tag">${escapeHtml(r.category)}</span>` : ''}</div>
+            <div class="r-elapsed" data-elapsed="${r.id}"></div>
+          </div>
+          <button data-stop="${r.id}">■ 終了</button>
+          <div class="running-note">
+            <input type="text" data-note="${r.id}" value="${escapeHtml(r.note || '')}" placeholder="✏️ メモを追加(この記録に保存されます)">
+          </div>
+        </div>`).join('');
+    }
+    for (const r of rs) {
+      const el = banner.querySelector(`[data-elapsed="${r.id}"]`);
+      if (el) el.textContent = fmtElapsed(Date.now() - new Date(r.start)) + '(' + fmtTime(r.start) + ' 開始)';
     }
   }
 
@@ -1094,8 +1101,25 @@
 
   // ---------- イベント ----------
   $('startBtn').addEventListener('click', startEntry);
-  $('stopBtn').addEventListener('click', stopEntry);
   $('actInput').addEventListener('keydown', e => { if (e.key === 'Enter') startEntry(); });
+
+  // 進行中リスト: 個別の終了ボタンとメモ入力
+  $('runningBanner').addEventListener('click', ev => {
+    const stopBtn = ev.target.closest('[data-stop]');
+    if (stopBtn) stopEntry(stopBtn.dataset.stop);
+  });
+  $('runningBanner').addEventListener('input', ev => {
+    const noteInput = ev.target.closest('[data-note]');
+    if (!noteInput) return;
+    const r = entries.find(e => e.id === noteInput.dataset.note);
+    if (r) { r.note = noteInput.value.trim(); save(); }
+  });
+  $('runningBanner').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && ev.target.closest('[data-note]')) {
+      ev.target.blur();
+      toast('メモを保存しました');
+    }
+  });
 
   // よく使う行動ボタン
   $('presets').addEventListener('click', ev => {
@@ -1124,15 +1148,6 @@
   $('presetSaveBtn').addEventListener('click', savePresetDialog);
   $('presetCancelBtn').addEventListener('click', () => $('presetDialog').close());
   $('presetName').addEventListener('keydown', ev => { if (ev.key === 'Enter') savePresetDialog(); });
-
-  // 進行中の記録へのメモ(入力するたびに保存)
-  $('runningNote').addEventListener('input', ev => {
-    const r = running();
-    if (r) { r.note = ev.target.value.trim(); save(); }
-  });
-  $('runningNote').addEventListener('keydown', ev => {
-    if (ev.key === 'Enter') { ev.target.blur(); toast('メモを保存しました'); }
-  });
 
   $('manualBtn').addEventListener('click', () => {
     const form = $('manualForm');
@@ -1220,7 +1235,7 @@
   setInterval(() => {
     const d = new Date();
     $('clock').textContent = `${fmtDateJa(dateKey(d.toISOString()))} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    if (running()) renderRunning();
+    if (runningAll().length) renderRunning();
   }, 1000);
 
   // 日付が変わったら「今日」を更新
