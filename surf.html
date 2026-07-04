@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>全国波情報</title>
 <meta name="description" content="全国主要サーフスポットの波情報。波のサイズ・波数・うねりの向き・周期・風・満潮干潮時間を毎日チェック。">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1c5cab">
+<meta name="apple-mobile-web-app-title" content="波情報">
 <style>
   :root {
     --bg: #f6f7f9;
@@ -284,7 +289,7 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-05.1';
+const APP_VERSION = '2026-07-05.2';
 
 /* ===== スポット定義 =====
    facing: ビーチが海に向いている方角（度）。オフショア判定に使用
@@ -312,7 +317,7 @@ const SPOTS = [
   { id:'shizunami', name:'静波',          pref:'静岡',   region:'中部・東海',  lat:34.71, lon:138.28, facing:150, lbl:'r', mapDx:2, mapDy:-3 },
   { id:'omaezaki',  name:'御前崎',        pref:'静岡',   region:'中部・東海',  lat:34.60, lon:138.22, facing:145, lbl:'b', mapDx:-2, mapDy:3 },
   { id:'akabane',   name:'赤羽根',        pref:'愛知',   region:'中部・東海',  lat:34.60, lon:137.19, facing:175, lbl:'b' },
-  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190, lbl:'b' },
+  { id:'irago',     name:'伊良湖',        pref:'愛知',   region:'中部・東海',  lat:34.58, lon:137.02, facing:190, lbl:'b', dataLat:34.53, dataLon:136.99 },
   // 近畿・四国
   { id:'kounohama', name:'国府の浜',      pref:'三重',   region:'近畿・四国',  lat:34.42, lon:136.90, facing:100, lbl:'t' },
   { id:'isonoura',  name:'磯ノ浦',        pref:'和歌山', region:'近畿・四国',  lat:34.26, lon:135.08, facing:340, lbl:'l' },
@@ -324,9 +329,9 @@ const SPOTS = [
   { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州',        lat:31.86, lon:131.47, facing:100, lbl:'r' },
   { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州',        lat:33.66, lon:130.20, facing:350, lbl:'t' },
   // 沖縄
-  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3 },
-  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3 },
-  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b' },
+  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3, dataLat:26.36, dataLon:127.68 },
+  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3, dataLat:26.33, dataLon:127.68 },
+  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b', dataLat:26.03, dataLon:127.70 },
   // 日本海
   { id:'yunohama',  name:'湯野浜',        pref:'山形',   region:'日本海',      lat:38.77, lon:139.73, facing:290, lbl:'t' },
   { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
@@ -336,7 +341,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v3';
+const CACHE_KEY = 'surf-cache-v4';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -434,8 +439,10 @@ async function fetchAll(force) {
   if (DEMO) {
     ({ marine, wind } = demoData());
   } else {
-    const lats = SPOTS.map(s => s.lat).join(',');
-    const lons = SPOTS.map(s => s.lon).join(',');
+    // dataLat/dataLon: 波データを取得する沖側の海上点(狭い島・岬では表示位置のままだと
+    // 隣接する不適切な海セルを拾うことがあるため、明示的に沖へずらす)
+    const lats = SPOTS.map(s => s.dataLat != null ? s.dataLat : s.lat).join(',');
+    const lons = SPOTS.map(s => s.dataLon != null ? s.dataLon : s.lon).join(',');
     const mUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lats}&longitude=${lons}`
       + `&hourly=wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period,wind_wave_height,wind_wave_direction,sea_level_height_msl`
       + `&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`;
@@ -824,6 +831,11 @@ function spotDetailPage(spot) {
     <div class="tideline">
       <span class="k">満潮</span> ${tideHtml('満')}　<span class="k">干潮</span> ${tideHtml('干')}
     </div>
+    ${(() => {
+      if (sd.seaBase == null) return '';
+      const txt = refRangesText((sd.hourlyByDate[d.date] || {}).sea || [], sd.seaBase, TIDE_REF_CM);
+      return txt ? `<div class="tideline"><span class="k">潮位${TIDE_REF_CM}cm以上</span> <b>${txt}</b></div>` : '';
+    })()}
     <h3 class="sec-h">週間コンディション（風・波浪予報から評価。行をタップで日付切替）</h3>
     <div class="table-wrap"><table class="hourly week">
       <thead><tr><th>日</th><th>評価</th><th>サイズ</th><th>うねり</th><th>周期</th><th>風（午前）</th></tr></thead>
@@ -937,6 +949,34 @@ function detailHtml(spot, sd) {
 }
 
 const TIDE_REF_CM = 120; // リーフポイントのエントリー目安ライン
+
+/* 潮位が基準値をまたぐ時刻を毎時データの線形補間で求める */
+const fmtHourFrac = t => `${pad2(Math.floor(t))}:${pad2(Math.round((t % 1) * 60))}`;
+function tideCrossings(sea, base, ref) {
+  const pts = sea.filter(p => p.v != null).map(p => ({ hr: p.hr, cm: (p.v - base) * 100 }));
+  const cross = [];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    if ((a.cm - ref) * (b.cm - ref) < 0) {
+      cross.push({ t: a.hr + (ref - a.cm) / (b.cm - a.cm) * (b.hr - a.hr), rising: b.cm > a.cm });
+    }
+  }
+  return { pts, cross };
+}
+/* 「120cm以上の時間帯」テキスト(例: 04:12〜09:58、16:40〜) */
+function refRangesText(sea, base, ref) {
+  const { pts, cross } = tideCrossings(sea, base, ref);
+  if (!pts.length) return null;
+  if (!cross.length) return pts[0].cm >= ref ? `終日 ${ref}cm以上` : `終日 ${ref}cm未満`;
+  const parts = [];
+  let start = pts[0].cm >= ref ? '0:00' : null;
+  cross.forEach(c => {
+    if (c.rising) start = fmtHourFrac(c.t);
+    else { parts.push(`${start || '0:00'}〜${fmtHourFrac(c.t)}`); start = null; }
+  });
+  if (start != null) parts.push(`${start}〜`);
+  return parts.join('、');
+}
 function tideChartSvg(spotId, sd, d) {
   const sea = (sd.hourlyByDate[d.date] || {}).sea || [];
   const pts = sea.filter(p => p.v != null);
@@ -963,11 +1003,18 @@ function tideChartSvg(spotId, sd, d) {
     `<line x1="${fmt1(x(hr))}" y1="${top}" x2="${fmt1(x(hr))}" y2="${fmt1(y(lo))}" stroke="var(--grid-line)" stroke-width="1"/>
      <text class="tick" x="${fmt1(Math.max(12, x(hr)))}" y="${H - 4}" text-anchor="middle">${hr}時</text>`).join('');
   const refY = y(TIDE_REF_CM);
+  // 120cmをまたぐ時刻をライン上にマーク(上げ=線の上側、下げ=下側に時刻を表示)
+  const { cross } = tideCrossings(sea, sd.seaBase, TIDE_REF_CM);
+  const crossMarks = cross.map(c => `
+    <circle cx="${fmt1(x(c.t))}" cy="${fmt1(refY)}" r="2.6" fill="var(--poor)" stroke="var(--card)" stroke-width="1"/>
+    <text x="${fmt1(x(c.t))}" y="${fmt1(c.rising ? refY - 5 : refY + 13)}" text-anchor="middle"
+      style="font-size:8.5px;font-weight:700;fill:var(--poor)">${c.rising ? '↑' : '↓'}${fmtHourFrac(c.t)}</text>`).join('');
   const refLine = `
     <line x1="${padL}" y1="${fmt1(refY)}" x2="${W - padR}" y2="${fmt1(refY)}"
       stroke="var(--poor)" stroke-width="1.2" stroke-dasharray="5 4"/>
     <text x="${W - padR + 3}" y="${fmt1(refY + 3)}" style="font-size:9.5px;font-weight:700;fill:var(--poor)">${TIDE_REF_CM}cm</text>
-    <text x="${W - padR + 3}" y="${fmt1(y(0) + 3)}" class="tick">0cm</text>`;
+    <text x="${W - padR + 3}" y="${fmt1(y(0) + 3)}" class="tick">0cm</text>
+    ${crossMarks}`;
   return `<div class="tide-chart" data-tide="${spotId}">
     <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="潮位カーブ(${TIDE_REF_CM}cmライン付き)">
       ${ticks}
