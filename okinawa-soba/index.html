@@ -64,7 +64,17 @@ nav .brand .hanko{
   width:1.7rem;height:1.7rem;background:var(--red);color:#fff;
   font-size:.8rem;border-radius:4px;font-weight:700;
 }
-nav .links{margin-left:auto;display:flex;gap:1.2rem}
+nav .nav-search{
+  margin-left:auto;
+  background:var(--ink2);border:1px solid var(--line);border-radius:999px;
+  padding:.42rem 1rem;color:var(--text);font-size:.82rem;width:150px;
+  font-family:var(--sans);outline:none;transition:width .25s,border-color .2s;
+}
+nav .nav-search:focus{border-color:var(--gold);width:230px}
+nav .nav-search::placeholder{color:#5c6880}
+@media(max-width:700px){nav .nav-search{display:none}}
+nav .links{display:flex;gap:1.2rem}
+.result-count{color:var(--gold2);font-size:.8rem;letter-spacing:.05em;margin-left:.2rem}
 nav .links a{
   color:var(--muted);text-decoration:none;font-size:.85rem;letter-spacing:.08em;
   transition:color .2s;
@@ -503,6 +513,7 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
 
 <nav>
   <a class="brand" href="#" onclick="location.hash='';return false;"><span class="hanko">ア</span>沖縄そば巡りの旅</a>
+  <input class="nav-search" id="nav-search" type="search" placeholder="🔍 店名・地名・キーワード">
   <div class="links">
     <a href="#shops" onclick="location.hash='';setTimeout(()=>document.getElementById('shops').scrollIntoView(),50);return false;">お店一覧</a>
     <a href="#map-sec" onclick="location.hash='';setTimeout(()=>document.getElementById('map-sec').scrollIntoView(),50);return false;">マップ</a>
@@ -570,6 +581,7 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
     <button class="chip tagchip" data-tag="変わり種">変わり種</button>
     <button class="chip tagchip" data-tag="古民家">古民家</button>
     <input class="search" id="search" type="search" placeholder="店名・キーワードで検索">
+    <span class="result-count" id="result-count"></span>
   </div>
 
   <div class="grid" id="grid"></div>
@@ -784,7 +796,8 @@ function render(){
     if(activeRegion!=="all" && s.region!==activeRegion) return false;
     if(activeTags.size && ![...activeTags].every(t=>s.tags.includes(t))) return false;
     if(query){
-      const hay = (s.name+s.area+s.desc+s.tags.join()).toLowerCase();
+      const geo = SHOP_GEO[s.name];
+      const hay = (s.name+s.area+s.desc+s.tags.join()+(geo&&geo.addr?geo.addr:"")+((ARTICLES[s.name]||[]).join(""))).toLowerCase();
       if(!hay.includes(query)) return false;
     }
     return true;
@@ -808,6 +821,8 @@ function render(){
       </div>
     </article>`;}).join("")
     : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
+  const rc=document.getElementById("result-count");
+  if(rc) rc.textContent = items.length + "軒";
   grid.querySelectorAll("img.photo").forEach(img=>{
     img.addEventListener("error", ()=>{ img.remove(); });
   });
@@ -831,10 +846,25 @@ document.getElementById("region-filters").addEventListener("click", e=>{
   }
   render();
 });
-document.getElementById("search").addEventListener("input", e=>{
-  query = e.target.value.trim().toLowerCase();
+const searchBox = document.getElementById("search");
+const navSearch = document.getElementById("nav-search");
+function setQuery(v, from){
+  query = v.trim().toLowerCase();
+  if(from!==searchBox && searchBox) searchBox.value = v;
+  if(from!==navSearch && navSearch) navSearch.value = v;
   render();
-});
+}
+searchBox.addEventListener("input", e=>setQuery(e.target.value, searchBox));
+if(navSearch){
+  navSearch.addEventListener("input", e=>{
+    if(document.body.classList.contains("article-mode")) location.hash = "";
+    setQuery(e.target.value, navSearch);
+    if(e.target.value.length===1) document.getElementById("shops").scrollIntoView({behavior:"smooth"});
+  });
+  navSearch.addEventListener("keydown", e=>{
+    if(e.key==="Enter") document.getElementById("shops").scrollIntoView({behavior:"smooth"});
+  });
+}
 
 // ============================================================
 // マップ
