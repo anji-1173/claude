@@ -332,8 +332,8 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
     <a class="btn btn-ghost" href="https://note.com/anjiijna/n/n4f6ba6108f76" target="_blank" rel="noopener">noteのまとめ記事へ</a>
   </div>
   <div class="stats">
-    <div class="stat"><div class="num" id="stat-count">40+</div><div class="label">食べ歩いた店</div></div>
-    <div class="stat"><div class="num">44+</div><div class="label">巡礼レポート</div></div>
+    <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
+    <div class="stat"><div class="num" id="stat-articles">70+</div><div class="label">巡礼レポート</div></div>
     <div class="stat"><div class="num">全域</div><div class="label">本島カバー範囲</div></div>
     <div class="stat"><div class="num">1位</div><div class="label">暫定王者 EIBUN</div></div>
   </div>
@@ -434,6 +434,24 @@ const SOBA_SHOPS = [
   {name:"上間沖縄天ぷら店", area:"那覇・南部", region:"naha", tags:["変わり種"],
    desc:"ずらりと並ぶ沖縄天ぷらが主役のお店で味わう沖縄そば。「そばも食べられる天ぷら屋さん」という立ち位置が面白い。",
    url:"https://note.com/anjiijna/n/nf91f1c616d31", photo:null},
+  {name:"麺処 てぃあんだー", area:"那覇市天久", region:"naha", tags:[],
+   desc:"那覇新都心（天久）エリアの人気沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n3a4fe6176e20", photo:null},
+  {name:"タイラ製麺所", area:"那覇・国際通り沿い", region:"naha", tags:[],
+   desc:"国際通り沿いで味わえる製麺所系の沖縄そば。",
+   url:"https://note.com/anjiijna/n/n52e3c7690832", photo:null},
+  {name:"識名そば", area:"那覇市", region:"naha", tags:[],
+   desc:"自家製麺が美味しい沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n38cdffad5c4a", photo:null},
+  {name:"沖縄そば 楚辺", area:"那覇市", region:"naha", tags:[],
+   desc:"観光客で賑わっている那覇の有名店。",
+   url:"https://note.com/anjiijna/n/n25efa84582d8", photo:null},
+  {name:"すーまぬめぇ", area:"那覇市", region:"naha", tags:["古民家"],
+   desc:"沖縄のおばーの家のような雰囲気の中で味わう沖縄そば。",
+   url:"https://note.com/anjiijna/n/nc57a8dfd5bda", photo:null},
+  {name:"むつみ橋 かどや", area:"那覇・国際通り", region:"naha", tags:["閉店"],
+   desc:"国際通りの老舗沖縄そば屋（※2024年6月20日に閉店）。記録として記事は残っています。",
+   url:"https://note.com/anjiijna/n/n45ca978e0324", photo:null},
 
   // ---- 南部 ----
   {name:"うちなあ家", area:"南城市", region:"south", tags:[],
@@ -489,6 +507,36 @@ const SOBA_SHOPS = [
   {name:"畑（はる）そば", area:"恩納村", region:"central", tags:[],
    desc:"国道58号の近く、ポツンと一軒家的なロケーションで味わう沖縄そば。",
    url:"https://note.com/anjiijna/n/n0049a47bf4f9", photo:null},
+  {name:"そば処 一本松", area:"浦添市", region:"central", tags:[],
+   desc:"浦添市の住宅街にある、地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n165640ecc3b8", photo:null},
+  {name:"我如古そば", area:"宜野湾市", region:"central", tags:[],
+   desc:"地元客で賑わう、昔ながらの沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/na0cc4544d07a", photo:null},
+  {name:"宮古そば なかよし", area:"宜野湾市", region:"central", tags:[],
+   desc:"宜野湾市で宮古そばが味わえるお店。",
+   url:"https://note.com/anjiijna/n/n7e3e2e55aa1c", photo:null},
+  {name:"嘉手納そば", area:"嘉手納町", region:"central", tags:[],
+   desc:"地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n1d7dad3cb877", photo:null},
+  {name:"我部祖河食堂 コザ店", area:"沖縄市", region:"central", tags:[],
+   desc:"老舗の沖縄そばが味わえる、我部祖河食堂のコザ店。",
+   url:"https://note.com/anjiijna/n/ne60138064d27", photo:null},
+  {name:"つるりんこう", area:"沖縄市", region:"central", tags:[],
+   desc:"定番の豚骨ベースのスープで勝負する沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n2c940c111329", photo:null},
+  {name:"当南食堂", area:"沖縄市・東南植物楽園近く", region:"central", tags:[],
+   desc:"東南植物楽園近くの、キタナシュラン的な魅力のある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/nbf19b5d034e1", photo:null},
+  {name:"石川さん家", area:"うるま市", region:"central", tags:[],
+   desc:"学生で賑わっている、タコライスもある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n6d7806575ae7", photo:null},
+  {name:"具志川そば 愛ちゃん", area:"うるま市", region:"central", tags:[],
+   desc:"うるま市にある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/nbdaa9a4bca7c", photo:null},
+  {name:"すぅ～ぎぃ～じぃ", area:"恩納村（移転）", region:"central", tags:["閉店"],
+   desc:"2024年2月に旧店舗を閉店し、以降は恩納村で営業となった沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n70cf916dedda", photo:null},
 
   // ---- 北部 ----
   {name:"本部そば", area:"本部町", region:"north", tags:[],
@@ -518,6 +566,9 @@ const SOBA_SHOPS = [
   {name:"沖縄そば家 まる良", area:"宜野座村", region:"north", tags:["閉店"],
    desc:"麺が選べる沖縄そば屋（※2025年5月に閉店）。記録として記事は残っています。",
    url:"https://note.com/anjiijna/n/nbfaf6a0e5ac6", photo:null},
+  {name:"もとぶのそば屋さん", area:"本部町", region:"north", tags:[],
+   desc:"美ら海水族館近くの沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n7284b12c67b7", photo:null},
 
   // ---- その他 ----
   {name:"介そば", area:"—", region:"other", tags:["オススメ"],
@@ -536,8 +587,38 @@ const SOBA_SHOPS = [
    desc:"濃厚つけ麺専門店が作る、1日限定30食の沖縄そば。",
    url:"https://note.com/anjiijna/n/n813070edfb52", photo:null},
   {name:"ゆし豆腐そば専門店 わらいそば", area:"—", region:"other", tags:["変わり種"],
-   desc:"沖縄のソウルフード「ゆし豆腐」と沖縄そばが一緒に味わえる専門店。",
+   desc:"沖縄のソウルフード「ゆし豆腐」と沖縄そばが一緒に味わえる専門店。照喜名製麺所の縮れ麺を使用（記事2本あり）。",
    url:"https://note.com/anjiijna/n/nc279ea15acdc", photo:null},
+  {name:"ニューロイヤル", area:"—", region:"other", tags:[],
+   desc:"おしゃれな店内で、独自の調味料によるスープの味変が楽しめる沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n0db9edd79875", photo:null},
+  {name:"わらまる商店", area:"—", region:"other", tags:[],
+   desc:"無添加出汁の沖縄そばが味わえるお店。",
+   url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
+  {name:"３丁目の島そば屋", area:"—", region:"other", tags:[],
+   desc:"スープがかなり美味しいと評判の沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
+  {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
+   desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
+   url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
+  {name:"沖縄そば 咲樹", area:"—", region:"other", tags:[],
+   desc:"地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n6aca49e01849", photo:null},
+  {name:"てびちのてーすけ", area:"—", region:"other", tags:["変わり種"],
+   desc:"てびち（豚足）が売りの沖縄そば屋。トロトロのてびち好きはぜひ。",
+   url:"https://note.com/anjiijna/n/n0a5c353d3390", photo:null},
+  {name:"そば処 じゅりあん", area:"—", region:"other", tags:[],
+   desc:"化学調味料無添加の材料で作る、体に優しい沖縄そば。",
+   url:"https://note.com/anjiijna/n/n8c08726b7161", photo:null},
+  {name:"沖縄そば 金太郎", area:"—", region:"other", tags:["変わり種"],
+   desc:"ラーメン二郎の沖縄そば版！？ ガッツリ系の一杯が味わえる。",
+   url:"https://note.com/anjiijna/n/n8fe3d12a7a0a", photo:null},
+  {name:"森の家", area:"—", region:"other", tags:[],
+   desc:"森の中の一軒。1月下旬〜2月頃はサクラも一緒に楽しめる。",
+   url:"https://note.com/anjiijna/n/nfb6bd547cbd7", photo:null},
+  {name:"花村そば", area:"—", region:"other", tags:[],
+   desc:"ダイビングの休憩中に味わえる沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n657cb5ce695c", photo:null},
 ];
 
 // タイトルのみ判明している記事（アーカイブ用）
@@ -546,6 +627,9 @@ const EXTRA_ARTICLES = [
   {title:"宜野湾市の沖縄そば屋で1番美味しいオススメの沖縄そば屋「三色屋」編（再訪）", url:"https://note.com/anjiijna/n/n7b417f21d4b7"},
   {title:"沖縄の古民家で行列の出来る沖縄そば屋 編", url:"https://note.com/anjiijna/n/n999021cb36b1"},
   {title:"古民家でゆったりな時間で味わえる沖縄そば屋 編", url:"https://note.com/anjiijna/n/ne100d7477f81"},
+  {title:"照喜名製麺所の縮れ麺が味わえる「ゆしどうふそば専門店わらいそば」編（2本目）", url:"https://note.com/anjiijna/n/n309cb38afff0"},
+  {title:"沖縄料理メニューを出す食堂 編", url:"https://note.com/anjiijna/n/n4c7de0101137"},
+  {title:"2024年11月22日に閉店した地元客に愛された沖縄そば屋 編", url:"https://note.com/anjiijna/n/n14463a0e1947"},
 ];
 
 // ============================================================
@@ -632,6 +716,7 @@ archiveList.innerHTML = allArticles.map(a=>
   `<li><a href="${a.url}" target="_blank" rel="noopener">${a.title}</a></li>`).join("");
 
 document.getElementById("stat-count").textContent = SOBA_SHOPS.length + "+";
+document.getElementById("stat-articles").textContent = allArticles.length + "+";
 render();
 </script>
 </body>
