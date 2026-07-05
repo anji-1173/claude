@@ -199,7 +199,7 @@ section{margin-top:5rem}
   position:relative;height:170px;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
 }
-.card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
 .card .thumb svg{width:110px;height:110px;opacity:.95}
 .thumb-naha{background:linear-gradient(135deg,#1d2740,#2b2033)}
 .thumb-south{background:linear-gradient(135deg,#1d3340,#203528)}
@@ -586,9 +586,9 @@ const SOBA_SHOPS = [
   {name:"わらまる商店", area:"—", region:"other", tags:[],
    desc:"無添加出汁の沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
-  {name:"３丁目の島そば屋", area:"—", region:"other", tags:[],
-   desc:"スープがかなり美味しいと評判の沖縄そば屋。",
-   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
+  {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"],
+   desc:"北部エリアの沖縄そばランキング第1位。カツオ・昆布・煮干しが効いたあっさり透明スープに、太麺・細麺・乱切りをブレンドしたぷりぷりの自家製生麺。人気No.1「島そば」、炙り軟骨ソーキそば、恩納村アーサそばも。（水曜定休）",
+   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:"photos/3丁目の島そば屋/1.jpg"},
   {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
    desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
    url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
@@ -664,7 +664,8 @@ function render(){
   grid.innerHTML = items.length ? items.map(s=>`
     <article class="card">
       <div class="thumb thumb-${s.region}">
-        ${s.photo ? `<img src="${s.photo}" alt="${s.name}" loading="lazy">` : bowlSVG}
+        ${bowlSVG}
+        ${s.photo ? `<img class="photo" src="${s.photo}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
         <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
         ${s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""}
       </div>
@@ -676,6 +677,10 @@ function render(){
       </div>
     </article>`).join("")
     : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
+  // 写真ファイルが未アップロード/読み込み失敗のときは、そっとイラスト表示に戻す
+  grid.querySelectorAll("img.photo").forEach(img=>{
+    img.addEventListener("error", ()=>img.remove());
+  });
 }
 
 document.getElementById("region-filters").addEventListener("click", e=>{
