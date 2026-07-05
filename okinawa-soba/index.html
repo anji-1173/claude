@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js" defer></script>
 <style>
 :root{
   --ink:#0d1320;
@@ -336,6 +336,7 @@ section{margin-top:5rem}
 .map-wrap{
   display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.5rem;align-items:start;
 }
+.map-wrap[hidden]{display:none}
 @media(max-width:820px){.map-wrap{grid-template-columns:1fr}}
 .map-panel{
   background:var(--ink2);border:1px solid var(--line);border-radius:10px;
@@ -347,7 +348,7 @@ section{margin-top:5rem}
 #okinawa-map .pin circle.dot{fill:var(--gold);stroke:#0d1320;stroke-width:1.5;transition:all .2s;cursor:pointer}
 #okinawa-map .pin text{fill:#1a1408;font-size:10px;font-weight:700;pointer-events:none;font-family:var(--sans)}
 #okinawa-map .pin .city-label{fill:#c6cddc;font-size:10.5px;font-weight:400;letter-spacing:.08em;paint-order:stroke;stroke:#0d1320;stroke-width:3px;stroke-linejoin:round}
-#okinawa-map .pin:hover circle.dot,#okinawa-map .pin.active circle.dot{fill:var(--gold2);r:13}
+#okinawa-map .pin:hover circle.dot,#okinawa-map .pin.active circle.dot{fill:var(--gold2);r:8}
 #okinawa-map .pin.active .city-label{fill:var(--gold2)}
 .map-info{
   background:var(--panel);border:1px solid var(--line);border-radius:10px;
@@ -647,7 +648,7 @@ const SOBA_SHOPS = [
   {name:"だるまそば", area:"那覇市", region:"naha", tags:["変わり種"],
    desc:"居酒屋が作るコッテリ系の沖縄そば。ガツンとくる一杯が食べたい日に。",
    url:"https://note.com/anjiijna/n/n73c64c39c19a", photo:null},
-  {name:"上間沖縄天ぷら店", area:"那覇・南部", region:"naha", tags:["変わり種"],
+  {name:"上間沖縄天ぷら店", area:"沖縄市登川（本店）", region:"central", tags:["変わり種"],
    desc:"ずらりと並ぶ沖縄天ぷらが主役のお店で味わう沖縄そば。「そばも食べられる天ぷら屋さん」という立ち位置が面白い。",
    url:"https://note.com/anjiijna/n/nf91f1c616d31", photo:null},
   {name:"麺処 てぃあんだー", area:"那覇市天久", region:"naha", tags:[],
@@ -676,13 +677,13 @@ const SOBA_SHOPS = [
   {name:"沖縄そば専門 しまぶく家", area:"豊見城・八重瀬エリア", region:"south", tags:[],
    desc:"木の温もりを感じる店内で、本格的な沖縄そばが味わえる専門店。",
    url:"https://note.com/anjiijna/n/n4971dc1602cd", photo:null},
-  {name:"沖縄そば処 みなみ", area:"南部・高速南IC近く", region:"south", tags:[],
+  {name:"沖縄そば処 みなみ", area:"沖縄市・沖縄南IC近く", region:"central", tags:[],
    desc:"2022年11月オープン。キャッシュレス対応で使い勝手のいいお店。",
    url:"https://note.com/anjiijna/n/nc20f16edb382", photo:null},
-  {name:"帆掛（ふーか）きそば", area:"与那原町", region:"south", tags:["変わり種"],
+  {name:"帆掛（ふーか）きそば", area:"うるま市宇堅", region:"central", tags:["変わり種"],
    desc:"魚介系の出汁で作る個性派の沖縄そば。",
    url:"https://note.com/anjiijna/n/n3a264b04aaf0", photo:null},
-  {name:"あじゃず", area:"南部", region:"south", tags:["変わり種"],
+  {name:"あじゃず", area:"那覇市曙", region:"naha", tags:["変わり種"],
    desc:"店内にジャズが流れる、大人な雰囲気の沖縄そば屋。",
    url:"https://note.com/anjiijna/n/nd3e1e16ae4c2", photo:null},
 
@@ -726,7 +727,7 @@ const SOBA_SHOPS = [
   {name:"そば処 一本松", area:"浦添市", region:"central", tags:[],
    desc:"浦添市の住宅街にある、地元客で賑わっている沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n165640ecc3b8", photo:null},
-  {name:"我如古そば", area:"宜野湾市", region:"central", tags:[],
+  {name:"我如古そば", area:"浦添市城間", region:"central", tags:[],
    desc:"地元客で賑わう、昔ながらの沖縄そば屋。",
    url:"https://note.com/anjiijna/n/na0cc4544d07a", photo:null},
   {name:"宮古そば なかよし", area:"宜野湾市", region:"central", tags:[],
@@ -747,7 +748,7 @@ const SOBA_SHOPS = [
   {name:"当南食堂", area:"沖縄市・東南植物楽園近く", region:"central", tags:[],
    desc:"東南植物楽園近くの、キタナシュラン的な魅力のある沖縄そば屋。",
    url:"https://note.com/anjiijna/n/nbf19b5d034e1", photo:null},
-  {name:"石川さん家", area:"うるま市", region:"central", tags:[],
+  {name:"石川さん家", area:"名護市為又", region:"north", tags:[],
    desc:"学生で賑わっている、タコライスもある沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n6d7806575ae7", photo:null},
   {name:"具志川そば 愛ちゃん", area:"うるま市", region:"central", tags:[],
@@ -779,7 +780,7 @@ const SOBA_SHOPS = [
   {name:"おきなわ長寿そば", area:"本部町", region:"north", tags:["変わり種"],
    desc:"長寿になれる？ なが〜い1本麺の沖縄そばが味わえるユニークなお店。",
    url:"https://note.com/anjiijna/n/nec0b959b0511", photo:null},
-  {name:"マルヨ製麺 塩屋店", area:"大宜味村", region:"north", tags:["古民家"],
+  {name:"マルヨ製麺 塩屋店", area:"うるま市塩屋", region:"central", tags:["古民家"],
    desc:"沖縄古民家でいただく、製麺所直営の沖縄そば。",
    url:"https://note.com/anjiijna/n/n28e87763122e", photo:null},
   {name:"沖縄そば家 まる良", area:"宜野座村", region:"north", tags:["閉店"],
@@ -790,52 +791,52 @@ const SOBA_SHOPS = [
    url:"https://note.com/anjiijna/n/n7284b12c67b7", photo:null},
 
   // ---- その他 ----
-  {name:"介そば", area:"—", region:"other", tags:["オススメ"],
+  {name:"介そば", area:"宜野湾市嘉数", region:"central", tags:["オススメ"],
    desc:"4種の魚節が効いたスープとツルツルもちもちの生麺。2回訪問するほどレベルの高い一杯。",
    url:"https://note.com/anjiijna/n/nae6a06277064", photo:null},
-  {name:"なりそば", area:"—", region:"other", tags:["変わり種"],
+  {name:"なりそば", area:"宜野湾市普天間", region:"central", tags:["変わり種"],
    desc:"24時間無人営業という新スタイルの沖縄そば屋。深夜でもそばが恋しくなったら。",
    url:"https://note.com/anjiijna/n/n823a88b7f513", photo:null},
-  {name:"海が見えるそば家", area:"—", region:"other", tags:[],
+  {name:"海が見えるそば家", area:"嘉手納町水釜", region:"central", tags:[],
    desc:"その名の通り、海を眺めながら沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n6f8e4e6be14d", photo:null},
-  {name:"沖縄そば SOBA DAY", area:"—", region:"other", tags:[],
+  {name:"沖縄そば SOBA DAY", area:"那覇市大道", region:"naha", tags:[],
    desc:"「沖縄そばの日」がそのまま名前になった沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n01b6551174dc", photo:null},
-  {name:"夢ノ弥", area:"—", region:"other", tags:["変わり種"],
+  {name:"夢ノ弥", area:"那覇市古島", region:"naha", tags:["変わり種"],
    desc:"濃厚つけ麺専門店が作る、1日限定30食の沖縄そば。",
    url:"https://note.com/anjiijna/n/n813070edfb52", photo:null},
-  {name:"ゆし豆腐そば専門店 わらいそば", area:"—", region:"other", tags:["変わり種"],
+  {name:"ゆし豆腐そば専門店 わらいそば", area:"豊見城市根差部", region:"south", tags:["変わり種"],
    desc:"沖縄のソウルフード「ゆし豆腐」と沖縄そばが一緒に味わえる専門店。照喜名製麺所の縮れ麺を使用（記事2本あり）。",
    url:"https://note.com/anjiijna/n/nc279ea15acdc", photo:null},
-  {name:"ニューロイヤル", area:"—", region:"other", tags:[],
+  {name:"ニューロイヤル", area:"うるま市喜仲", region:"central", tags:[],
    desc:"おしゃれな店内で、独自の調味料によるスープの味変が楽しめる沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n0db9edd79875", photo:null},
-  {name:"わらまる商店", area:"—", region:"other", tags:[],
+  {name:"わらまる商店", area:"南城市大里", region:"south", tags:[],
    desc:"無添加出汁の沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
   {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"], photoKey:"３丁目の島そば屋",
    desc:"北部エリアの沖縄そばランキング第1位。カツオ・昆布・煮干しが効いたあっさり透明スープに、太麺・細麺・乱切りをブレンドしたぷりぷりの自家製生麺。人気No.1「島そば」、炙り軟骨ソーキそば、恩納村アーサそばも。（水曜定休）",
    url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
-  {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
+  {name:"沖縄そば にいぶんじゃ～", area:"沖縄市登川", region:"central", tags:[],
    desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
    url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
-  {name:"沖縄そば 咲樹", area:"—", region:"other", tags:[],
+  {name:"沖縄そば 咲樹", area:"宜野湾市我如古", region:"central", tags:[],
    desc:"地元客で賑わっている沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n6aca49e01849", photo:null},
-  {name:"てびちのてーすけ", area:"—", region:"other", tags:["変わり種"],
+  {name:"てびちのてーすけ", area:"南城市佐敷", region:"south", tags:["変わり種"],
    desc:"てびち（豚足）が売りの沖縄そば屋。トロトロのてびち好きはぜひ。",
    url:"https://note.com/anjiijna/n/n0a5c353d3390", photo:null},
-  {name:"そば処 じゅりあん", area:"—", region:"other", tags:[],
+  {name:"そば処 じゅりあん", area:"糸満市", region:"south", tags:[],
    desc:"化学調味料無添加の材料で作る、体に優しい沖縄そば。",
    url:"https://note.com/anjiijna/n/n8c08726b7161", photo:null},
-  {name:"沖縄そば 金太郎", area:"—", region:"other", tags:["変わり種"],
+  {name:"沖縄そば 金太郎", area:"南城市玉城", region:"south", tags:["変わり種"],
    desc:"ラーメン二郎の沖縄そば版！？ ガッツリ系の一杯が味わえる。",
    url:"https://note.com/anjiijna/n/n8fe3d12a7a0a", photo:null},
-  {name:"森の家", area:"—", region:"other", tags:[],
+  {name:"森の家", area:"本部町伊豆味", region:"north", tags:[],
    desc:"森の中の一軒。1月下旬〜2月頃はサクラも一緒に楽しめる。",
    url:"https://note.com/anjiijna/n/nfb6bd547cbd7", photo:null},
-  {name:"花村そば", area:"—", region:"other", tags:[],
+  {name:"花村そば", area:"恩納村瀬良垣", region:"central", tags:[],
    desc:"ダイビングの休憩中に味わえる沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n657cb5ce695c", photo:null},
 ];
@@ -920,12 +921,16 @@ function cityOf(s){
 }
 // 沖縄本島のデフォルメ輪郭（経度,緯度）
 const OUTLINE = [
-  [127.66,26.07],[127.64,26.12],[127.645,26.21],[127.70,26.27],[127.735,26.32],
-  [127.735,26.365],[127.71,26.44],[127.79,26.50],[127.845,26.515],[127.90,26.545],
-  [127.875,26.615],[127.815,26.655],[127.865,26.71],[127.975,26.695],[128.06,26.68],
-  [128.135,26.755],[128.25,26.87],[128.31,26.80],[128.255,26.745],[128.16,26.625],
-  [128.00,26.505],[127.975,26.44],[127.895,26.35],[127.955,26.275],[127.86,26.29],
-  [127.80,26.245],[127.76,26.185],[127.835,26.15],[127.76,26.085],[127.70,26.075]
+  [127.663,26.072],[127.638,26.108],[127.652,26.155],[127.646,26.195],[127.658,26.230],
+  [127.694,26.263],[127.719,26.298],[127.740,26.330],[127.741,26.363],[127.708,26.404],
+  [127.712,26.443],[127.771,26.446],[127.800,26.480],[127.850,26.505],[127.878,26.512],
+  [127.900,26.530],[127.925,26.540],[127.960,26.565],[127.900,26.615],[127.880,26.640],
+  [127.855,26.660],[127.870,26.706],[127.950,26.695],[128.005,26.685],[128.020,26.660],
+  [128.085,26.700],[128.155,26.745],[128.255,26.870],[128.310,26.800],[128.280,26.740],
+  [128.180,26.630],[128.140,26.590],[128.050,26.545],[128.035,26.520],[128.010,26.480],
+  [127.995,26.460],[127.925,26.445],[127.868,26.423],[127.885,26.395],[127.920,26.365],
+  [127.990,26.305],[127.935,26.310],[127.865,26.290],[127.800,26.230],[127.770,26.190],
+  [127.800,26.170],[127.840,26.160],[127.815,26.120],[127.760,26.095],[127.700,26.080]
 ];
 const PRJ = {x0:127.55, x1:128.40, y0:26.93, y1:26.02, W:460, H:640};
 const px = lng => (lng-PRJ.x0)/(PRJ.x1-PRJ.x0)*PRJ.W;
@@ -1054,45 +1059,38 @@ document.getElementById("search").addEventListener("input", e=>{
 function buildMap(){
   const svg = document.getElementById("okinawa-map");
   const NS = "http://www.w3.org/2000/svg";
-  // 島の輪郭
   const poly = document.createElementNS(NS,"polygon");
   poly.setAttribute("points", OUTLINE.map(p=>px(p[0]).toFixed(1)+","+py(p[1]).toFixed(1)).join(" "));
   poly.setAttribute("class","island");
   svg.appendChild(poly);
-  // 海ラベル
-  const sea1 = document.createElementNS(NS,"text");
-  sea1.setAttribute("x","40"); sea1.setAttribute("y","150"); sea1.setAttribute("class","sea-label");
-  sea1.textContent = "東シナ海"; svg.appendChild(sea1);
-  const sea2 = document.createElementNS(NS,"text");
-  sea2.setAttribute("x","330"); sea2.setAttribute("y","560"); sea2.setAttribute("class","sea-label");
-  sea2.textContent = "太平洋"; svg.appendChild(sea2);
-  // 市町村ごとにお店を集計
-  const groups = {};
-  SOBA_SHOPS.forEach(s=>{
-    const c = cityOf(s);
-    if(c && CITY_POINTS[c]) (groups[c] = groups[c] || []).push(s);
+  const labels = [["東シナ海",40,150],["太平洋",330,560],["やんばる",320,120],["本部半島",150,205],["那覇",30,500]];
+  labels.forEach(([t,x,y])=>{
+    const el = document.createElementNS(NS,"text");
+    el.setAttribute("x",x); el.setAttribute("y",y); el.setAttribute("class","sea-label");
+    el.textContent = t; svg.appendChild(el);
   });
   const info = document.getElementById("map-info");
-  Object.entries(groups).forEach(([city, shops])=>{
-    const [lng,lat] = CITY_POINTS[city];
+  SOBA_SHOPS.forEach(s=>{
+    const geo = SHOP_GEO[s.name];
+    if(!geo) return;
     const g = document.createElementNS(NS,"g");
     g.setAttribute("class","pin");
-    g.setAttribute("transform",`translate(${px(lng).toFixed(1)},${py(lat).toFixed(1)})`);
+    g.setAttribute("transform",`translate(${px(geo.lng).toFixed(1)},${py(geo.lat).toFixed(1)})`);
+    const isRec = s.tags.includes("オススメ");
     const dot = document.createElementNS(NS,"circle");
-    dot.setAttribute("class","dot"); dot.setAttribute("r", shops.length>3?12:10);
+    dot.setAttribute("class","dot"); dot.setAttribute("r", isRec?6:4.5);
+    if(isRec) dot.setAttribute("fill","#f0c469");
     g.appendChild(dot);
-    const num = document.createElementNS(NS,"text");
-    num.setAttribute("text-anchor","middle"); num.setAttribute("dy","3.5");
-    num.textContent = shops.length; g.appendChild(num);
-    const label = document.createElementNS(NS,"text");
-    label.setAttribute("class","city-label");
-    label.setAttribute("x","15"); label.setAttribute("dy","4");
-    label.textContent = city==="沖縄市"?"沖縄市":city; g.appendChild(label);
+    const tip = document.createElementNS(NS,"title");
+    tip.textContent = s.name + (geo.addr ? "（"+geo.addr+"）" : "");
+    g.appendChild(tip);
     g.addEventListener("click", ()=>{
       svg.querySelectorAll(".pin").forEach(p=>p.classList.remove("active"));
       g.classList.add("active");
-      info.innerHTML = `<h3>${city}<span class="cnt">${shops.length}軒</span></h3><ul>` +
-        shops.map(s=>`<li><a href="#shop/${slugOf(s)}">${s.name}${s.tags.includes("オススメ")?" ★":""}<span class="mi-area">${s.area==="—"?"":s.area}</span></a></li>`).join("") + "</ul>";
+      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
+        ${geo.addr?`<p style="color:var(--muted);font-size:.75rem">${geo.addr}</p>`:""}
+        <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem">${s.desc}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
     });
     svg.appendChild(g);
   });
@@ -1100,7 +1098,7 @@ function buildMap(){
 
 // ===== 本格マップ（Leaflet + OpenStreetMap）=====
 // SHOP_GEO: 店名 → {lat, lng, addr}（住所からのおおよその座標）
-/*__SHOP_GEO__*/
+window.SHOP_GEO_DATA = {"EIBUN":{"lat":26.2129,"lng":127.6864,"addr":"那覇市壺屋1-5-14"},"STAND EIBUN":{"lat":26.2143,"lng":127.6851,"addr":"那覇市壺屋1-1-18"},"木灰そば とらや":{"lat":26.1926,"lng":127.6669,"addr":"那覇市赤嶺1-5-14"},"宮古そば みやらび":{"lat":26.1885,"lng":127.6635,"addr":"那覇市具志3-24-18"},"沖縄そば くいな":{"lat":26.2058,"lng":127.6907,"addr":"那覇市楚辺1-1-40"},"SHIKAKU":{"lat":26.2137,"lng":127.679,"addr":"那覇市久茂地3-29-52"},"首里の行列店（首里そば店主監修）":{"lat":26.2185,"lng":127.7195,"addr":null},"だるまそば":{"lat":26.2145,"lng":127.6702,"addr":"那覇市辻2-28-3"},"上間沖縄天ぷら店":{"lat":26.3641,"lng":127.8228,"addr":"沖縄市登川3-23-20（本店）"},"麺処 てぃあんだー":{"lat":26.2276,"lng":127.6931,"addr":"那覇市天久1-6-10"},"タイラ製麺所":{"lat":26.2158,"lng":127.6885,"addr":"那覇市牧志2-7-21"},"識名そば":{"lat":26.2005,"lng":127.701,"addr":"那覇市識名1206-1"},"沖縄そば 楚辺":{"lat":26.2043,"lng":127.6934,"addr":"那覇市楚辺2-37-40"},"すーまぬめぇ":{"lat":26.1969,"lng":127.696,"addr":"那覇市国場40-1"},"むつみ橋 かどや":{"lat":26.2149,"lng":127.6852,"addr":"那覇市牧志1-3-49"},"沖縄そば SOBA DAY":{"lat":26.2222,"lng":127.698,"addr":"那覇市大道173"},"夢ノ弥":{"lat":26.2318,"lng":127.7013,"addr":"那覇市古島1-4-11"},"あじゃず":{"lat":26.2311,"lng":127.68,"addr":"那覇市曙2-9-18"},"うちなあ家":{"lat":26.1409,"lng":127.7758,"addr":"南城市玉城垣花414"},"沖縄そば専門 しまぶく家":{"lat":26.1229,"lng":127.7433,"addr":"八重瀬町富盛981-1"},"ゆし豆腐そば専門店 わらいそば":{"lat":26.1706,"lng":127.687,"addr":"豊見城市根差部727"},"わらまる商店":{"lat":26.1728,"lng":127.7443,"addr":"南城市大里2543-1"},"沖縄そば 金太郎":{"lat":26.1497,"lng":127.7562,"addr":"南城市玉城船越1197"},"てびちのてーすけ":{"lat":26.1852,"lng":127.7787,"addr":"南城市佐敷新開1-238"},"そば処 じゅりあん":{"lat":26.1236,"lng":127.6659,"addr":"糸満市糸満1955-7"},"かめぜん食堂":{"lat":26.3163,"lng":127.756,"addr":"北谷町美浜9-1 デポアイランドC棟2F"},"すながわ製麺所":{"lat":26.3155,"lng":127.7568,"addr":"北谷町美浜9-7 デポアイランドプラザF 1F"},"北谷そば":{"lat":26.3237,"lng":127.7623,"addr":"北谷町桑江614-1"},"まるち 北谷店":{"lat":26.3358,"lng":127.7719,"addr":"北谷町吉原487"},"三色屋":{"lat":26.2748,"lng":127.7628,"addr":"宜野湾市愛知3-7-51"},"伊波家":{"lat":26.2825,"lng":127.7877,"addr":"宜野湾市野嵩1-50-6"},"我如古そば":{"lat":26.2545,"lng":127.7143,"addr":"浦添市城間4-3-6"},"宮古そば なかよし":{"lat":26.2626,"lng":127.7638,"addr":"宜野湾市志真志4-25-5"},"３丁目の島そば屋":{"lat":26.2564,"lng":127.7455,"addr":"宜野湾市嘉数3-10-1"},"麺処 まんねん":{"lat":26.2542,"lng":127.7215,"addr":"浦添市仲西2-1-21"},"そば処 一本松":{"lat":26.2559,"lng":127.7345,"addr":"浦添市当山2-37-20"},"嘉手納そば":{"lat":26.3521,"lng":127.753,"addr":"嘉手納町屋良1075-2"},"読谷山そば":{"lat":26.3701,"lng":127.7396,"addr":"読谷村古堅485-7"},"田舎 読谷店":{"lat":26.3906,"lng":127.7386,"addr":"読谷村上地359-3"},"796（ナンクル）":{"lat":26.3336,"lng":127.8027,"addr":"沖縄市中央1-2-3"},"我部祖河食堂 コザ店":{"lat":26.3283,"lng":127.7942,"addr":"沖縄市上地4-20-1"},"つるりんこう":{"lat":26.3468,"lng":127.8321,"addr":"沖縄市海邦2-26-21"},"当南食堂":{"lat":26.3665,"lng":127.8258,"addr":"沖縄市登川3261"},"沖縄そば にいぶんじゃ～":{"lat":26.3628,"lng":127.8203,"addr":"沖縄市登川2-10-1"},"沖縄そば処 みなみ":{"lat":26.3295,"lng":127.7955,"addr":"沖縄市上地3-23-2"},"石川さん家":{"lat":26.6155,"lng":127.9538,"addr":"名護市為又1219-213"},"具志川そば 愛ちゃん":{"lat":26.3793,"lng":127.8571,"addr":"うるま市大田702-6"},"ニューロイヤル":{"lat":26.3707,"lng":127.8434,"addr":"うるま市喜仲1-7-5"},"帆掛（ふーか）きそば":{"lat":26.3922,"lng":127.8407,"addr":"うるま市宇堅7"},"マルヨ製麺 塩屋店":{"lat":26.3841,"lng":127.8493,"addr":"うるま市塩屋349"},"沖縄そばと郷土料理 島時間":{"lat":26.497,"lng":127.8524,"addr":"恩納村恩納7335-4"},"なかま食堂":{"lat":26.5296,"lng":127.8968,"addr":"恩納村名嘉真2576-1"},"畑（はる）そば":{"lat":26.4448,"lng":127.7995,"addr":"恩納村山田2805"},"花村そば":{"lat":26.5099,"lng":127.8776,"addr":"恩納村瀬良垣1062-1"},"すぅ～ぎぃ～じぃ":{"lat":26.492,"lng":127.848,"addr":null},"本部そば":{"lat":26.6376,"lng":127.8878,"addr":"本部町崎本部4639-1"},"おきなわ長寿そば":{"lat":26.6337,"lng":127.8856,"addr":"本部町崎本部2795-1"},"我那覇そば":{"lat":26.6473,"lng":128.0448,"addr":"名護市真喜屋763"},"さくら食堂":{"lat":26.5891,"lng":127.9827,"addr":"名護市城1-4-11 名護市営市場2F"},"大城そば家":{"lat":26.6003,"lng":127.9648,"addr":"名護市宮里7-1-10"},"石くびり":{"lat":26.6584,"lng":127.9012,"addr":"本部町東464-1"},"沖縄料理と島どうふ TO-PU":{"lat":26.672,"lng":127.894,"addr":"本部町浜元233"},"森の家":{"lat":26.6403,"lng":127.935,"addr":"本部町伊豆味743-3"},"もとぶのそば屋さん":{"lat":26.6577,"lng":127.8985,"addr":null},"沖縄そば家 まる良":{"lat":26.4813,"lng":127.9755,"addr":null},"介そば":{"lat":26.257,"lng":127.7462,"addr":"宜野湾市嘉数4-27-10"},"なりそば":{"lat":26.2843,"lng":127.777,"addr":"宜野湾市普天間2-15-11"},"海が見えるそば家":{"lat":26.3489,"lng":127.7411,"addr":"嘉手納町水釜6-25-13"},"沖縄そば 咲樹":{"lat":26.2609,"lng":127.7548,"addr":"宜野湾市我如古3-7-6"}};
 const SHOP_GEO = window.SHOP_GEO_DATA || {};
 
 function initLeaflet(){
