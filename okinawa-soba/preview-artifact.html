@@ -1,0 +1,712 @@
+<title>アンジの沖縄そば巡りの旅</title>
+<style>
+:root{
+  --ink:#0d1320;
+  --ink2:#111a2b;
+  --panel:#182338;
+  --panel2:#1e2b44;
+  --line:#2a3a58;
+  --gold:#d9a441;
+  --gold2:#f0c469;
+  --red:#c73e3a;
+  --aqua:#4fb3aa;
+  --cream:#f2e8d5;
+  --text:#e8e2d4;
+  --muted:#9aa5b8;
+  --serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --sans:"Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--sans);
+  line-height:1.8;
+  overflow-x:hidden;
+}
+::selection{background:var(--gold);color:var(--ink)}
+
+/* ===== 青海波背景 ===== */
+.seigaiha{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cg fill='none' stroke='%23d9a441' stroke-width='1.2'%3E%3Ccircle cx='40' cy='40' r='36'/%3E%3Ccircle cx='40' cy='40' r='28'/%3E%3Ccircle cx='40' cy='40' r='20'/%3E%3Ccircle cx='40' cy='40' r='12'/%3E%3Ccircle cx='0' cy='40' r='36'/%3E%3Ccircle cx='0' cy='40' r='28'/%3E%3Ccircle cx='0' cy='40' r='20'/%3E%3Ccircle cx='0' cy='40' r='12'/%3E%3Ccircle cx='80' cy='40' r='36'/%3E%3Ccircle cx='80' cy='40' r='28'/%3E%3Ccircle cx='80' cy='40' r='20'/%3E%3Ccircle cx='80' cy='40' r='12'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:80px 40px;
+}
+
+/* ===== ナビ ===== */
+nav{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:1rem;
+  padding:.7rem 1.4rem;
+  background:rgba(13,19,32,.88);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+nav .brand{
+  font-family:var(--serif);font-weight:900;font-size:1.05rem;
+  color:var(--cream);text-decoration:none;letter-spacing:.12em;
+  display:flex;align-items:center;gap:.55rem;
+}
+nav .brand .hanko{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.7rem;height:1.7rem;background:var(--red);color:#fff;
+  font-size:.8rem;border-radius:4px;font-weight:700;
+}
+nav .links{margin-left:auto;display:flex;gap:1.2rem}
+nav .links a{
+  color:var(--muted);text-decoration:none;font-size:.85rem;letter-spacing:.08em;
+  transition:color .2s;
+}
+nav .links a:hover{color:var(--gold2)}
+
+/* ===== ヒーロー ===== */
+header{
+  position:relative;z-index:1;
+  min-height:88vh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:5rem 1.5rem 4rem;
+  max-width:1100px;margin:0 auto;
+}
+.hero-kanji{
+  position:absolute;right:-2rem;top:50%;transform:translateY(-52%);
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(16rem,34vw,30rem);
+  color:transparent;
+  -webkit-text-stroke:1px rgba(217,164,65,.14);
+  line-height:1;user-select:none;pointer-events:none;
+}
+.hero-eyebrow{
+  display:flex;align-items:center;gap:.8rem;
+  color:var(--gold);letter-spacing:.35em;font-size:.8rem;font-weight:500;
+  margin-bottom:1.4rem;
+}
+.hero-eyebrow::before{content:"";width:3rem;height:1px;background:var(--gold)}
+h1{
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(2.4rem,7vw,4.6rem);
+  line-height:1.25;letter-spacing:.06em;color:var(--cream);
+}
+h1 .accent{color:var(--gold2)}
+.hero-sub{
+  margin-top:1.6rem;color:var(--muted);font-size:1rem;max-width:34em;
+  font-weight:300;
+}
+.hero-sub b{color:var(--text);font-weight:500}
+.hero-cta{margin-top:2.4rem;display:flex;flex-wrap:wrap;gap:1rem}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.85rem 1.8rem;border-radius:3px;
+  font-size:.9rem;letter-spacing:.1em;text-decoration:none;
+  transition:all .25s;font-weight:500;
+}
+.btn-gold{background:var(--gold);color:#1a1408}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-2px)}
+.btn-ghost{border:1px solid var(--line);color:var(--text)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.stats{
+  margin-top:3.5rem;display:flex;flex-wrap:wrap;gap:0;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.stat{
+  flex:1;min-width:140px;padding:1.3rem 1rem;text-align:center;
+  border-right:1px solid var(--line);
+}
+.stat:last-child{border-right:none}
+.stat .num{
+  font-family:var(--serif);font-size:1.9rem;font-weight:700;color:var(--gold2);
+  line-height:1.2;
+}
+.stat .label{font-size:.72rem;color:var(--muted);letter-spacing:.2em;margin-top:.3rem}
+
+/* ===== セクション ===== */
+main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 1.5rem 5rem}
+section{margin-top:5rem}
+.sec-head{display:flex;align-items:baseline;gap:1.2rem;margin-bottom:.6rem}
+.sec-head h2{
+  font-family:var(--serif);font-weight:700;font-size:1.9rem;
+  color:var(--cream);letter-spacing:.08em;
+}
+.sec-head .en{
+  color:var(--gold);font-size:.72rem;letter-spacing:.35em;text-transform:uppercase;
+}
+.sec-lead{color:var(--muted);font-size:.9rem;margin-bottom:2rem;font-weight:300}
+
+/* ===== 暫定1位バナー ===== */
+.champion{
+  position:relative;overflow:hidden;
+  background:linear-gradient(120deg,var(--panel) 0%,var(--panel2) 60%,#243352 100%);
+  border:1px solid var(--line);border-left:4px solid var(--gold);
+  border-radius:6px;
+  padding:2.2rem 2.4rem;
+  display:flex;flex-wrap:wrap;gap:1.8rem;align-items:center;
+}
+.champion .crown{
+  font-family:var(--serif);font-size:.75rem;letter-spacing:.3em;
+  color:var(--ink);background:var(--gold);
+  padding:.35rem .9rem;border-radius:2px;font-weight:700;white-space:nowrap;
+}
+.champion .body{flex:1;min-width:250px}
+.champion h3{
+  font-family:var(--serif);font-size:2rem;color:var(--gold2);letter-spacing:.1em;
+  line-height:1.3;
+}
+.champion p{color:var(--muted);font-size:.9rem;margin-top:.6rem;max-width:44em}
+.champion .kanji-bg{
+  position:absolute;right:1rem;bottom:-2.5rem;
+  font-family:var(--serif);font-size:9rem;font-weight:900;
+  color:rgba(217,164,65,.07);line-height:1;pointer-events:none;
+}
+
+/* ===== フィルター ===== */
+.filters{
+  display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;
+  margin-bottom:2rem;
+}
+.chip{
+  padding:.45rem 1.1rem;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:.82rem;letter-spacing:.06em;font-family:var(--sans);
+  transition:all .2s;
+}
+.chip:hover{border-color:var(--gold);color:var(--gold2)}
+.chip.active{background:var(--gold);border-color:var(--gold);color:#1a1408;font-weight:700}
+.chip.tagchip.active{background:var(--red);border-color:var(--red);color:#fff}
+.search{
+  margin-left:auto;
+  background:var(--ink2);border:1px solid var(--line);border-radius:999px;
+  padding:.5rem 1.2rem;color:var(--text);font-size:.85rem;width:220px;
+  font-family:var(--sans);outline:none;transition:border-color .2s;
+}
+.search:focus{border-color:var(--gold)}
+.search::placeholder{color:#5c6880}
+
+/* ===== カードグリッド ===== */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:1.4rem;
+}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:transform .25s,border-color .25s,box-shadow .25s;
+}
+.card:hover{
+  transform:translateY(-5px);border-color:var(--gold);
+  box-shadow:0 14px 40px rgba(0,0,0,.45);
+}
+.card .thumb{
+  position:relative;height:170px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card .thumb svg{width:110px;height:110px;opacity:.95}
+.thumb-naha{background:linear-gradient(135deg,#1d2740,#2b2033)}
+.thumb-south{background:linear-gradient(135deg,#1d3340,#203528)}
+.thumb-central{background:linear-gradient(135deg,#20303f,#31283d)}
+.thumb-north{background:linear-gradient(135deg,#173544,#1c3d35)}
+.thumb-other{background:linear-gradient(135deg,#2b2b3a,#1f2733)}
+.card .area-badge{
+  position:absolute;top:.8rem;left:.8rem;
+  background:rgba(13,19,32,.82);border:1px solid var(--line);
+  color:var(--gold2);font-size:.7rem;letter-spacing:.15em;
+  padding:.25rem .7rem;border-radius:2px;backdrop-filter:blur(4px);
+}
+.card .rank-badge{
+  position:absolute;top:.8rem;right:.8rem;
+  background:var(--gold);color:#1a1408;font-weight:700;
+  font-size:.7rem;letter-spacing:.1em;padding:.25rem .7rem;border-radius:2px;
+}
+.card .body{padding:1.2rem 1.3rem 1.4rem;display:flex;flex-direction:column;flex:1}
+.card h3{
+  font-family:var(--serif);font-size:1.15rem;font-weight:700;
+  color:var(--cream);letter-spacing:.04em;line-height:1.5;
+}
+.card .tags{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0 .7rem}
+.card .tag{
+  font-size:.68rem;padding:.12rem .6rem;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;
+}
+.card .tag.t-rec{border-color:var(--gold);color:var(--gold2)}
+.card .tag.t-uni{border-color:var(--aqua);color:var(--aqua)}
+.card .tag.t-kom{border-color:#b58a5f;color:#cfa377}
+.card .tag.t-cls{border-color:#7a4a4a;color:#c98080}
+.card p{font-size:.83rem;color:var(--muted);flex:1;font-weight:300}
+.card .more{
+  margin-top:1rem;align-self:flex-start;
+  color:var(--gold);text-decoration:none;font-size:.8rem;letter-spacing:.12em;
+  border-bottom:1px solid transparent;transition:all .2s;
+  display:inline-flex;align-items:center;gap:.4rem;
+}
+.card .more:hover{color:var(--gold2);border-bottom-color:var(--gold2)}
+.card .more::after{content:"→";transition:transform .2s}
+.card .more:hover::after{transform:translateX(3px)}
+.empty{
+  grid-column:1/-1;text-align:center;color:var(--muted);
+  padding:3rem 1rem;font-size:.9rem;
+}
+
+/* ===== アーカイブ ===== */
+.archive{
+  background:var(--ink2);border:1px solid var(--line);border-radius:8px;
+  padding:1.6rem 2rem;
+}
+.archive summary{
+  cursor:pointer;font-family:var(--serif);font-size:1.05rem;color:var(--cream);
+  letter-spacing:.08em;list-style:none;display:flex;align-items:center;gap:.8rem;
+}
+.archive summary::before{content:"＋";color:var(--gold);font-size:1.2rem;transition:transform .25s}
+.archive[open] summary::before{transform:rotate(45deg)}
+.archive ul{margin-top:1.2rem;list-style:none}
+.archive li{
+  border-top:1px dashed var(--line);
+}
+.archive a{
+  display:block;padding:.65rem .2rem;color:var(--muted);text-decoration:none;
+  font-size:.84rem;transition:color .2s,padding-left .2s;
+}
+.archive a:hover{color:var(--gold2);padding-left:.7rem}
+
+/* ===== フッター ===== */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--line);margin-top:4rem;
+  padding:3.5rem 1.5rem 3rem;text-align:center;
+}
+footer .hanko-big{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:3.4rem;height:3.4rem;background:var(--red);color:#fff;
+  font-family:var(--serif);font-size:1.3rem;font-weight:700;border-radius:6px;
+  margin-bottom:1.2rem;letter-spacing:0;
+  box-shadow:0 6px 20px rgba(199,62,58,.35);
+}
+footer p{color:var(--muted);font-size:.85rem;max-width:36em;margin:0 auto;font-weight:300}
+footer .note-link{
+  display:inline-block;margin-top:1.4rem;color:var(--gold);text-decoration:none;
+  letter-spacing:.1em;font-size:.88rem;border-bottom:1px solid var(--gold);
+  padding-bottom:2px;transition:color .2s;
+}
+footer .note-link:hover{color:var(--gold2)}
+footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15em}
+
+@media(max-width:640px){
+  .search{width:100%;margin-left:0}
+  .hero-kanji{right:-4rem}
+  .champion{padding:1.6rem 1.4rem}
+  .stat{min-width:105px}
+}
+</style>
+</head>
+<body>
+<div class="seigaiha"></div>
+
+<nav>
+  <a class="brand" href="#"><span class="hanko">ア</span>沖縄そば巡りの旅</a>
+  <div class="links">
+    <a href="#shops">お店一覧</a>
+    <a href="#archive">全記事</a>
+    <a href="https://note.com/anjiijna" target="_blank" rel="noopener">note</a>
+  </div>
+</nav>
+
+<header>
+  <div class="hero-kanji">麺</div>
+  <div class="hero-eyebrow">OKINAWA SOBA JOURNEY</div>
+  <h1>沖縄本島、<br>そば屋<span class="accent">全店制覇</span>への道。</h1>
+  <p class="hero-sub">
+    アンジが沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を
+    じっくり味わって綴る食べ歩きの記録。観光地の名店から住宅街の隠れた実力店、
+    24時間無人営業の変わり種まで──今日もどこかで、すすっています。
+  </p>
+  <div class="hero-cta">
+    <a class="btn btn-gold" href="#shops">お店を探す</a>
+    <a class="btn btn-ghost" href="https://note.com/anjiijna/n/n4f6ba6108f76" target="_blank" rel="noopener">noteのまとめ記事へ</a>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
+    <div class="stat"><div class="num" id="stat-articles">70+</div><div class="label">巡礼レポート</div></div>
+    <div class="stat"><div class="num">全域</div><div class="label">本島カバー範囲</div></div>
+    <div class="stat"><div class="num">1位</div><div class="label">暫定王者 EIBUN</div></div>
+  </div>
+</header>
+
+<main>
+
+<section id="champion">
+  <div class="champion">
+    <div class="kanji-bg">壱</div>
+    <div class="crown">暫定第一位</div>
+    <div class="body">
+      <h3>EIBUN<span style="font-size:1rem;color:var(--muted);margin-left:1rem">那覇市壺屋</span></h3>
+      <p>
+        食べ歩いた沖縄そば屋の中で、暫定1位。カツオ出汁の効いたスープに、
+        トロトロの軟骨ソーキと甘めに炊かれた三枚肉。麺・スープ・具材のバランスが絶妙な一杯。
+        行列を避けたいなら、同じクオリティが並ばず味わえる2号店「STAND EIBUN」も狙い目。
+      </p>
+    </div>
+    <a class="btn btn-ghost" href="https://note.com/anjiijna/n/n4f6ba6108f76" target="_blank" rel="noopener">記事を読む</a>
+  </div>
+</section>
+
+<section id="shops">
+  <div class="sec-head"><h2>お店をさがす</h2><span class="en">Shop Index</span></div>
+  <p class="sec-lead">エリアやタグで絞り込んで、次の一杯を見つけてください。カードの「noteで読む」から全文レポートへ飛べます。</p>
+
+  <div class="filters" id="region-filters">
+    <button class="chip active" data-region="all">すべて</button>
+    <button class="chip" data-region="naha">那覇</button>
+    <button class="chip" data-region="south">南部</button>
+    <button class="chip" data-region="central">中部</button>
+    <button class="chip" data-region="north">北部</button>
+    <button class="chip" data-region="other">その他</button>
+    <button class="chip tagchip" data-tag="オススメ">★ オススメ</button>
+    <button class="chip tagchip" data-tag="変わり種">変わり種</button>
+    <button class="chip tagchip" data-tag="古民家">古民家</button>
+    <input class="search" id="search" type="search" placeholder="店名・キーワードで検索">
+  </div>
+
+  <div class="grid" id="grid"></div>
+</section>
+
+<section id="archive-sec">
+  <div class="sec-head"><h2>全記事アーカイブ</h2><span class="en">All Articles</span></div>
+  <p class="sec-lead">noteに公開している沖縄そば巡りの記事一覧です。</p>
+  <details class="archive" id="archive">
+    <summary>記事リストをひらく</summary>
+    <ul id="archive-list"></ul>
+  </details>
+</section>
+
+</main>
+
+<footer>
+  <div class="hanko-big">アンジ</div>
+  <p>
+    沖縄本島の沖縄そば屋、全店制覇が目標。<br>
+    食べ歩いたお店を少しずつnoteで紹介しています。
+  </p>
+  <a class="note-link" href="https://note.com/anjiijna" target="_blank" rel="noopener">note.com/anjiijna をフォローする</a>
+  <div class="copy">OKINAWA SOBA JOURNEY by ANJI — 掲載文はnoteの記事より</div>
+</footer>
+
+<script>
+// ============================================================
+// お店データ
+//  photo: "photos/xxx.jpg" を設定すると、その写真がカードに表示されます。
+//  未設定(null)のあいだは、そば鉢のイラストが表示されます。
+//  region: naha / south / central / north / other
+// ============================================================
+const SOBA_SHOPS = [
+  // ---- 那覇 ----
+  {name:"EIBUN", area:"那覇市壺屋", region:"naha", tags:["オススメ"], rank:"暫定1位",
+   desc:"食べ歩いた沖縄そば屋の暫定1位。カツオ出汁のスープに、トロトロの軟骨ソーキと甘めの三枚肉。全体のバランスが絶妙。",
+   url:"https://note.com/anjiijna/n/n4f6ba6108f76", photo:null},
+  {name:"STAND EIBUN", area:"那覇市", region:"naha", tags:["オススメ"],
+   desc:"暫定1位「EIBUN」の2号店。本店より知られていない分、行列に並ばずに同じクオリティの一杯が味わえる穴場。",
+   url:"https://note.com/anjiijna/n/n8477d0de69b1", photo:null},
+  {name:"木灰そば とらや", area:"那覇市・赤嶺", region:"naha", tags:["オススメ"],
+   desc:"那覇空港近くの木灰そばの名店。お店の雰囲気もそばもレベルが高いオススメ店。",
+   url:"https://note.com/anjiijna/n/naff353152fb7", photo:null},
+  {name:"宮古そば みやらび", area:"那覇空港近く", region:"naha", tags:[],
+   desc:"宮古そば750円。注文から約5分で提供されるスピードも魅力で、フライト前の一杯にもぴったり。",
+   url:"https://note.com/anjiijna/n/n3826dca1394d", photo:null},
+  {name:"沖縄そば くいな", area:"那覇市", region:"naha", tags:[],
+   desc:"2024年4月にオープンしたばかりのフレッシュな沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/ne7f510a78f1e", photo:null},
+  {name:"SHIKAKU", area:"那覇市", region:"naha", tags:[],
+   desc:"那覇のホテルの中にある沖縄そば屋。旅の拠点でそのまま一杯。",
+   url:"https://note.com/anjiijna/n/n2fd108921a0a", photo:null},
+  {name:"首里の行列店（首里そば店主監修）", area:"那覇市首里", region:"naha", tags:[],
+   desc:"首里そば店主監修のそばが味わえる行列店。あっさりと繊細な味わいのスープが特徴。",
+   url:"https://note.com/anjiijna/n/n956a586dc158", photo:null},
+  {name:"だるまそば", area:"那覇市", region:"naha", tags:["変わり種"],
+   desc:"居酒屋が作るコッテリ系の沖縄そば。ガツンとくる一杯が食べたい日に。",
+   url:"https://note.com/anjiijna/n/n73c64c39c19a", photo:null},
+  {name:"上間沖縄天ぷら店", area:"那覇・南部", region:"naha", tags:["変わり種"],
+   desc:"ずらりと並ぶ沖縄天ぷらが主役のお店で味わう沖縄そば。「そばも食べられる天ぷら屋さん」という立ち位置が面白い。",
+   url:"https://note.com/anjiijna/n/nf91f1c616d31", photo:null},
+  {name:"麺処 てぃあんだー", area:"那覇市天久", region:"naha", tags:[],
+   desc:"那覇新都心（天久）エリアの人気沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n3a4fe6176e20", photo:null},
+  {name:"タイラ製麺所", area:"那覇・国際通り沿い", region:"naha", tags:[],
+   desc:"国際通り沿いで味わえる製麺所系の沖縄そば。",
+   url:"https://note.com/anjiijna/n/n52e3c7690832", photo:null},
+  {name:"識名そば", area:"那覇市", region:"naha", tags:[],
+   desc:"自家製麺が美味しい沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n38cdffad5c4a", photo:null},
+  {name:"沖縄そば 楚辺", area:"那覇市", region:"naha", tags:[],
+   desc:"観光客で賑わっている那覇の有名店。",
+   url:"https://note.com/anjiijna/n/n25efa84582d8", photo:null},
+  {name:"すーまぬめぇ", area:"那覇市", region:"naha", tags:["古民家"],
+   desc:"沖縄のおばーの家のような雰囲気の中で味わう沖縄そば。",
+   url:"https://note.com/anjiijna/n/nc57a8dfd5bda", photo:null},
+  {name:"むつみ橋 かどや", area:"那覇・国際通り", region:"naha", tags:["閉店"],
+   desc:"国際通りの老舗沖縄そば屋（※2024年6月20日に閉店）。記録として記事は残っています。",
+   url:"https://note.com/anjiijna/n/n45ca978e0324", photo:null},
+
+  // ---- 南部 ----
+  {name:"うちなあ家", area:"南城市", region:"south", tags:[],
+   desc:"コストコ南城倉庫店に近い沖縄そば屋。買い物ついでに立ち寄れる便利な一軒。",
+   url:"https://note.com/anjiijna/n/n8dc03fa062ab", photo:null},
+  {name:"沖縄そば専門 しまぶく家", area:"豊見城・八重瀬エリア", region:"south", tags:[],
+   desc:"木の温もりを感じる店内で、本格的な沖縄そばが味わえる専門店。",
+   url:"https://note.com/anjiijna/n/n4971dc1602cd", photo:null},
+  {name:"沖縄そば処 みなみ", area:"南部・高速南IC近く", region:"south", tags:[],
+   desc:"2022年11月オープン。キャッシュレス対応で使い勝手のいいお店。",
+   url:"https://note.com/anjiijna/n/nc20f16edb382", photo:null},
+  {name:"帆掛（ふーか）きそば", area:"与那原町", region:"south", tags:["変わり種"],
+   desc:"魚介系の出汁で作る個性派の沖縄そば。",
+   url:"https://note.com/anjiijna/n/n3a264b04aaf0", photo:null},
+  {name:"あじゃず", area:"南部", region:"south", tags:["変わり種"],
+   desc:"店内にジャズが流れる、大人な雰囲気の沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/nd3e1e16ae4c2", photo:null},
+
+  // ---- 中部 ----
+  {name:"かめぜん食堂", area:"北谷町・アメリカンビレッジ", region:"central", tags:[],
+   desc:"観光地アメリカンビレッジの中で沖縄そばが味わえる食堂。",
+   url:"https://note.com/anjiijna/n/n84227373cb99", photo:null},
+  {name:"すながわ製麺所", area:"北谷町美浜", region:"central", tags:[],
+   desc:"アメリカンビレッジ内にある製麺所系の沖縄そば屋。麺で勝負の一杯。",
+   url:"https://note.com/anjiijna/n/n71c7c2044ac5", photo:null},
+  {name:"北谷そば", area:"北谷町", region:"central", tags:[],
+   desc:"住宅街にありながら、著名人のサインがいっぱい飾られている地元の実力店。",
+   url:"https://note.com/anjiijna/n/ncab7cc63a4e8", photo:null},
+  {name:"まるち 北谷店", area:"北谷町", region:"central", tags:["古民家"],
+   desc:"赤瓦にシーサーが乗る古民家スタイル。オープンと同時に行列ができる人気店。",
+   url:"https://note.com/anjiijna/n/n4dac7df22087", photo:null},
+  {name:"三色屋", area:"宜野湾市", region:"central", tags:["オススメ"],
+   desc:"「宜野湾で一番」を掲げる沖縄そば屋。鶏・豚・合わせの3種から選べるスープが特徴。再訪記事もあり。",
+   url:"https://note.com/anjiijna/n/nf883504677d3", photo:null},
+  {name:"伊波家", area:"宜野湾市", region:"central", tags:[],
+   desc:"地元客に愛されている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n87196db941a2", photo:null},
+  {name:"麺処 まんねん", area:"浦添市仲西", region:"central", tags:["変わり種"],
+   desc:"塩・醤油・味噌から選べる、ラーメンみたいなスープの個性派。鶏むね肉のチャーシューも珍しい。",
+   url:"https://note.com/anjiijna/n/n18293f36f2bf", photo:null},
+  {name:"読谷山そば", area:"読谷村", region:"central", tags:["オススメ"],
+   desc:"骨出汁ベースにカツオがしっかり効いたスープ。アーサやフーチバーなどメニューのバリエーションも豊富。",
+   url:"https://note.com/anjiijna/n/n17a6b8f4fb20", photo:null},
+  {name:"田舎 読谷店", area:"読谷村", region:"central", tags:[],
+   desc:"コスパ抜群の宮古そばが味わえる。財布に優しく、味は本格派。",
+   url:"https://note.com/anjiijna/n/n05df138e2959", photo:null},
+  {name:"沖縄そばと郷土料理 島時間", area:"恩納村", region:"central", tags:[],
+   desc:"沖縄っぽさを感じながら食べられる郷土料理のお店。観光の途中に。",
+   url:"https://note.com/anjiijna/n/n06a0562961a4", photo:null},
+  {name:"なかま食堂", area:"恩納村", region:"central", tags:[],
+   desc:"特大スペアリブのソーキそば（1,200円）が名物。骨付き肉が別皿で登場する迫力の一杯。",
+   url:"https://note.com/anjiijna/n/n392303b97bca", photo:null},
+  {name:"畑（はる）そば", area:"恩納村", region:"central", tags:[],
+   desc:"国道58号の近く、ポツンと一軒家的なロケーションで味わう沖縄そば。",
+   url:"https://note.com/anjiijna/n/n0049a47bf4f9", photo:null},
+  {name:"そば処 一本松", area:"浦添市", region:"central", tags:[],
+   desc:"浦添市の住宅街にある、地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n165640ecc3b8", photo:null},
+  {name:"我如古そば", area:"宜野湾市", region:"central", tags:[],
+   desc:"地元客で賑わう、昔ながらの沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/na0cc4544d07a", photo:null},
+  {name:"宮古そば なかよし", area:"宜野湾市", region:"central", tags:[],
+   desc:"宜野湾市で宮古そばが味わえるお店。",
+   url:"https://note.com/anjiijna/n/n7e3e2e55aa1c", photo:null},
+  {name:"嘉手納そば", area:"嘉手納町", region:"central", tags:[],
+   desc:"地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n1d7dad3cb877", photo:null},
+  {name:"我部祖河食堂 コザ店", area:"沖縄市", region:"central", tags:[],
+   desc:"老舗の沖縄そばが味わえる、我部祖河食堂のコザ店。",
+   url:"https://note.com/anjiijna/n/ne60138064d27", photo:null},
+  {name:"つるりんこう", area:"沖縄市", region:"central", tags:[],
+   desc:"定番の豚骨ベースのスープで勝負する沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n2c940c111329", photo:null},
+  {name:"当南食堂", area:"沖縄市・東南植物楽園近く", region:"central", tags:[],
+   desc:"東南植物楽園近くの、キタナシュラン的な魅力のある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/nbf19b5d034e1", photo:null},
+  {name:"石川さん家", area:"うるま市", region:"central", tags:[],
+   desc:"学生で賑わっている、タコライスもある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n6d7806575ae7", photo:null},
+  {name:"具志川そば 愛ちゃん", area:"うるま市", region:"central", tags:[],
+   desc:"うるま市にある沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/nbdaa9a4bca7c", photo:null},
+  {name:"すぅ～ぎぃ～じぃ", area:"恩納村（移転）", region:"central", tags:["閉店"],
+   desc:"2024年2月に旧店舗を閉店し、以降は恩納村で営業となった沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n70cf916dedda", photo:null},
+
+  // ---- 北部 ----
+  {name:"本部そば", area:"本部町", region:"north", tags:[],
+   desc:"美ら海水族館に近い黄色い外観のお店。ヤギそばなど個性的なメニューも揃う。",
+   url:"https://note.com/anjiijna/n/n983a9dbe36fc", photo:null},
+  {name:"我那覇そば", area:"名護市", region:"north", tags:[],
+   desc:"元祖ソーキそばの流れをくむ一杯が味わえる。",
+   url:"https://note.com/anjiijna/n/ne31e75909c23", photo:null},
+  {name:"さくら食堂", area:"名護市", region:"north", tags:["オススメ"],
+   desc:"名護のオススメ店。名物はスタミナもやしそば。",
+   url:"https://note.com/anjiijna/n/ne08a329dc04c", photo:null},
+  {name:"大城そば家", area:"名護市", region:"north", tags:[],
+   desc:"名護名物の平打ち麺が味わえる沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/na3e75c7b3086", photo:null},
+  {name:"石くびり", area:"本部町", region:"north", tags:[],
+   desc:"昭和の食堂のような懐かしい雰囲気。サブ具材のかまぼこが絶品。",
+   url:"https://note.com/anjiijna/n/n08b3ead62524", photo:null},
+  {name:"沖縄料理と島どうふ TO-PU", area:"本部町", region:"north", tags:[],
+   desc:"美ら海水族館近く。手作りの島どうふがオススメの沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n9991d531fc2b", photo:null},
+  {name:"おきなわ長寿そば", area:"本部町", region:"north", tags:["変わり種"],
+   desc:"長寿になれる？ なが〜い1本麺の沖縄そばが味わえるユニークなお店。",
+   url:"https://note.com/anjiijna/n/nec0b959b0511", photo:null},
+  {name:"マルヨ製麺 塩屋店", area:"大宜味村", region:"north", tags:["古民家"],
+   desc:"沖縄古民家でいただく、製麺所直営の沖縄そば。",
+   url:"https://note.com/anjiijna/n/n28e87763122e", photo:null},
+  {name:"沖縄そば家 まる良", area:"宜野座村", region:"north", tags:["閉店"],
+   desc:"麺が選べる沖縄そば屋（※2025年5月に閉店）。記録として記事は残っています。",
+   url:"https://note.com/anjiijna/n/nbfaf6a0e5ac6", photo:null},
+  {name:"もとぶのそば屋さん", area:"本部町", region:"north", tags:[],
+   desc:"美ら海水族館近くの沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n7284b12c67b7", photo:null},
+
+  // ---- その他 ----
+  {name:"介そば", area:"—", region:"other", tags:["オススメ"],
+   desc:"4種の魚節が効いたスープとツルツルもちもちの生麺。2回訪問するほどレベルの高い一杯。",
+   url:"https://note.com/anjiijna/n/nae6a06277064", photo:null},
+  {name:"なりそば", area:"—", region:"other", tags:["変わり種"],
+   desc:"24時間無人営業という新スタイルの沖縄そば屋。深夜でもそばが恋しくなったら。",
+   url:"https://note.com/anjiijna/n/n823a88b7f513", photo:null},
+  {name:"海が見えるそば家", area:"—", region:"other", tags:[],
+   desc:"その名の通り、海を眺めながら沖縄そばが味わえるお店。",
+   url:"https://note.com/anjiijna/n/n6f8e4e6be14d", photo:null},
+  {name:"沖縄そば SOBA DAY", area:"—", region:"other", tags:[],
+   desc:"「沖縄そばの日」がそのまま名前になった沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n01b6551174dc", photo:null},
+  {name:"夢ノ弥", area:"—", region:"other", tags:["変わり種"],
+   desc:"濃厚つけ麺専門店が作る、1日限定30食の沖縄そば。",
+   url:"https://note.com/anjiijna/n/n813070edfb52", photo:null},
+  {name:"ゆし豆腐そば専門店 わらいそば", area:"—", region:"other", tags:["変わり種"],
+   desc:"沖縄のソウルフード「ゆし豆腐」と沖縄そばが一緒に味わえる専門店。照喜名製麺所の縮れ麺を使用（記事2本あり）。",
+   url:"https://note.com/anjiijna/n/nc279ea15acdc", photo:null},
+  {name:"ニューロイヤル", area:"—", region:"other", tags:[],
+   desc:"おしゃれな店内で、独自の調味料によるスープの味変が楽しめる沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n0db9edd79875", photo:null},
+  {name:"わらまる商店", area:"—", region:"other", tags:[],
+   desc:"無添加出汁の沖縄そばが味わえるお店。",
+   url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
+  {name:"３丁目の島そば屋", area:"—", region:"other", tags:[],
+   desc:"スープがかなり美味しいと評判の沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
+  {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
+   desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
+   url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
+  {name:"沖縄そば 咲樹", area:"—", region:"other", tags:[],
+   desc:"地元客で賑わっている沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n6aca49e01849", photo:null},
+  {name:"てびちのてーすけ", area:"—", region:"other", tags:["変わり種"],
+   desc:"てびち（豚足）が売りの沖縄そば屋。トロトロのてびち好きはぜひ。",
+   url:"https://note.com/anjiijna/n/n0a5c353d3390", photo:null},
+  {name:"そば処 じゅりあん", area:"—", region:"other", tags:[],
+   desc:"化学調味料無添加の材料で作る、体に優しい沖縄そば。",
+   url:"https://note.com/anjiijna/n/n8c08726b7161", photo:null},
+  {name:"沖縄そば 金太郎", area:"—", region:"other", tags:["変わり種"],
+   desc:"ラーメン二郎の沖縄そば版！？ ガッツリ系の一杯が味わえる。",
+   url:"https://note.com/anjiijna/n/n8fe3d12a7a0a", photo:null},
+  {name:"森の家", area:"—", region:"other", tags:[],
+   desc:"森の中の一軒。1月下旬〜2月頃はサクラも一緒に楽しめる。",
+   url:"https://note.com/anjiijna/n/nfb6bd547cbd7", photo:null},
+  {name:"花村そば", area:"—", region:"other", tags:[],
+   desc:"ダイビングの休憩中に味わえる沖縄そば屋。",
+   url:"https://note.com/anjiijna/n/n657cb5ce695c", photo:null},
+];
+
+// タイトルのみ判明している記事（アーカイブ用）
+const EXTRA_ARTICLES = [
+  {title:"＃沖縄そば 沖縄そば巡りの旅 ＃ｵｽｽﾒそば（まとめ記事）", url:"https://note.com/anjiijna/n/n4f6ba6108f76"},
+  {title:"宜野湾市の沖縄そば屋で1番美味しいオススメの沖縄そば屋「三色屋」編（再訪）", url:"https://note.com/anjiijna/n/n7b417f21d4b7"},
+  {title:"沖縄の古民家で行列の出来る沖縄そば屋 編", url:"https://note.com/anjiijna/n/n999021cb36b1"},
+  {title:"古民家でゆったりな時間で味わえる沖縄そば屋 編", url:"https://note.com/anjiijna/n/ne100d7477f81"},
+  {title:"照喜名製麺所の縮れ麺が味わえる「ゆしどうふそば専門店わらいそば」編（2本目）", url:"https://note.com/anjiijna/n/n309cb38afff0"},
+  {title:"沖縄料理メニューを出す食堂 編", url:"https://note.com/anjiijna/n/n4c7de0101137"},
+  {title:"2024年11月22日に閉店した地元客に愛された沖縄そば屋 編", url:"https://note.com/anjiijna/n/n14463a0e1947"},
+];
+
+// ============================================================
+// 描画
+// ============================================================
+const bowlSVG = `
+<svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#d9a441" stroke-width="2.2" stroke-linecap="round">
+    <path d="M20 62h80" />
+    <path d="M22 62c0 20 14 34 38 34s38-14 38-34" fill="rgba(217,164,65,.08)"/>
+    <path d="M34 96h52" opacity=".6"/>
+    <path d="M30 54c4-6 10-8 16-5" opacity=".85"/>
+    <path d="M50 50c5-5 12-6 17-2" opacity=".85"/>
+    <path d="M71 50c6-3 12-1 15 4" opacity=".85"/>
+    <path d="M40 30c-3 5 3 7 0 12" opacity=".5"/>
+    <path d="M58 24c-3 5 3 7 0 12" opacity=".5"/>
+    <path d="M76 30c-3 5 3 7 0 12" opacity=".5"/>
+    <path d="M88 18l14 32" opacity=".9"/>
+    <path d="M96 14l12 34" opacity=".9"/>
+  </g>
+</svg>`;
+
+const tagClass = t => t==="オススメ" ? "t-rec" : t==="変わり種" ? "t-uni" : t==="古民家" ? "t-kom" : t==="閉店" ? "t-cls" : "";
+const REGION_LABEL = {naha:"那覇", south:"南部", central:"中部", north:"北部", other:"—"};
+
+const grid = document.getElementById("grid");
+let activeRegion = "all";
+let activeTags = new Set();
+let query = "";
+
+function render(){
+  const items = SOBA_SHOPS.filter(s=>{
+    if(activeRegion!=="all" && s.region!==activeRegion) return false;
+    if(activeTags.size && ![...activeTags].every(t=>s.tags.includes(t))) return false;
+    if(query){
+      const hay = (s.name+s.area+s.desc+s.tags.join()).toLowerCase();
+      if(!hay.includes(query)) return false;
+    }
+    return true;
+  });
+  grid.innerHTML = items.length ? items.map(s=>`
+    <article class="card">
+      <div class="thumb thumb-${s.region}">
+        ${s.photo ? `<img src="${s.photo}" alt="${s.name}" loading="lazy">` : bowlSVG}
+        <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
+        ${s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""}
+      </div>
+      <div class="body">
+        <h3>${s.name}</h3>
+        <div class="tags">${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${t}</span>`).join("")}</div>
+        <p>${s.desc}</p>
+        <a class="more" href="${s.url}" target="_blank" rel="noopener">noteで読む</a>
+      </div>
+    </article>`).join("")
+    : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
+}
+
+document.getElementById("region-filters").addEventListener("click", e=>{
+  const btn = e.target.closest(".chip");
+  if(!btn) return;
+  if(btn.dataset.region){
+    document.querySelectorAll(".chip[data-region]").forEach(c=>c.classList.remove("active"));
+    btn.classList.add("active");
+    activeRegion = btn.dataset.region;
+  }else if(btn.dataset.tag){
+    btn.classList.toggle("active");
+    btn.classList.contains("active") ? activeTags.add(btn.dataset.tag) : activeTags.delete(btn.dataset.tag);
+  }
+  render();
+});
+document.getElementById("search").addEventListener("input", e=>{
+  query = e.target.value.trim().toLowerCase();
+  render();
+});
+
+// アーカイブ描画
+const archiveList = document.getElementById("archive-list");
+const allArticles = [
+  ...EXTRA_ARTICLES,
+  ...SOBA_SHOPS.filter(s=>!EXTRA_ARTICLES.some(a=>a.url===s.url))
+    .map(s=>({title:`沖縄そば巡りの旅「${s.name}」編`, url:s.url})),
+];
+archiveList.innerHTML = allArticles.map(a=>
+  `<li><a href="${a.url}" target="_blank" rel="noopener">${a.title}</a></li>`).join("");
+
+document.getElementById("stat-count").textContent = SOBA_SHOPS.length + "+";
+document.getElementById("stat-articles").textContent = allArticles.length + "+";
+render();
+</script>
