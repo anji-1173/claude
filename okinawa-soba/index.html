@@ -250,6 +250,47 @@ section{margin-top:5rem}
 .card .more:hover{color:var(--gold2);border-bottom-color:var(--gold2)}
 .card .more::after{content:"→";transition:transform .2s}
 .card .more:hover::after{transform:translateX(3px)}
+.card .thumb.clickable{cursor:pointer}
+.card .photo-count{
+  position:absolute;bottom:.7rem;right:.7rem;z-index:2;
+  background:rgba(13,19,32,.8);border:1px solid var(--line);color:var(--gold2);
+  font-size:.7rem;padding:.2rem .6rem;border-radius:2px;letter-spacing:.05em;
+  display:flex;align-items:center;gap:.3rem;backdrop-filter:blur(4px);
+}
+.card .thumb.clickable::after{
+  content:"クリックで拡大";position:absolute;inset:0;z-index:2;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(13,19,32,.45);color:var(--cream);font-size:.82rem;letter-spacing:.1em;
+  opacity:0;transition:opacity .25s;
+}
+.card:hover .thumb.clickable::after{opacity:1}
+
+/* ===== ライトボックス ===== */
+.lightbox{
+  position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.94);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);padding:3rem 1rem;
+}
+.lightbox[hidden]{display:none}
+.lb-stage{max-width:min(1100px,92vw);max-height:82vh;display:flex;align-items:center;justify-content:center}
+.lb-stage img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lb-close{
+  position:absolute;top:1rem;right:1.3rem;background:none;border:none;
+  color:var(--cream);font-size:2.2rem;cursor:pointer;line-height:1;opacity:.8;
+}
+.lb-close:hover{opacity:1;color:var(--gold2)}
+.lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(24,35,56,.7);border:1px solid var(--line);color:var(--cream);
+  width:3rem;height:3rem;border-radius:50%;font-size:1.6rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.lb-nav:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.lb-prev{left:1.2rem}.lb-next{right:1.2rem}
+.lb-caption{position:absolute;bottom:1.3rem;left:0;right:0;text-align:center;color:var(--muted);font-size:.85rem}
+.lb-caption .lb-title{color:var(--cream);font-family:var(--serif);font-size:1rem}
+.lb-caption .lb-count{color:var(--gold2);margin-left:.6rem;font-variant-numeric:tabular-nums}
+@media(max-width:640px){.lb-nav{width:2.4rem;height:2.4rem;font-size:1.3rem}.lb-prev{left:.4rem}.lb-next{right:.4rem}}
 .empty{
   grid-column:1/-1;text-align:center;color:var(--muted);
   padding:3rem 1rem;font-size:.9rem;
@@ -398,6 +439,14 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
   <div class="copy">OKINAWA SOBA JOURNEY by ANJI — 掲載文はnoteの記事より</div>
 </footer>
 
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-close" type="button" aria-label="閉じる">×</button>
+  <button class="lb-nav lb-prev" type="button" aria-label="前の写真">‹</button>
+  <figure class="lb-stage"><img id="lb-img" src="" alt=""></figure>
+  <button class="lb-nav lb-next" type="button" aria-label="次の写真">›</button>
+  <div class="lb-caption"><span class="lb-title" id="lb-title"></span><span class="lb-count" id="lb-count"></span></div>
+</div>
+
 <script>
 // ============================================================
 // お店データ
@@ -405,6 +454,8 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
 //  未設定(null)のあいだは、そば鉢のイラストが表示されます。
 //  region: naha / south / central / north / other
 // ============================================================
+const PHOTOS = {"796(ナンクル)":{"id":"001","photos":["photos/001/01.jpg","photos/001/02.jpg","photos/001/03.jpg","photos/001/04.jpg","photos/001/05.jpg","photos/001/06.jpg","photos/001/07.jpg","photos/001/08.jpg","photos/001/09.jpg","photos/001/10.jpg","photos/001/11.jpg","photos/001/12.jpg","photos/001/13.jpg","photos/001/14.jpg","photos/001/15.jpg","photos/001/16.jpg","photos/001/17.jpg","photos/001/18.jpg","photos/001/19.jpg"]},"３丁目の島そば屋":{"id":"002","photos":["photos/002/01.jpg","photos/002/02.jpg","photos/002/03.jpg","photos/002/04.jpg","photos/002/05.jpg"]}};
+
 const SOBA_SHOPS = [
   // ---- 那覇 ----
   {name:"EIBUN", area:"那覇市壺屋", region:"naha", tags:["オススメ"], rank:"暫定1位",
@@ -525,6 +576,9 @@ const SOBA_SHOPS = [
   {name:"つるりんこう", area:"沖縄市", region:"central", tags:[],
    desc:"定番の豚骨ベースのスープで勝負する沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n2c940c111329", photo:null},
+  {name:"796（ナンクル）", area:"沖縄市", region:"central", tags:["オススメ","変わり種"], photoKey:"796(ナンクル)",
+   desc:"アグー出汁系No.1。沖縄県産アグー豚の濃厚スープに縮れ生麺を合わせた実力店。名物は「ハーブ香るバターチキンカレーそば」など変わり種も充実。アンジ採点13/15点。",
+   url:"https://note.com/anjiijna/n/nd54932ebfeb7", photo:null},
   {name:"当南食堂", area:"沖縄市・東南植物楽園近く", region:"central", tags:[],
    desc:"東南植物楽園近くの、キタナシュラン的な魅力のある沖縄そば屋。",
    url:"https://note.com/anjiijna/n/nbf19b5d034e1", photo:null},
@@ -595,9 +649,9 @@ const SOBA_SHOPS = [
   {name:"わらまる商店", area:"—", region:"other", tags:[],
    desc:"無添加出汁の沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
-  {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"],
+  {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"], photoKey:"３丁目の島そば屋",
    desc:"北部エリアの沖縄そばランキング第1位。カツオ・昆布・煮干しが効いたあっさり透明スープに、太麺・細麺・乱切りをブレンドしたぷりぷりの自家製生麺。人気No.1「島そば」、炙り軟骨ソーキそば、恩納村アーサそばも。（水曜定休）",
-   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:"photos/3丁目の島そば屋/1.jpg"},
+   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
   {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
    desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
    url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
@@ -655,6 +709,37 @@ const bowlSVG = `
 const tagClass = t => t==="オススメ" ? "t-rec" : t==="変わり種" ? "t-uni" : t==="古民家" ? "t-kom" : t==="閉店" ? "t-cls" : "";
 const REGION_LABEL = {naha:"那覇", south:"南部", central:"中部", north:"北部", other:"—"};
 
+// お店の写真一覧を返す（photoKeyでPHOTOSを参照、無ければ単体photo）
+const galleryOf = s => (s.photoKey && PHOTOS[s.photoKey]) ? PHOTOS[s.photoKey].photos
+                     : (s.photo ? [s.photo] : []);
+
+// ===== ライトボックス（写真ギャラリー）=====
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lb-img");
+let lbPhotos = [], lbIndex = 0, lbTitle = "";
+function renderLb(){
+  lbImg.src = encodeURI(lbPhotos[lbIndex]);
+  lbImg.alt = lbTitle + " の写真 " + (lbIndex+1);
+  document.getElementById("lb-title").textContent = lbTitle;
+  document.getElementById("lb-count").textContent = (lbIndex+1) + " / " + lbPhotos.length;
+}
+function openLightbox(title, photos){
+  lbTitle = title; lbPhotos = photos; lbIndex = 0;
+  renderLb(); lb.hidden = false; document.body.style.overflow = "hidden";
+}
+function closeLb(){ lb.hidden = true; document.body.style.overflow = ""; lbImg.src = ""; }
+function lbStep(d){ lbIndex = (lbIndex + d + lbPhotos.length) % lbPhotos.length; renderLb(); }
+lb.querySelector(".lb-close").addEventListener("click", closeLb);
+lb.querySelector(".lb-prev").addEventListener("click", e=>{ e.stopPropagation(); lbStep(-1); });
+lb.querySelector(".lb-next").addEventListener("click", e=>{ e.stopPropagation(); lbStep(1); });
+lb.addEventListener("click", e=>{ if(e.target === lb || e.target.classList.contains("lb-stage")) closeLb(); });
+document.addEventListener("keydown", e=>{
+  if(lb.hidden) return;
+  if(e.key === "Escape") closeLb();
+  else if(e.key === "ArrowLeft") lbStep(-1);
+  else if(e.key === "ArrowRight") lbStep(1);
+});
+
 const grid = document.getElementById("grid");
 let activeRegion = "all";
 let activeTags = new Set();
@@ -670,13 +755,17 @@ function render(){
     }
     return true;
   });
-  grid.innerHTML = items.length ? items.map(s=>`
+  grid.innerHTML = items.length ? items.map(s=>{
+    const g = galleryOf(s);
+    const clickable = g.length ? "clickable" : "";
+    return `
     <article class="card">
-      <div class="thumb thumb-${s.region}">
+      <div class="thumb thumb-${s.region} ${clickable}" ${g.length?`data-key="${s.photoKey?encodeURIComponent(s.photoKey):""}" data-shop="${encodeURIComponent(s.name)}"`:""}>
         ${bowlSVG}
-        ${s.photo ? `<img class="photo" src="${s.photo}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
+        ${g.length ? `<img class="photo" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
         <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
         ${s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""}
+        ${g.length>1 ? `<span class="photo-count">📷 ${g.length}枚</span>` : ""}
       </div>
       <div class="body">
         <h3>${s.name}</h3>
@@ -684,11 +773,19 @@ function render(){
         <p>${s.desc}</p>
         <a class="more" href="${s.url}" target="_blank" rel="noopener">noteで読む</a>
       </div>
-    </article>`).join("")
+    </article>`;}).join("")
     : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
   // 写真ファイルが未アップロード/読み込み失敗のときは、そっとイラスト表示に戻す
   grid.querySelectorAll("img.photo").forEach(img=>{
-    img.addEventListener("error", ()=>img.remove());
+    img.addEventListener("error", ()=>{ img.remove(); });
+  });
+  // カードのサムネイルをクリックしたらギャラリーを開く
+  grid.querySelectorAll(".thumb.clickable").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const key = decodeURIComponent(el.dataset.key||"");
+      const photos = (PHOTOS[key] && PHOTOS[key].photos) || [];
+      if(photos.length) openLightbox(decodeURIComponent(el.dataset.shop||""), photos);
+    });
   });
 }
 
