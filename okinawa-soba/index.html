@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js" defer></script>
 <style>
 :root{
   --ink:#0d1320;
@@ -69,64 +71,113 @@ nav .links a{
 }
 nav .links a:hover{color:var(--gold2)}
 
-/* ===== ヒーロー ===== */
-header{
+/* ===== ヒーロー v2（写真背景） ===== */
+.hero{
   position:relative;z-index:1;
-  min-height:88vh;
-  display:flex;flex-direction:column;justify-content:center;
-  padding:5rem 1.5rem 4rem;
-  max-width:1100px;margin:0 auto;
+  min-height:94vh;
+  display:flex;align-items:center;
+  overflow:hidden;
 }
-.hero-kanji{
-  position:absolute;right:-2rem;top:50%;transform:translateY(-52%);
-  font-family:var(--serif);font-weight:900;
-  font-size:clamp(16rem,34vw,30rem);
-  color:transparent;
-  -webkit-text-stroke:1px rgba(217,164,65,.14);
-  line-height:1;user-select:none;pointer-events:none;
+.hero-media{position:absolute;inset:0;z-index:0}
+.hero-media img{
+  width:100%;height:100%;object-fit:cover;object-position:center 35%;
+  filter:saturate(.85) brightness(.62) contrast(1.05);
+  animation:heroZoom 26s ease-out forwards;
+}
+@keyframes heroZoom{from{transform:scale(1.12)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.hero-media img{animation:none}}
+.hero-media::after{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(100deg, rgba(13,19,32,.97) 0%, rgba(13,19,32,.88) 34%, rgba(13,19,32,.45) 62%, rgba(13,19,32,.30) 100%),
+    linear-gradient(to top, var(--ink) 0%, rgba(13,19,32,0) 26%),
+    linear-gradient(to bottom, rgba(13,19,32,.55) 0%, rgba(13,19,32,0) 18%);
+}
+.hero.nophoto .hero-media{background:radial-gradient(1200px 700px at 75% 40%, #1c2946 0%, var(--ink) 70%)}
+.hero-inner{
+  position:relative;z-index:2;
+  max-width:1100px;margin:0 auto;width:100%;
+  padding:6rem 1.5rem 7rem;
 }
 .hero-eyebrow{
   display:flex;align-items:center;gap:.8rem;
   color:var(--gold);letter-spacing:.35em;font-size:.8rem;font-weight:500;
-  margin-bottom:1.4rem;
+  margin-bottom:1.5rem;
 }
 .hero-eyebrow::before{content:"";width:3rem;height:1px;background:var(--gold)}
+.hero-eyebrow .hanko2{
+  margin-left:.4rem;
+  background:var(--red);color:#fff;font-size:.72rem;letter-spacing:.15em;
+  padding:.15rem .6rem;border-radius:3px;font-weight:700;
+}
 h1{
   font-family:var(--serif);font-weight:900;
-  font-size:clamp(2.4rem,7vw,4.6rem);
-  line-height:1.25;letter-spacing:.06em;color:var(--cream);
+  font-size:clamp(2.6rem,7.4vw,5rem);
+  line-height:1.22;letter-spacing:.05em;color:var(--cream);
+  text-shadow:0 4px 30px rgba(0,0,0,.55);
+  text-wrap:balance;
 }
 h1 .accent{color:var(--gold2)}
-.hero-sub{
-  margin-top:1.6rem;color:var(--muted);font-size:1rem;max-width:34em;
-  font-weight:300;
+.hero-goal{
+  margin-top:1.1rem;
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(1.05rem,2.4vw,1.45rem);
+  color:#c6cddc;letter-spacing:.12em;
+  text-shadow:0 2px 14px rgba(0,0,0,.55);
 }
-.hero-sub b{color:var(--text);font-weight:500}
-.hero-cta{margin-top:2.4rem;display:flex;flex-wrap:wrap;gap:1rem}
+.hero-goal .accent{color:var(--gold2)}
+.hero-sub{
+  margin-top:1.7rem;color:#c6cddc;font-size:1.02rem;max-width:33em;
+  font-weight:300;text-shadow:0 2px 12px rgba(0,0,0,.5);
+}
+.hero-sub b{color:var(--cream);font-weight:500}
+.hero-cta{margin-top:2.5rem;display:flex;flex-wrap:wrap;gap:1rem}
 .btn{
   display:inline-flex;align-items:center;gap:.5rem;
-  padding:.85rem 1.8rem;border-radius:3px;
+  padding:.9rem 1.9rem;border-radius:3px;
   font-size:.9rem;letter-spacing:.1em;text-decoration:none;
   transition:all .25s;font-weight:500;
 }
-.btn-gold{background:var(--gold);color:#1a1408}
+.btn-gold{background:var(--gold);color:#1a1408;box-shadow:0 8px 28px rgba(217,164,65,.28)}
 .btn-gold:hover{background:var(--gold2);transform:translateY(-2px)}
-.btn-ghost{border:1px solid var(--line);color:var(--text)}
+.btn-ghost{border:1px solid rgba(242,232,213,.4);color:var(--cream);backdrop-filter:blur(4px)}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
+.hero-tate{
+  position:absolute;right:2.2rem;top:50%;transform:translateY(-50%);z-index:2;
+  writing-mode:vertical-rl;font-family:var(--serif);font-weight:700;
+  color:rgba(242,232,213,.85);letter-spacing:.5em;font-size:1.05rem;
+  border-right:1px solid rgba(217,164,65,.55);padding-right:1rem;
+  text-shadow:0 2px 14px rgba(0,0,0,.6);
+}
+.hero-tate .small{font-size:.7rem;color:var(--gold2);letter-spacing:.4em}
+@media(max-width:820px){.hero-tate{display:none}}
 .stats{
-  margin-top:3.5rem;display:flex;flex-wrap:wrap;gap:0;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  margin-top:3.2rem;display:flex;flex-wrap:wrap;gap:0;
+  border:1px solid rgba(217,164,65,.25);border-radius:6px;
+  background:rgba(13,19,32,.55);backdrop-filter:blur(8px);
+  max-width:720px;overflow:hidden;
 }
 .stat{
-  flex:1;min-width:140px;padding:1.3rem 1rem;text-align:center;
-  border-right:1px solid var(--line);
+  flex:1;min-width:120px;padding:1.15rem .9rem;text-align:center;
+  border-right:1px solid rgba(217,164,65,.18);
 }
 .stat:last-child{border-right:none}
 .stat .num{
-  font-family:var(--serif);font-size:1.9rem;font-weight:700;color:var(--gold2);
-  line-height:1.2;
+  font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--gold2);
+  line-height:1.2;font-variant-numeric:tabular-nums;
 }
-.stat .label{font-size:.72rem;color:var(--muted);letter-spacing:.2em;margin-top:.3rem}
+.stat .label{font-size:.7rem;color:var(--muted);letter-spacing:.2em;margin-top:.3rem}
+.scroll-cue{
+  position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:2;
+  color:rgba(242,232,213,.7);font-size:.68rem;letter-spacing:.3em;text-align:center;
+}
+.scroll-cue::after{
+  content:"";display:block;width:1px;height:2.6rem;margin:.5rem auto 0;
+  background:linear-gradient(to bottom, var(--gold), transparent);
+  animation:cueDrop 2s ease-in-out infinite;
+}
+@keyframes cueDrop{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1);transform-origin:top}56%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+@media(prefers-reduced-motion:reduce){.scroll-cue::after{animation:none}}
 
 /* ===== セクション ===== */
 main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 1.5rem 5rem}
@@ -199,16 +250,19 @@ section{margin-top:5rem}
   background:var(--panel);border:1px solid var(--line);border-radius:8px;
   overflow:hidden;display:flex;flex-direction:column;
   transition:transform .25s,border-color .25s,box-shadow .25s;
+  cursor:pointer;
 }
 .card:hover{
   transform:translateY(-5px);border-color:var(--gold);
   box-shadow:0 14px 40px rgba(0,0,0,.45);
 }
+.card:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
 .card .thumb{
   position:relative;height:170px;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
 }
-.card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
+.card .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;transition:transform .4s}
+.card:hover .thumb img{transform:scale(1.05)}
 .card .thumb svg{width:110px;height:110px;opacity:.95}
 .thumb-naha{background:linear-gradient(135deg,#1d2740,#2b2033)}
 .thumb-south{background:linear-gradient(135deg,#1d3340,#203528)}
@@ -216,15 +270,21 @@ section{margin-top:5rem}
 .thumb-north{background:linear-gradient(135deg,#173544,#1c3d35)}
 .thumb-other{background:linear-gradient(135deg,#2b2b3a,#1f2733)}
 .card .area-badge{
-  position:absolute;top:.8rem;left:.8rem;
+  position:absolute;top:.8rem;left:.8rem;z-index:2;
   background:rgba(13,19,32,.82);border:1px solid var(--line);
   color:var(--gold2);font-size:.7rem;letter-spacing:.15em;
   padding:.25rem .7rem;border-radius:2px;backdrop-filter:blur(4px);
 }
 .card .rank-badge{
-  position:absolute;top:.8rem;right:.8rem;
+  position:absolute;top:.8rem;right:.8rem;z-index:2;
   background:var(--gold);color:#1a1408;font-weight:700;
   font-size:.7rem;letter-spacing:.1em;padding:.25rem .7rem;border-radius:2px;
+}
+.card .photo-count{
+  position:absolute;bottom:.7rem;right:.7rem;z-index:2;
+  background:rgba(13,19,32,.8);border:1px solid var(--line);color:var(--gold2);
+  font-size:.7rem;padding:.2rem .6rem;border-radius:2px;letter-spacing:.05em;
+  display:flex;align-items:center;gap:.3rem;backdrop-filter:blur(4px);
 }
 .card .body{padding:1.2rem 1.3rem 1.4rem;display:flex;flex-direction:column;flex:1}
 .card h3{
@@ -232,14 +292,14 @@ section{margin-top:5rem}
   color:var(--cream);letter-spacing:.04em;line-height:1.5;
 }
 .card .tags{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0 .7rem}
-.card .tag{
+.tag{
   font-size:.68rem;padding:.12rem .6rem;border-radius:999px;
   border:1px solid var(--line);color:var(--muted);letter-spacing:.08em;
 }
-.card .tag.t-rec{border-color:var(--gold);color:var(--gold2)}
-.card .tag.t-uni{border-color:var(--aqua);color:var(--aqua)}
-.card .tag.t-kom{border-color:#b58a5f;color:#cfa377}
-.card .tag.t-cls{border-color:#7a4a4a;color:#c98080}
+.tag.t-rec{border-color:var(--gold);color:var(--gold2)}
+.tag.t-uni{border-color:var(--aqua);color:var(--aqua)}
+.tag.t-kom{border-color:#b58a5f;color:#cfa377}
+.tag.t-cls{border-color:#7a4a4a;color:#c98080}
 .card p{font-size:.83rem;color:var(--muted);flex:1;font-weight:300}
 .card .more{
   margin-top:1rem;align-self:flex-start;
@@ -247,13 +307,67 @@ section{margin-top:5rem}
   border-bottom:1px solid transparent;transition:all .2s;
   display:inline-flex;align-items:center;gap:.4rem;
 }
-.card .more:hover{color:var(--gold2);border-bottom-color:var(--gold2)}
+.card:hover .more{color:var(--gold2);border-bottom-color:var(--gold2)}
 .card .more::after{content:"→";transition:transform .2s}
-.card .more:hover::after{transform:translateX(3px)}
+.card:hover .more::after{transform:translateX(3px)}
 .empty{
   grid-column:1/-1;text-align:center;color:var(--muted);
   padding:3rem 1rem;font-size:.9rem;
 }
+
+/* ===== マップ ===== */
+#leaflet-map{height:600px;border-radius:10px;background:#0f1626}
+.leaflet-container{font-family:var(--sans)}
+.leaflet-popup-content-wrapper{
+  background:var(--panel);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.leaflet-popup-tip{background:var(--panel);border:1px solid var(--line)}
+.leaflet-popup-content{margin:.9rem 1.1rem;line-height:1.7}
+.lp-name{font-family:var(--serif);font-weight:700;color:var(--cream);font-size:1rem}
+.lp-area{color:var(--muted);font-size:.75rem;margin-top:.1rem}
+.lp-addr{color:var(--muted);font-size:.72rem;margin-top:.3rem}
+.lp-links{display:flex;gap:.9rem;margin-top:.6rem}
+.lp-links a{color:var(--gold);text-decoration:none;font-size:.8rem;border-bottom:1px solid var(--gold)}
+.lp-links a:hover{color:var(--gold2)}
+.leaflet-control-attribution{background:rgba(13,19,32,.7)!important;color:#7a86a0!important}
+.leaflet-control-attribution a{color:#9aa5b8!important}
+.leaflet-bar a{background:var(--panel)!important;color:var(--cream)!important;border-color:var(--line)!important}
+.map-wrap{
+  display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.5rem;align-items:start;
+}
+.map-wrap[hidden]{display:none}
+@media(max-width:820px){.map-wrap{grid-template-columns:1fr}}
+.map-panel{
+  background:var(--ink2);border:1px solid var(--line);border-radius:10px;
+  padding:1rem;overflow:hidden;
+}
+#okinawa-map{width:100%;height:auto;display:block}
+#okinawa-map .island{fill:#1a2742;stroke:rgba(217,164,65,.45);stroke-width:1.5}
+#okinawa-map .sea-label{fill:#3d4d6e;font-size:11px;letter-spacing:.3em;font-family:var(--sans)}
+#okinawa-map .pin circle.dot{fill:var(--gold);stroke:#0d1320;stroke-width:1.5;transition:all .2s;cursor:pointer}
+#okinawa-map .pin text{fill:#1a1408;font-size:10px;font-weight:700;pointer-events:none;font-family:var(--sans)}
+#okinawa-map .pin .city-label{fill:#c6cddc;font-size:10.5px;font-weight:400;letter-spacing:.08em;paint-order:stroke;stroke:#0d1320;stroke-width:3px;stroke-linejoin:round}
+#okinawa-map .pin:hover circle.dot,#okinawa-map .pin.active circle.dot{fill:var(--gold2);r:8}
+#okinawa-map .pin.active .city-label{fill:var(--gold2)}
+.map-info{
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:1.3rem 1.4rem;min-height:200px;
+}
+.map-info .mi-placeholder{color:var(--muted);font-size:.85rem;padding:1rem 0}
+.map-info h3{
+  font-family:var(--serif);color:var(--cream);font-size:1.15rem;letter-spacing:.06em;
+  display:flex;align-items:baseline;gap:.6rem;margin-bottom:.8rem;
+}
+.map-info h3 .cnt{color:var(--gold2);font-size:.8rem}
+.map-info ul{list-style:none}
+.map-info li{border-top:1px dashed var(--line)}
+.map-info a{
+  display:block;padding:.55rem .1rem;color:var(--text);text-decoration:none;
+  font-size:.86rem;transition:color .2s,padding-left .2s;
+}
+.map-info a:hover{color:var(--gold2);padding-left:.5rem}
+.map-info a .mi-area{color:var(--muted);font-size:.72rem;margin-left:.5rem}
 
 /* ===== アーカイブ ===== */
 .archive{
@@ -267,14 +381,66 @@ section{margin-top:5rem}
 .archive summary::before{content:"＋";color:var(--gold);font-size:1.2rem;transition:transform .25s}
 .archive[open] summary::before{transform:rotate(45deg)}
 .archive ul{margin-top:1.2rem;list-style:none}
-.archive li{
-  border-top:1px dashed var(--line);
-}
+.archive li{border-top:1px dashed var(--line)}
 .archive a{
   display:block;padding:.65rem .2rem;color:var(--muted);text-decoration:none;
   font-size:.84rem;transition:color .2s,padding-left .2s;
 }
 .archive a:hover{color:var(--gold2);padding-left:.7rem}
+
+/* ===== 記事ページ ===== */
+#article-view{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+.art-back{
+  display:inline-flex;align-items:center;gap:.5rem;
+  color:var(--muted);text-decoration:none;font-size:.85rem;letter-spacing:.1em;
+  margin-bottom:2rem;transition:color .2s;
+}
+.art-back:hover{color:var(--gold2)}
+.art-head{border-bottom:1px solid var(--line);padding-bottom:1.6rem;margin-bottom:2rem}
+.art-eyebrow{color:var(--gold);font-size:.72rem;letter-spacing:.35em;margin-bottom:.7rem}
+.art-head h1{font-size:clamp(1.8rem,4.5vw,2.7rem);text-shadow:none;line-height:1.35}
+.art-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;align-items:center}
+.art-meta .area{
+  background:rgba(217,164,65,.1);border:1px solid rgba(217,164,65,.4);color:var(--gold2);
+  font-size:.75rem;padding:.2rem .8rem;border-radius:2px;letter-spacing:.1em;
+}
+.art-meta .rank{background:var(--gold);color:#1a1408;font-weight:700;font-size:.75rem;padding:.2rem .8rem;border-radius:2px}
+.art-hero{
+  width:100%;max-height:440px;object-fit:cover;border-radius:10px;
+  border:1px solid var(--line);margin-bottom:1.2rem;cursor:pointer;
+}
+.art-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:.6rem;margin-bottom:2.2rem}
+.art-gallery img{
+  width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;cursor:pointer;
+  border:1px solid var(--line);transition:transform .2s,border-color .2s;
+}
+.art-gallery img:hover{transform:scale(1.05);border-color:var(--gold)}
+.art-body p{
+  font-size:1rem;color:#d5d9e0;font-weight:300;line-height:2.1;
+  margin-bottom:1.6em;max-width:40em;
+}
+.art-body p:first-of-type::first-letter{
+  font-family:var(--serif);font-size:2.1em;color:var(--gold2);
+  float:left;line-height:1;padding-right:.12em;padding-top:.08em;
+}
+.art-note{
+  margin-top:2.5rem;background:var(--panel);border:1px solid var(--line);
+  border-left:4px solid var(--gold);border-radius:6px;padding:1.3rem 1.6rem;
+  font-size:.85rem;color:var(--muted);
+}
+.art-note a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold)}
+.art-note a:hover{color:var(--gold2)}
+.art-nav{
+  display:flex;justify-content:space-between;gap:1rem;margin-top:3rem;
+  border-top:1px solid var(--line);padding-top:1.6rem;
+}
+.art-nav a{
+  color:var(--muted);text-decoration:none;font-size:.85rem;max-width:45%;
+  transition:color .2s;
+}
+.art-nav a:hover{color:var(--gold2)}
+.art-nav .lbl{display:block;font-size:.68rem;color:var(--gold);letter-spacing:.2em;margin-bottom:.2rem}
+body.article-mode .hero, body.article-mode #home-main{display:none}
 
 /* ===== フッター ===== */
 footer{
@@ -298,11 +464,37 @@ footer .note-link{
 footer .note-link:hover{color:var(--gold2)}
 footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15em}
 
+/* ===== ライトボックス ===== */
+.lightbox{
+  position:fixed;inset:0;z-index:100;background:rgba(6,10,18,.94);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);padding:3rem 1rem;
+}
+.lightbox[hidden]{display:none}
+.lb-stage{max-width:min(1100px,92vw);max-height:82vh;display:flex;align-items:center;justify-content:center}
+.lb-stage img{max-width:100%;max-height:82vh;object-fit:contain;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lb-close{
+  position:absolute;top:1rem;right:1.3rem;background:none;border:none;
+  color:var(--cream);font-size:2.2rem;cursor:pointer;line-height:1;opacity:.8;
+}
+.lb-close:hover{opacity:1;color:var(--gold2)}
+.lb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(24,35,56,.7);border:1px solid var(--line);color:var(--cream);
+  width:3rem;height:3rem;border-radius:50%;font-size:1.6rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.lb-nav:hover{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.lb-prev{left:1.2rem}.lb-next{right:1.2rem}
+.lb-caption{position:absolute;bottom:1.3rem;left:0;right:0;text-align:center;color:var(--muted);font-size:.85rem}
+.lb-caption .lb-title{color:var(--cream);font-family:var(--serif);font-size:1rem}
+.lb-caption .lb-count{color:var(--gold2);margin-left:.6rem;font-variant-numeric:tabular-nums}
 @media(max-width:640px){
   .search{width:100%;margin-left:0}
-  .hero-kanji{right:-4rem}
   .champion{padding:1.6rem 1.4rem}
-  .stat{min-width:105px}
+  .stat{min-width:100px}
+  .lb-nav{width:2.4rem;height:2.4rem;font-size:1.3rem}
+  .lb-prev{left:.4rem}.lb-next{right:.4rem}
 }
 </style>
 </head>
@@ -310,36 +502,42 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
 <div class="seigaiha"></div>
 
 <nav>
-  <a class="brand" href="#"><span class="hanko">ア</span>沖縄そば巡りの旅</a>
+  <a class="brand" href="#" onclick="location.hash='';return false;"><span class="hanko">ア</span>沖縄そば巡りの旅</a>
   <div class="links">
-    <a href="#shops">お店一覧</a>
-    <a href="#archive">全記事</a>
+    <a href="#shops" onclick="location.hash='';setTimeout(()=>document.getElementById('shops').scrollIntoView(),50);return false;">お店一覧</a>
+    <a href="#map-sec" onclick="location.hash='';setTimeout(()=>document.getElementById('map-sec').scrollIntoView(),50);return false;">マップ</a>
+    <a href="#archive-sec" onclick="location.hash='';setTimeout(()=>document.getElementById('archive-sec').scrollIntoView(),50);return false;">全記事</a>
     <a href="https://note.com/anjiijna" target="_blank" rel="noopener">note</a>
   </div>
 </nav>
 
-<header>
-  <div class="hero-kanji">麺</div>
-  <div class="hero-eyebrow">OKINAWA SOBA JOURNEY</div>
-  <h1>沖縄本島、<br>そば屋<span class="accent">全店制覇</span>への道。</h1>
-  <p class="hero-sub">
-    アンジが沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を
-    じっくり味わって綴る食べ歩きの記録。観光地の名店から住宅街の隠れた実力店、
-    24時間無人営業の変わり種まで──今日もどこかで、すすっています。
-  </p>
-  <div class="hero-cta">
-    <a class="btn btn-gold" href="#shops">お店を探す</a>
-    <a class="btn btn-ghost" href="https://note.com/anjiijna/n/n4f6ba6108f76" target="_blank" rel="noopener">noteのまとめ記事へ</a>
+<header class="hero" id="hero">
+  <div class="hero-media"><img id="hero-photo" src="photos/002/05.jpg" alt="" onerror="document.getElementById('hero').classList.add('nophoto');this.remove()"></div>
+  <div class="hero-tate">一杯入魂</div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">OKINAWA SOBA JOURNEY<span class="hanko2">アンジ</span></div>
+    <h1>すすった数だけ、<br>島を知る。</h1>
+    <div class="hero-goal">沖縄本島・沖縄そば屋 <span class="accent">全店制覇</span> への道</div>
+    <p class="hero-sub">
+      アンジが沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を
+      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、
+      24時間無人営業の変わり種まで──今日もどこかで、すすっています。
+    </p>
+    <div class="hero-cta">
+      <a class="btn btn-gold" href="#shops">お店をさがす</a>
+      <a class="btn btn-ghost" href="#map-sec">マップでさがす</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
+      <div class="stat"><div class="num" id="stat-articles">70+</div><div class="label">巡礼レポート</div></div>
+      <div class="stat"><div class="num">全域</div><div class="label">本島カバー</div></div>
+      <div class="stat"><div class="num">1位</div><div class="label">暫定王者 EIBUN</div></div>
+    </div>
   </div>
-  <div class="stats">
-    <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
-    <div class="stat"><div class="num" id="stat-articles">70+</div><div class="label">巡礼レポート</div></div>
-    <div class="stat"><div class="num">全域</div><div class="label">本島カバー範囲</div></div>
-    <div class="stat"><div class="num">1位</div><div class="label">暫定王者 EIBUN</div></div>
-  </div>
+  <div class="scroll-cue">SCROLL</div>
 </header>
 
-<main>
+<main id="home-main">
 
 <section id="champion">
   <div class="champion">
@@ -353,13 +551,13 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
         行列を避けたいなら、同じクオリティが並ばず味わえる2号店「STAND EIBUN」も狙い目。
       </p>
     </div>
-    <a class="btn btn-ghost" href="https://note.com/anjiijna/n/n4f6ba6108f76" target="_blank" rel="noopener">記事を読む</a>
+    <a class="btn btn-ghost" href="#shop/EIBUN">記事を読む</a>
   </div>
 </section>
 
 <section id="shops">
   <div class="sec-head"><h2>お店をさがす</h2><span class="en">Shop Index</span></div>
-  <p class="sec-lead">エリアやタグで絞り込んで、次の一杯を見つけてください。カードの「noteで読む」から全文レポートへ飛べます。</p>
+  <p class="sec-lead">エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。</p>
 
   <div class="filters" id="region-filters">
     <button class="chip active" data-region="all">すべて</button>
@@ -377,9 +575,22 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
   <div class="grid" id="grid"></div>
 </section>
 
+<section id="map-sec">
+  <div class="sec-head"><h2>マップでさがす</h2><span class="en">Soba Map</span></div>
+  <p class="sec-lead">ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）</p>
+  <div class="map-wrap" id="map-wrap-real" hidden>
+    <div class="map-panel" style="padding:0"><div id="leaflet-map"></div></div>
+    <div class="map-info" id="map-info-real"><div class="mi-placeholder">🍜 地図のピンか、下のエリアボタンを選んでください。</div></div>
+  </div>
+  <div class="map-wrap" id="map-wrap-svg">
+    <div class="map-panel"><svg id="okinawa-map" viewBox="0 0 460 640" role="img" aria-label="沖縄本島の沖縄そばマップ"></svg></div>
+    <div class="map-info" id="map-info"><div class="mi-placeholder">🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。</div></div>
+  </div>
+</section>
+
 <section id="archive-sec">
   <div class="sec-head"><h2>全記事アーカイブ</h2><span class="en">All Articles</span></div>
-  <p class="sec-lead">noteに公開している沖縄そば巡りの記事一覧です。</p>
+  <p class="sec-lead">note版の沖縄そば巡り記事一覧です。</p>
   <details class="archive" id="archive">
     <summary>記事リストをひらく</summary>
     <ul id="archive-list"></ul>
@@ -388,23 +599,29 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
 
 </main>
 
+<div id="article-view" hidden></div>
+
 <footer>
   <div class="hanko-big">アンジ</div>
   <p>
     沖縄本島の沖縄そば屋、全店制覇が目標。<br>
-    食べ歩いたお店を少しずつnoteで紹介しています。
+    食べ歩いたお店を少しずつ紹介しています。
   </p>
   <a class="note-link" href="https://note.com/anjiijna" target="_blank" rel="noopener">note.com/anjiijna をフォローする</a>
-  <div class="copy">OKINAWA SOBA JOURNEY by ANJI — 掲載文はnoteの記事より</div>
+  <div class="copy">OKINAWA SOBA JOURNEY by ANJI</div>
 </footer>
 
+<div id="lightbox" class="lightbox" hidden>
+  <button class="lb-close" type="button" aria-label="閉じる">×</button>
+  <button class="lb-nav lb-prev" type="button" aria-label="前の写真">‹</button>
+  <figure class="lb-stage"><img id="lb-img" src="" alt=""></figure>
+  <button class="lb-nav lb-next" type="button" aria-label="次の写真">›</button>
+  <div class="lb-caption"><span class="lb-title" id="lb-title"></span><span class="lb-count" id="lb-count"></span></div>
+</div>
+
 <script>
-// ============================================================
-// お店データ
-//  photo: "photos/xxx.jpg" を設定すると、その写真がカードに表示されます。
-//  未設定(null)のあいだは、そば鉢のイラストが表示されます。
-//  region: naha / south / central / north / other
-// ============================================================
+const PHOTOS = {"796(ナンクル)":{"id":"001","photos":["photos/001/01.jpg","photos/001/02.jpg","photos/001/03.jpg","photos/001/04.jpg","photos/001/05.jpg","photos/001/06.jpg","photos/001/07.jpg","photos/001/08.jpg","photos/001/09.jpg","photos/001/10.jpg","photos/001/11.jpg","photos/001/12.jpg","photos/001/13.jpg","photos/001/14.jpg","photos/001/15.jpg","photos/001/16.jpg","photos/001/17.jpg","photos/001/18.jpg","photos/001/19.jpg"]},"３丁目の島そば屋":{"id":"002","photos":["photos/002/01.jpg","photos/002/02.jpg","photos/002/03.jpg","photos/002/04.jpg","photos/002/05.jpg"]}};
+
 const SOBA_SHOPS = [
   // ---- 那覇 ----
   {name:"EIBUN", area:"那覇市壺屋", region:"naha", tags:["オススメ"], rank:"暫定1位",
@@ -431,7 +648,7 @@ const SOBA_SHOPS = [
   {name:"だるまそば", area:"那覇市", region:"naha", tags:["変わり種"],
    desc:"居酒屋が作るコッテリ系の沖縄そば。ガツンとくる一杯が食べたい日に。",
    url:"https://note.com/anjiijna/n/n73c64c39c19a", photo:null},
-  {name:"上間沖縄天ぷら店", area:"那覇・南部", region:"naha", tags:["変わり種"],
+  {name:"上間沖縄天ぷら店", area:"沖縄市登川（本店）", region:"central", tags:["変わり種"],
    desc:"ずらりと並ぶ沖縄天ぷらが主役のお店で味わう沖縄そば。「そばも食べられる天ぷら屋さん」という立ち位置が面白い。",
    url:"https://note.com/anjiijna/n/nf91f1c616d31", photo:null},
   {name:"麺処 てぃあんだー", area:"那覇市天久", region:"naha", tags:[],
@@ -460,13 +677,13 @@ const SOBA_SHOPS = [
   {name:"沖縄そば専門 しまぶく家", area:"豊見城・八重瀬エリア", region:"south", tags:[],
    desc:"木の温もりを感じる店内で、本格的な沖縄そばが味わえる専門店。",
    url:"https://note.com/anjiijna/n/n4971dc1602cd", photo:null},
-  {name:"沖縄そば処 みなみ", area:"南部・高速南IC近く", region:"south", tags:[],
+  {name:"沖縄そば処 みなみ", area:"沖縄市・沖縄南IC近く", region:"central", tags:[],
    desc:"2022年11月オープン。キャッシュレス対応で使い勝手のいいお店。",
    url:"https://note.com/anjiijna/n/nc20f16edb382", photo:null},
-  {name:"帆掛（ふーか）きそば", area:"与那原町", region:"south", tags:["変わり種"],
+  {name:"帆掛（ふーか）きそば", area:"うるま市宇堅", region:"central", tags:["変わり種"],
    desc:"魚介系の出汁で作る個性派の沖縄そば。",
    url:"https://note.com/anjiijna/n/n3a264b04aaf0", photo:null},
-  {name:"あじゃず", area:"南部", region:"south", tags:["変わり種"],
+  {name:"あじゃず", area:"那覇市曙", region:"naha", tags:["変わり種"],
    desc:"店内にジャズが流れる、大人な雰囲気の沖縄そば屋。",
    url:"https://note.com/anjiijna/n/nd3e1e16ae4c2", photo:null},
 
@@ -510,7 +727,7 @@ const SOBA_SHOPS = [
   {name:"そば処 一本松", area:"浦添市", region:"central", tags:[],
    desc:"浦添市の住宅街にある、地元客で賑わっている沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n165640ecc3b8", photo:null},
-  {name:"我如古そば", area:"宜野湾市", region:"central", tags:[],
+  {name:"我如古そば", area:"浦添市城間", region:"central", tags:[],
    desc:"地元客で賑わう、昔ながらの沖縄そば屋。",
    url:"https://note.com/anjiijna/n/na0cc4544d07a", photo:null},
   {name:"宮古そば なかよし", area:"宜野湾市", region:"central", tags:[],
@@ -525,10 +742,13 @@ const SOBA_SHOPS = [
   {name:"つるりんこう", area:"沖縄市", region:"central", tags:[],
    desc:"定番の豚骨ベースのスープで勝負する沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n2c940c111329", photo:null},
+  {name:"796（ナンクル）", area:"沖縄市", region:"central", tags:["オススメ","変わり種"], photoKey:"796(ナンクル)",
+   desc:"アグー出汁系No.1。沖縄県産アグー豚の濃厚スープに縮れ生麺を合わせた実力店。名物は「ハーブ香るバターチキンカレーそば」など変わり種も充実。アンジ採点13/15点。",
+   url:"https://note.com/anjiijna/n/nd54932ebfeb7", photo:null},
   {name:"当南食堂", area:"沖縄市・東南植物楽園近く", region:"central", tags:[],
    desc:"東南植物楽園近くの、キタナシュラン的な魅力のある沖縄そば屋。",
    url:"https://note.com/anjiijna/n/nbf19b5d034e1", photo:null},
-  {name:"石川さん家", area:"うるま市", region:"central", tags:[],
+  {name:"石川さん家", area:"名護市為又", region:"north", tags:[],
    desc:"学生で賑わっている、タコライスもある沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n6d7806575ae7", photo:null},
   {name:"具志川そば 愛ちゃん", area:"うるま市", region:"central", tags:[],
@@ -560,7 +780,7 @@ const SOBA_SHOPS = [
   {name:"おきなわ長寿そば", area:"本部町", region:"north", tags:["変わり種"],
    desc:"長寿になれる？ なが〜い1本麺の沖縄そばが味わえるユニークなお店。",
    url:"https://note.com/anjiijna/n/nec0b959b0511", photo:null},
-  {name:"マルヨ製麺 塩屋店", area:"大宜味村", region:"north", tags:["古民家"],
+  {name:"マルヨ製麺 塩屋店", area:"うるま市塩屋", region:"central", tags:["古民家"],
    desc:"沖縄古民家でいただく、製麺所直営の沖縄そば。",
    url:"https://note.com/anjiijna/n/n28e87763122e", photo:null},
   {name:"沖縄そば家 まる良", area:"宜野座村", region:"north", tags:["閉店"],
@@ -571,52 +791,52 @@ const SOBA_SHOPS = [
    url:"https://note.com/anjiijna/n/n7284b12c67b7", photo:null},
 
   // ---- その他 ----
-  {name:"介そば", area:"—", region:"other", tags:["オススメ"],
+  {name:"介そば", area:"宜野湾市嘉数", region:"central", tags:["オススメ"],
    desc:"4種の魚節が効いたスープとツルツルもちもちの生麺。2回訪問するほどレベルの高い一杯。",
    url:"https://note.com/anjiijna/n/nae6a06277064", photo:null},
-  {name:"なりそば", area:"—", region:"other", tags:["変わり種"],
+  {name:"なりそば", area:"宜野湾市普天間", region:"central", tags:["変わり種"],
    desc:"24時間無人営業という新スタイルの沖縄そば屋。深夜でもそばが恋しくなったら。",
    url:"https://note.com/anjiijna/n/n823a88b7f513", photo:null},
-  {name:"海が見えるそば家", area:"—", region:"other", tags:[],
+  {name:"海が見えるそば家", area:"嘉手納町水釜", region:"central", tags:[],
    desc:"その名の通り、海を眺めながら沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n6f8e4e6be14d", photo:null},
-  {name:"沖縄そば SOBA DAY", area:"—", region:"other", tags:[],
+  {name:"沖縄そば SOBA DAY", area:"那覇市大道", region:"naha", tags:[],
    desc:"「沖縄そばの日」がそのまま名前になった沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n01b6551174dc", photo:null},
-  {name:"夢ノ弥", area:"—", region:"other", tags:["変わり種"],
+  {name:"夢ノ弥", area:"那覇市古島", region:"naha", tags:["変わり種"],
    desc:"濃厚つけ麺専門店が作る、1日限定30食の沖縄そば。",
    url:"https://note.com/anjiijna/n/n813070edfb52", photo:null},
-  {name:"ゆし豆腐そば専門店 わらいそば", area:"—", region:"other", tags:["変わり種"],
+  {name:"ゆし豆腐そば専門店 わらいそば", area:"豊見城市根差部", region:"south", tags:["変わり種"],
    desc:"沖縄のソウルフード「ゆし豆腐」と沖縄そばが一緒に味わえる専門店。照喜名製麺所の縮れ麺を使用（記事2本あり）。",
    url:"https://note.com/anjiijna/n/nc279ea15acdc", photo:null},
-  {name:"ニューロイヤル", area:"—", region:"other", tags:[],
+  {name:"ニューロイヤル", area:"うるま市喜仲", region:"central", tags:[],
    desc:"おしゃれな店内で、独自の調味料によるスープの味変が楽しめる沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n0db9edd79875", photo:null},
-  {name:"わらまる商店", area:"—", region:"other", tags:[],
+  {name:"わらまる商店", area:"南城市大里", region:"south", tags:[],
    desc:"無添加出汁の沖縄そばが味わえるお店。",
    url:"https://note.com/anjiijna/n/n2c2bc70033d2", photo:null},
-  {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"],
+  {name:"３丁目の島そば屋", area:"宜野湾市嘉数", region:"central", tags:["オススメ"], photoKey:"３丁目の島そば屋",
    desc:"北部エリアの沖縄そばランキング第1位。カツオ・昆布・煮干しが効いたあっさり透明スープに、太麺・細麺・乱切りをブレンドしたぷりぷりの自家製生麺。人気No.1「島そば」、炙り軟骨ソーキそば、恩納村アーサそばも。（水曜定休）",
-   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:"photos/3丁目の島そば屋/1.jpg"},
-  {name:"沖縄そば にいぶんじゃ～", area:"—", region:"other", tags:[],
+   url:"https://note.com/anjiijna/n/n25afed974cfe", photo:null},
+  {name:"沖縄そば にいぶんじゃ～", area:"沖縄市登川", region:"central", tags:[],
    desc:"なかだ製麺所の鰹粉末が練り込まれた、もちもちのストレート生麺が味わえる。",
    url:"https://note.com/anjiijna/n/nab24fda928ec", photo:null},
-  {name:"沖縄そば 咲樹", area:"—", region:"other", tags:[],
+  {name:"沖縄そば 咲樹", area:"宜野湾市我如古", region:"central", tags:[],
    desc:"地元客で賑わっている沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n6aca49e01849", photo:null},
-  {name:"てびちのてーすけ", area:"—", region:"other", tags:["変わり種"],
+  {name:"てびちのてーすけ", area:"南城市佐敷", region:"south", tags:["変わり種"],
    desc:"てびち（豚足）が売りの沖縄そば屋。トロトロのてびち好きはぜひ。",
    url:"https://note.com/anjiijna/n/n0a5c353d3390", photo:null},
-  {name:"そば処 じゅりあん", area:"—", region:"other", tags:[],
+  {name:"そば処 じゅりあん", area:"糸満市", region:"south", tags:[],
    desc:"化学調味料無添加の材料で作る、体に優しい沖縄そば。",
    url:"https://note.com/anjiijna/n/n8c08726b7161", photo:null},
-  {name:"沖縄そば 金太郎", area:"—", region:"other", tags:["変わり種"],
+  {name:"沖縄そば 金太郎", area:"南城市玉城", region:"south", tags:["変わり種"],
    desc:"ラーメン二郎の沖縄そば版！？ ガッツリ系の一杯が味わえる。",
    url:"https://note.com/anjiijna/n/n8fe3d12a7a0a", photo:null},
-  {name:"森の家", area:"—", region:"other", tags:[],
+  {name:"森の家", area:"本部町伊豆味", region:"north", tags:[],
    desc:"森の中の一軒。1月下旬〜2月頃はサクラも一緒に楽しめる。",
    url:"https://note.com/anjiijna/n/nfb6bd547cbd7", photo:null},
-  {name:"花村そば", area:"—", region:"other", tags:[],
+  {name:"花村そば", area:"恩納村瀬良垣", region:"central", tags:[],
    desc:"ダイビングの休憩中に味わえる沖縄そば屋。",
    url:"https://note.com/anjiijna/n/n657cb5ce695c", photo:null},
 ];
@@ -633,7 +853,91 @@ const EXTRA_ARTICLES = [
 ];
 
 // ============================================================
-// 描画
+// サイト内記事（カスタム原稿がある店はここに。無い店は自動生成）
+// note全文をもらったら、この ARTICLES に貼り付ければ差し替わります。
+// ============================================================
+const ARTICLES = {
+"EIBUN":[
+"沖縄本島の沖縄そば屋・全店制覇を目指して食べ歩いてきた中で、今のところ暫定1位に置いているのが、那覇市壺屋の「EIBUN」です。",
+"スープはカツオ出汁がしっかり効いていて、飲み進めるほどに旨味が広がるタイプ。そこにトロットロに煮込まれた軟骨ソーキと、甘めに炊かれた三枚肉。麺・スープ・具材、どれか一つが突出しているのではなく、全体のバランスが絶妙なんです。",
+"人気店なので行列は覚悟。並びたくない人は、同じクオリティの一杯が味わえる2号店「STAND EIBUN」が狙い目です。沖縄そばを1杯しか食べられないなら、まずこの店をオススメします。"],
+"STAND EIBUN":[
+"食べ歩いた沖縄そば屋の暫定1位「EIBUN」の2号店が、この「STAND EIBUN」。",
+"本店ほど知られていないぶん、行列に並ばずに、あのバランスの取れた一杯が味わえます。カツオの効いたスープも、トロトロの軟骨ソーキも健在。",
+"本店の行列を見て諦めたことがある人にこそ、教えたいお店です。"],
+"木灰そば とらや":[
+"那覇空港近くの赤嶺にある「木灰そば とらや」。木灰（もくはい）そばの名店として知られるお店です。",
+"木灰そばは、ガジュマルなどの木を燃やした灰の上澄み液で麺を練る、沖縄の伝統製法。かん水とはひと味違う、風味とコシのある麺に仕上がります。",
+"お店の雰囲気も含めてレベルが高く、空港からも近いので、沖縄に着いた日の一杯目、帰る日の締めの一杯にもオススメです。"],
+"三色屋":[
+"「宜野湾で一番になる」を掲げる沖縄そば屋「三色屋」。その名の通り、スープを鶏・豚・合わせの3種類から選べるのが最大の特徴です。",
+"どのスープにするか毎回悩むのも、このお店の楽しみのうち。個人的には食べ比べ推奨です。",
+"一度では選びきれず、再訪して2本目の記事も書きました。宜野湾市の沖縄そば屋では1番美味しいと思っているオススメ店です。"],
+"読谷山そば":[
+"読谷村のオススメ店「読谷山（ゆんたんざ）そば」。骨出汁をベースに、カツオがしっかり効いたスープが看板です。",
+"アーサそば、フーチバーそばなど、メニューのバリエーションが豊富なのも嬉しいところ。何度通っても違う一杯に出会えます。",
+"読谷観光の途中に立ち寄るのにもぴったりのお店です。"],
+"さくら食堂":[
+"名護市にあるオススメの沖縄そば屋「さくら食堂」。名物は、ガツンとくる「スタミナもやしそば」です。",
+"沖縄そばの出汁に、炒めたもやしの香ばしさが合わさって、他では味わえない一杯に。名護に来たらぜひ寄ってほしいお店です。"],
+"796（ナンクル）":[
+"沖縄市の「796（ナンクル）」は、アグー出汁系の沖縄そばでは個人的No.1のお店。2022年9月オープンと比較的新しいお店ですが、実力は折り紙つきです。",
+"沖縄県産アグー豚を使った濃厚なスープに、縮れの生麺がよく絡みます。出汁も具も調味料も沖縄県産にこだわる姿勢が、一杯からしっかり伝わってきます。",
+"そして名物が「ハーブ香るバターチキンカレーそば」。沖縄そば×カレーという変化球ですが、これが驚くほど完成度が高い。採点は15点満点で13点。定番も変わり種も強い、通いたくなるお店です。実際、もう3回通っています。"],
+"３丁目の島そば屋":[
+"宜野湾市嘉数の「３丁目の島そば屋」。店頭に「沖縄そばランキング第1位」の看板が掲げられ、シーサーが出迎えてくれる人気店で、オープン前から行列ができます。",
+"スープは、カツオ節をゆっくり時間をかけて煮出し、一晩寝かせた昆布と煮干しの旨味、自家製の塩ダレを合わせた、スッキリ透明感のあるあっさりカツオ出汁。麺は太麺・細麺・乱切り麺をブレンドした、他にはないぷりぷり食感のオリジナル生麺です。",
+"人気No.1は、ほろっと箸で切れる三枚肉と軟骨ソーキがのった「島そば」（小750円・並850円・大950円）。炙り軟骨ソーキそば、恩納村産アーサをたっぷり使ったアーサそばも人気です。ジューシー（200円）との相性も抜群。水曜定休、売り切れ次第終了なのでお早めに。"],
+"なかま食堂":[
+"観光地・恩納村で、特大スペアリブのソーキそば（1,200円）が味わえる「なかま食堂」。",
+"骨付きの特大スペアリブは別皿で登場。そのビジュアルのインパクトは、沖縄そば巡りの中でも屈指です。かぶりつきながら食べる一杯は、満足感もボリュームも満点。",
+"恩納村のリゾートエリアからも寄りやすく、観光の昼ごはんにもオススメです。"],
+"おきなわ長寿そば":[
+"本部町の「おきなわ長寿そば」は、なが〜い1本麺の沖縄そばが名物のユニークなお店。",
+"どんぶりの中の麺が、切れ目なく1本につながっています。長い麺にあやかって、長寿祈願の一杯としてどうぞ。",
+"美ら海水族館方面の観光と合わせて楽しみたい、話のタネになるお店です。"]
+};
+
+// ============================================================
+// マップ用データ（市町村のおおよその座標）
+// ============================================================
+const CITY_POINTS = {
+  "那覇":[127.68,26.213],"糸満":[127.665,26.125],"豊見城":[127.67,26.16],
+  "八重瀬":[127.74,26.12],"南風原":[127.73,26.19],"与那原":[127.755,26.20],
+  "南城":[127.78,26.145],"浦添":[127.72,26.25],"宜野湾":[127.77,26.28],
+  "北谷":[127.755,26.32],"嘉手納":[127.755,26.36],"読谷":[127.72,26.40],
+  "沖縄市":[127.805,26.335],"うるま":[127.86,26.37],"恩納":[127.82,26.475],
+  "宜野座":[127.975,26.48],"金武":[127.925,26.455],"名護":[127.975,26.59],
+  "本部":[127.88,26.66],"今帰仁":[127.965,26.685],"大宜味":[128.105,26.695],
+  "南部":[127.71,26.155]
+};
+const CITY_KEYS = ["糸満","豊見城","八重瀬","南風原","与那原","南城","浦添","宜野湾","北谷","嘉手納","読谷","沖縄市","うるま","恩納","宜野座","金武","名護","本部","今帰仁","大宜味","那覇","南部"];
+function cityOf(s){
+  const a = s.area || "";
+  if(/首里|国際通り|天久|赤嶺|壺屋|空港/.test(a)) return "那覇";
+  for(const k of CITY_KEYS){ if(a.includes(k)) return k; }
+  if(s.region==="naha") return "那覇";
+  return null;
+}
+// 沖縄本島のデフォルメ輪郭（経度,緯度）
+const OUTLINE = [
+  [127.663,26.072],[127.638,26.108],[127.652,26.155],[127.646,26.195],[127.658,26.230],
+  [127.694,26.263],[127.719,26.298],[127.740,26.330],[127.741,26.363],[127.708,26.404],
+  [127.712,26.443],[127.771,26.446],[127.800,26.480],[127.850,26.505],[127.878,26.512],
+  [127.900,26.530],[127.925,26.540],[127.960,26.565],[127.900,26.615],[127.880,26.640],
+  [127.855,26.660],[127.870,26.706],[127.950,26.695],[128.005,26.685],[128.020,26.660],
+  [128.085,26.700],[128.155,26.745],[128.255,26.870],[128.310,26.800],[128.280,26.740],
+  [128.180,26.630],[128.140,26.590],[128.050,26.545],[128.035,26.520],[128.010,26.480],
+  [127.995,26.460],[127.925,26.445],[127.868,26.423],[127.885,26.395],[127.920,26.365],
+  [127.990,26.305],[127.935,26.310],[127.865,26.290],[127.800,26.230],[127.770,26.190],
+  [127.800,26.170],[127.840,26.160],[127.815,26.120],[127.760,26.095],[127.700,26.080]
+];
+const PRJ = {x0:127.55, x1:128.40, y0:26.93, y1:26.02, W:460, H:640};
+const px = lng => (lng-PRJ.x0)/(PRJ.x1-PRJ.x0)*PRJ.W;
+const py = lat => (PRJ.y0-lat)/(PRJ.y0-PRJ.y1)*PRJ.H;
+
+// ============================================================
+// 共通ヘルパー
 // ============================================================
 const bowlSVG = `
 <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -651,10 +955,42 @@ const bowlSVG = `
     <path d="M96 14l12 34" opacity=".9"/>
   </g>
 </svg>`;
-
 const tagClass = t => t==="オススメ" ? "t-rec" : t==="変わり種" ? "t-uni" : t==="古民家" ? "t-kom" : t==="閉店" ? "t-cls" : "";
-const REGION_LABEL = {naha:"那覇", south:"南部", central:"中部", north:"北部", other:"—"};
+const REGION_LABEL = {naha:"那覇エリア", south:"南部エリア", central:"中部エリア", north:"北部エリア", other:"沖縄本島"};
+const slugOf = s => encodeURIComponent(s.name);
+const galleryOf = s => (s.photoKey && PHOTOS[s.photoKey]) ? PHOTOS[s.photoKey].photos
+                     : (s.photo ? [s.photo] : []);
 
+// ===== ライトボックス =====
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lb-img");
+let lbPhotos = [], lbIndex = 0, lbTitle = "";
+function renderLb(){
+  lbImg.src = encodeURI(lbPhotos[lbIndex]);
+  lbImg.alt = lbTitle + " の写真 " + (lbIndex+1);
+  document.getElementById("lb-title").textContent = lbTitle;
+  document.getElementById("lb-count").textContent = (lbIndex+1) + " / " + lbPhotos.length;
+}
+function openLightbox(title, photos, start){
+  lbTitle = title; lbPhotos = photos; lbIndex = start || 0;
+  renderLb(); lb.hidden = false; document.body.style.overflow = "hidden";
+}
+function closeLb(){ lb.hidden = true; document.body.style.overflow = ""; lbImg.src = ""; }
+function lbStep(d){ lbIndex = (lbIndex + d + lbPhotos.length) % lbPhotos.length; renderLb(); }
+lb.querySelector(".lb-close").addEventListener("click", closeLb);
+lb.querySelector(".lb-prev").addEventListener("click", e=>{ e.stopPropagation(); lbStep(-1); });
+lb.querySelector(".lb-next").addEventListener("click", e=>{ e.stopPropagation(); lbStep(1); });
+lb.addEventListener("click", e=>{ if(e.target === lb || e.target.classList.contains("lb-stage")) closeLb(); });
+document.addEventListener("keydown", e=>{
+  if(lb.hidden) return;
+  if(e.key === "Escape") closeLb();
+  else if(e.key === "ArrowLeft") lbStep(-1);
+  else if(e.key === "ArrowRight") lbStep(1);
+});
+
+// ============================================================
+// お店一覧（カード）
+// ============================================================
 const grid = document.getElementById("grid");
 let activeRegion = "all";
 let activeTags = new Set();
@@ -670,25 +1006,32 @@ function render(){
     }
     return true;
   });
-  grid.innerHTML = items.length ? items.map(s=>`
-    <article class="card">
+  grid.innerHTML = items.length ? items.map(s=>{
+    const g = galleryOf(s);
+    return `
+    <article class="card" data-slug="${slugOf(s)}" tabindex="0" role="link" aria-label="${s.name}の記事を読む">
       <div class="thumb thumb-${s.region}">
         ${bowlSVG}
-        ${s.photo ? `<img class="photo" src="${s.photo}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
+        ${g.length ? `<img class="photo" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
         <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
         ${s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""}
+        ${g.length>1 ? `<span class="photo-count">📷 ${g.length}枚</span>` : ""}
       </div>
       <div class="body">
         <h3>${s.name}</h3>
         <div class="tags">${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${t}</span>`).join("")}</div>
         <p>${s.desc}</p>
-        <a class="more" href="${s.url}" target="_blank" rel="noopener">noteで読む</a>
+        <span class="more">記事を読む</span>
       </div>
-    </article>`).join("")
+    </article>`;}).join("")
     : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
-  // 写真ファイルが未アップロード/読み込み失敗のときは、そっとイラスト表示に戻す
   grid.querySelectorAll("img.photo").forEach(img=>{
-    img.addEventListener("error", ()=>img.remove());
+    img.addEventListener("error", ()=>{ img.remove(); });
+  });
+  grid.querySelectorAll(".card").forEach(card=>{
+    const go = ()=>{ location.hash = "shop/" + card.dataset.slug; };
+    card.addEventListener("click", go);
+    card.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } });
   });
 }
 
@@ -710,7 +1053,174 @@ document.getElementById("search").addEventListener("input", e=>{
   render();
 });
 
-// アーカイブ描画
+// ============================================================
+// マップ
+// ============================================================
+function buildMap(){
+  const svg = document.getElementById("okinawa-map");
+  const NS = "http://www.w3.org/2000/svg";
+  const poly = document.createElementNS(NS,"polygon");
+  poly.setAttribute("points", OUTLINE.map(p=>px(p[0]).toFixed(1)+","+py(p[1]).toFixed(1)).join(" "));
+  poly.setAttribute("class","island");
+  svg.appendChild(poly);
+  const labels = [["東シナ海",40,150],["太平洋",330,560],["やんばる",320,120],["本部半島",150,205],["那覇",30,500]];
+  labels.forEach(([t,x,y])=>{
+    const el = document.createElementNS(NS,"text");
+    el.setAttribute("x",x); el.setAttribute("y",y); el.setAttribute("class","sea-label");
+    el.textContent = t; svg.appendChild(el);
+  });
+  const info = document.getElementById("map-info");
+  SOBA_SHOPS.forEach(s=>{
+    const geo = SHOP_GEO[s.name];
+    if(!geo) return;
+    const g = document.createElementNS(NS,"g");
+    g.setAttribute("class","pin");
+    g.setAttribute("transform",`translate(${px(geo.lng).toFixed(1)},${py(geo.lat).toFixed(1)})`);
+    const isRec = s.tags.includes("オススメ");
+    const dot = document.createElementNS(NS,"circle");
+    dot.setAttribute("class","dot"); dot.setAttribute("r", isRec?6:4.5);
+    if(isRec) dot.setAttribute("fill","#f0c469");
+    g.appendChild(dot);
+    const tip = document.createElementNS(NS,"title");
+    tip.textContent = s.name + (geo.addr ? "（"+geo.addr+"）" : "");
+    g.appendChild(tip);
+    g.addEventListener("click", ()=>{
+      svg.querySelectorAll(".pin").forEach(p=>p.classList.remove("active"));
+      g.classList.add("active");
+      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
+        ${geo.addr?`<p style="color:var(--muted);font-size:.75rem">${geo.addr}</p>`:""}
+        <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem">${s.desc}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
+    });
+    svg.appendChild(g);
+  });
+}
+
+// ===== 本格マップ（Leaflet + OpenStreetMap）=====
+// SHOP_GEO: 店名 → {lat, lng, addr}（住所からのおおよその座標）
+window.SHOP_GEO_DATA = {"EIBUN":{"lat":26.2129,"lng":127.6864,"addr":"那覇市壺屋1-5-14"},"STAND EIBUN":{"lat":26.2143,"lng":127.6851,"addr":"那覇市壺屋1-1-18"},"木灰そば とらや":{"lat":26.1926,"lng":127.6669,"addr":"那覇市赤嶺1-5-14"},"宮古そば みやらび":{"lat":26.1885,"lng":127.6635,"addr":"那覇市具志3-24-18"},"沖縄そば くいな":{"lat":26.2058,"lng":127.6907,"addr":"那覇市楚辺1-1-40"},"SHIKAKU":{"lat":26.2137,"lng":127.679,"addr":"那覇市久茂地3-29-52"},"首里の行列店（首里そば店主監修）":{"lat":26.2185,"lng":127.7195,"addr":null},"だるまそば":{"lat":26.2145,"lng":127.6702,"addr":"那覇市辻2-28-3"},"上間沖縄天ぷら店":{"lat":26.3641,"lng":127.8228,"addr":"沖縄市登川3-23-20（本店）"},"麺処 てぃあんだー":{"lat":26.2276,"lng":127.6931,"addr":"那覇市天久1-6-10"},"タイラ製麺所":{"lat":26.2158,"lng":127.6885,"addr":"那覇市牧志2-7-21"},"識名そば":{"lat":26.2005,"lng":127.701,"addr":"那覇市識名1206-1"},"沖縄そば 楚辺":{"lat":26.2043,"lng":127.6934,"addr":"那覇市楚辺2-37-40"},"すーまぬめぇ":{"lat":26.1969,"lng":127.696,"addr":"那覇市国場40-1"},"むつみ橋 かどや":{"lat":26.2149,"lng":127.6852,"addr":"那覇市牧志1-3-49"},"沖縄そば SOBA DAY":{"lat":26.2222,"lng":127.698,"addr":"那覇市大道173"},"夢ノ弥":{"lat":26.2318,"lng":127.7013,"addr":"那覇市古島1-4-11"},"あじゃず":{"lat":26.2311,"lng":127.68,"addr":"那覇市曙2-9-18"},"うちなあ家":{"lat":26.1409,"lng":127.7758,"addr":"南城市玉城垣花414"},"沖縄そば専門 しまぶく家":{"lat":26.1229,"lng":127.7433,"addr":"八重瀬町富盛981-1"},"ゆし豆腐そば専門店 わらいそば":{"lat":26.1706,"lng":127.687,"addr":"豊見城市根差部727"},"わらまる商店":{"lat":26.1728,"lng":127.7443,"addr":"南城市大里2543-1"},"沖縄そば 金太郎":{"lat":26.1497,"lng":127.7562,"addr":"南城市玉城船越1197"},"てびちのてーすけ":{"lat":26.1852,"lng":127.7787,"addr":"南城市佐敷新開1-238"},"そば処 じゅりあん":{"lat":26.1236,"lng":127.6659,"addr":"糸満市糸満1955-7"},"かめぜん食堂":{"lat":26.3163,"lng":127.756,"addr":"北谷町美浜9-1 デポアイランドC棟2F"},"すながわ製麺所":{"lat":26.3155,"lng":127.7568,"addr":"北谷町美浜9-7 デポアイランドプラザF 1F"},"北谷そば":{"lat":26.3237,"lng":127.7623,"addr":"北谷町桑江614-1"},"まるち 北谷店":{"lat":26.3358,"lng":127.7719,"addr":"北谷町吉原487"},"三色屋":{"lat":26.2748,"lng":127.7628,"addr":"宜野湾市愛知3-7-51"},"伊波家":{"lat":26.2825,"lng":127.7877,"addr":"宜野湾市野嵩1-50-6"},"我如古そば":{"lat":26.2545,"lng":127.7143,"addr":"浦添市城間4-3-6"},"宮古そば なかよし":{"lat":26.2626,"lng":127.7638,"addr":"宜野湾市志真志4-25-5"},"３丁目の島そば屋":{"lat":26.2564,"lng":127.7455,"addr":"宜野湾市嘉数3-10-1"},"麺処 まんねん":{"lat":26.2542,"lng":127.7215,"addr":"浦添市仲西2-1-21"},"そば処 一本松":{"lat":26.2559,"lng":127.7345,"addr":"浦添市当山2-37-20"},"嘉手納そば":{"lat":26.3521,"lng":127.753,"addr":"嘉手納町屋良1075-2"},"読谷山そば":{"lat":26.3701,"lng":127.7396,"addr":"読谷村古堅485-7"},"田舎 読谷店":{"lat":26.3906,"lng":127.7386,"addr":"読谷村上地359-3"},"796（ナンクル）":{"lat":26.3336,"lng":127.8027,"addr":"沖縄市中央1-2-3"},"我部祖河食堂 コザ店":{"lat":26.3283,"lng":127.7942,"addr":"沖縄市上地4-20-1"},"つるりんこう":{"lat":26.3468,"lng":127.8321,"addr":"沖縄市海邦2-26-21"},"当南食堂":{"lat":26.3665,"lng":127.8258,"addr":"沖縄市登川3261"},"沖縄そば にいぶんじゃ～":{"lat":26.3628,"lng":127.8203,"addr":"沖縄市登川2-10-1"},"沖縄そば処 みなみ":{"lat":26.3295,"lng":127.7955,"addr":"沖縄市上地3-23-2"},"石川さん家":{"lat":26.6155,"lng":127.9538,"addr":"名護市為又1219-213"},"具志川そば 愛ちゃん":{"lat":26.3793,"lng":127.8571,"addr":"うるま市大田702-6"},"ニューロイヤル":{"lat":26.3707,"lng":127.8434,"addr":"うるま市喜仲1-7-5"},"帆掛（ふーか）きそば":{"lat":26.3922,"lng":127.8407,"addr":"うるま市宇堅7"},"マルヨ製麺 塩屋店":{"lat":26.3841,"lng":127.8493,"addr":"うるま市塩屋349"},"沖縄そばと郷土料理 島時間":{"lat":26.497,"lng":127.8524,"addr":"恩納村恩納7335-4"},"なかま食堂":{"lat":26.5296,"lng":127.8968,"addr":"恩納村名嘉真2576-1"},"畑（はる）そば":{"lat":26.4448,"lng":127.7995,"addr":"恩納村山田2805"},"花村そば":{"lat":26.5099,"lng":127.8776,"addr":"恩納村瀬良垣1062-1"},"すぅ～ぎぃ～じぃ":{"lat":26.492,"lng":127.848,"addr":null},"本部そば":{"lat":26.6376,"lng":127.8878,"addr":"本部町崎本部4639-1"},"おきなわ長寿そば":{"lat":26.6337,"lng":127.8856,"addr":"本部町崎本部2795-1"},"我那覇そば":{"lat":26.6473,"lng":128.0448,"addr":"名護市真喜屋763"},"さくら食堂":{"lat":26.5891,"lng":127.9827,"addr":"名護市城1-4-11 名護市営市場2F"},"大城そば家":{"lat":26.6003,"lng":127.9648,"addr":"名護市宮里7-1-10"},"石くびり":{"lat":26.6584,"lng":127.9012,"addr":"本部町東464-1"},"沖縄料理と島どうふ TO-PU":{"lat":26.672,"lng":127.894,"addr":"本部町浜元233"},"森の家":{"lat":26.6403,"lng":127.935,"addr":"本部町伊豆味743-3"},"もとぶのそば屋さん":{"lat":26.6577,"lng":127.8985,"addr":null},"沖縄そば家 まる良":{"lat":26.4813,"lng":127.9755,"addr":null},"介そば":{"lat":26.257,"lng":127.7462,"addr":"宜野湾市嘉数4-27-10"},"なりそば":{"lat":26.2843,"lng":127.777,"addr":"宜野湾市普天間2-15-11"},"海が見えるそば家":{"lat":26.3489,"lng":127.7411,"addr":"嘉手納町水釜6-25-13"},"沖縄そば 咲樹":{"lat":26.2609,"lng":127.7548,"addr":"宜野湾市我如古3-7-6"}};
+const SHOP_GEO = window.SHOP_GEO_DATA || {};
+
+function initLeaflet(){
+  if(!window.L || !Object.keys(SHOP_GEO).length) return false;
+  document.getElementById("map-wrap-real").hidden = false;
+  document.getElementById("map-wrap-svg").hidden = true;
+  const map = L.map("leaflet-map", {scrollWheelZoom:true}).setView([26.42, 127.95], 10);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    maxZoom:19
+  }).addTo(map);
+  const info = document.getElementById("map-info-real");
+  const bounds = [];
+  SOBA_SHOPS.forEach(s=>{
+    const geo = SHOP_GEO[s.name];
+    if(!geo) return;
+    bounds.push([geo.lat, geo.lng]);
+    const isRec = s.tags.includes("オススメ");
+    const m = L.circleMarker([geo.lat, geo.lng], {
+      radius: isRec ? 9 : 7,
+      color:"#0d1320", weight:1.5,
+      fillColor: isRec ? "#f0c469" : "#d9a441", fillOpacity:.95
+    }).addTo(map);
+    const gq = encodeURIComponent(geo.addr ? s.name+" "+geo.addr : s.name+" 沖縄そば");
+    m.bindPopup(`
+      <div class="lp-name">${s.name}${isRec?" ★":""}</div>
+      <div class="lp-area">${s.area==="—"?"沖縄本島":s.area}${s.rank?"　"+s.rank:""}</div>
+      ${geo.addr?`<div class="lp-addr">${geo.addr}</div>`:""}
+      <div class="lp-links">
+        <a href="#shop/${slugOf(s)}" onclick="document.querySelector('.leaflet-popup-close-button')?.click()">記事を読む</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=${gq}" target="_blank" rel="noopener">Googleマップ</a>
+      </div>`);
+    m.on("click", ()=>{
+      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
+        <p style="color:var(--muted);font-size:.85rem">${s.desc}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
+    });
+  });
+  if(bounds.length) map.fitBounds(bounds, {padding:[30,30]});
+  return true;
+}
+window.addEventListener("load", ()=>{ try{ initLeaflet(); }catch(e){ console.warn("Leaflet無効:", e); } });
+
+// ============================================================
+// 記事ページ
+// ============================================================
+const artView = document.getElementById("article-view");
+
+function buildArticle(s){
+  if(ARTICLES[s.name]) return ARTICLES[s.name];
+  const ps = [];
+  ps.push(s.desc);
+  let p2 = `場所は${s.area==="—"?"沖縄本島内":s.area}（${REGION_LABEL[s.region]}）。`;
+  if(s.tags.includes("古民家")) p2 += "沖縄の古民家の趣を感じながら、ゆったりと一杯を味わえるお店です。";
+  if(s.tags.includes("変わり種")) p2 += "定番とはひと味違う、個性の光る一杯に出会えるお店です。";
+  if(s.tags.includes("オススメ")) p2 += "数ある沖縄そば屋の中でも、自信を持ってオススメできる一軒です。";
+  if(s.tags.includes("閉店")) p2 += "現在は閉店していますが、味の記録としてここに残しておきます。";
+  ps.push(p2);
+  ps.push("沖縄本島の沖縄そば屋・全店制覇を目指して、今日も一杯。麺、スープ、具材──それぞれの個性を確かめながら、じっくり味わってきました。");
+  return ps;
+}
+
+function renderArticle(slug){
+  const idx = SOBA_SHOPS.findIndex(x=>slugOf(x)===slug);
+  if(idx < 0){ location.hash = ""; return; }
+  const s = SOBA_SHOPS[idx];
+  const g = galleryOf(s);
+  const paras = buildArticle(s);
+  const prev = SOBA_SHOPS[(idx-1+SOBA_SHOPS.length)%SOBA_SHOPS.length];
+  const next = SOBA_SHOPS[(idx+1)%SOBA_SHOPS.length];
+  artView.innerHTML = `
+    <a class="art-back" href="#" onclick="location.hash='';return false;">← お店一覧にもどる</a>
+    <div class="art-head">
+      <div class="art-eyebrow">沖縄そば巡りの旅</div>
+      <h1>${s.name}</h1>
+      <div class="art-meta">
+        <span class="area">${s.area==="—" ? "沖縄本島" : s.area}</span>
+        ${s.rank ? `<span class="rank">${s.rank}</span>` : ""}
+        ${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${t}</span>`).join("")}
+      </div>
+    </div>
+    ${g.length ? `<img class="art-hero" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" id="art-hero-img">` : ""}
+    ${g.length>1 ? `<div class="art-gallery" id="art-gallery">` +
+        g.map((p,i)=>`<img src="${encodeURI(p)}" alt="${s.name}の写真${i+1}" loading="lazy" data-i="${i}">`).join("") + `</div>` : ""}
+    <div class="art-body">${paras.map(p=>`<p>${p}</p>`).join("")}</div>
+    <div class="art-note">
+      ${ARTICLES[s.name] ? "この記事はnote版をもとにした本サイト掲載版です。" : "この記事はnote記事のダイジェスト版です。写真や採点の詳細は、note版でも読めます。"}
+      <a href="${s.url}" target="_blank" rel="noopener">note版で読む →</a>
+    </div>
+    <div class="art-nav">
+      <a href="#shop/${slugOf(prev)}"><span class="lbl">← 前のお店</span>${prev.name}</a>
+      <a href="#shop/${slugOf(next)}" style="text-align:right"><span class="lbl">次のお店 →</span>${next.name}</a>
+    </div>`;
+  const heroImg = document.getElementById("art-hero-img");
+  if(heroImg){
+    heroImg.addEventListener("click", ()=>openLightbox(s.name, g, 0));
+    heroImg.addEventListener("error", ()=>heroImg.remove());
+  }
+  const gal = document.getElementById("art-gallery");
+  if(gal) gal.querySelectorAll("img").forEach(img=>{
+    img.addEventListener("click", ()=>openLightbox(s.name, g, +img.dataset.i));
+    img.addEventListener("error", ()=>img.remove());
+  });
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
+// ===== ルーター =====
+function route(){
+  const h = decodeURIComponent(location.hash.replace(/^#/,""));
+  if(h.startsWith("shop/")){
+    const slug = encodeURIComponent(h.slice(5));
+    document.body.classList.add("article-mode");
+    artView.hidden = false;
+    renderArticle(slug);
+  }else{
+    document.body.classList.remove("article-mode");
+    artView.hidden = true;
+  }
+}
+window.addEventListener("hashchange", route);
+
+// ===== アーカイブ =====
 const archiveList = document.getElementById("archive-list");
 const allArticles = [
   ...EXTRA_ARTICLES,
@@ -720,9 +1230,12 @@ const allArticles = [
 archiveList.innerHTML = allArticles.map(a=>
   `<li><a href="${a.url}" target="_blank" rel="noopener">${a.title}</a></li>`).join("");
 
+// ===== 起動 =====
 document.getElementById("stat-count").textContent = SOBA_SHOPS.length + "+";
 document.getElementById("stat-articles").textContent = allArticles.length + "+";
 render();
+buildMap();
+route();
 </script>
 </body>
 </html>
