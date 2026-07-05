@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
 :root{
   --ink:#0d1320;
@@ -314,6 +316,23 @@ section{margin-top:5rem}
 }
 
 /* ===== マップ ===== */
+#leaflet-map{height:600px;border-radius:10px;background:#0f1626}
+.leaflet-container{font-family:var(--sans)}
+.leaflet-popup-content-wrapper{
+  background:var(--panel);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.leaflet-popup-tip{background:var(--panel);border:1px solid var(--line)}
+.leaflet-popup-content{margin:.9rem 1.1rem;line-height:1.7}
+.lp-name{font-family:var(--serif);font-weight:700;color:var(--cream);font-size:1rem}
+.lp-area{color:var(--muted);font-size:.75rem;margin-top:.1rem}
+.lp-addr{color:var(--muted);font-size:.72rem;margin-top:.3rem}
+.lp-links{display:flex;gap:.9rem;margin-top:.6rem}
+.lp-links a{color:var(--gold);text-decoration:none;font-size:.8rem;border-bottom:1px solid var(--gold)}
+.lp-links a:hover{color:var(--gold2)}
+.leaflet-control-attribution{background:rgba(13,19,32,.7)!important;color:#7a86a0!important}
+.leaflet-control-attribution a{color:#9aa5b8!important}
+.leaflet-bar a{background:var(--panel)!important;color:var(--cream)!important;border-color:var(--line)!important}
 .map-wrap{
   display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1.5rem;align-items:start;
 }
@@ -557,8 +576,12 @@ footer .copy{margin-top:2.5rem;font-size:.72rem;color:#54607a;letter-spacing:.15
 
 <section id="map-sec">
   <div class="sec-head"><h2>マップでさがす</h2><span class="en">Soba Map</span></div>
-  <p class="sec-lead">ピンをタップすると、その街のお店一覧が表示されます。（デフォルメ地図・位置は市町村単位のおおよその目安です）</p>
-  <div class="map-wrap">
+  <p class="sec-lead">ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）</p>
+  <div class="map-wrap" id="map-wrap-real" hidden>
+    <div class="map-panel" style="padding:0"><div id="leaflet-map"></div></div>
+    <div class="map-info" id="map-info-real"><div class="mi-placeholder">🍜 地図のピンか、下のエリアボタンを選んでください。</div></div>
+  </div>
+  <div class="map-wrap" id="map-wrap-svg">
     <div class="map-panel"><svg id="okinawa-map" viewBox="0 0 460 640" role="img" aria-label="沖縄本島の沖縄そばマップ"></svg></div>
     <div class="map-info" id="map-info"><div class="mi-placeholder">🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。</div></div>
   </div>
@@ -1074,6 +1097,52 @@ function buildMap(){
     svg.appendChild(g);
   });
 }
+
+// ===== 本格マップ（Leaflet + OpenStreetMap）=====
+// SHOP_GEO: 店名 → {lat, lng, addr}（住所からのおおよその座標）
+/*__SHOP_GEO__*/
+const SHOP_GEO = window.SHOP_GEO_DATA || {};
+
+function initLeaflet(){
+  if(!window.L || !Object.keys(SHOP_GEO).length) return false;
+  document.getElementById("map-wrap-real").hidden = false;
+  document.getElementById("map-wrap-svg").hidden = true;
+  const map = L.map("leaflet-map", {scrollWheelZoom:true}).setView([26.42, 127.95], 10);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    maxZoom:19
+  }).addTo(map);
+  const info = document.getElementById("map-info-real");
+  const bounds = [];
+  SOBA_SHOPS.forEach(s=>{
+    const geo = SHOP_GEO[s.name];
+    if(!geo) return;
+    bounds.push([geo.lat, geo.lng]);
+    const isRec = s.tags.includes("オススメ");
+    const m = L.circleMarker([geo.lat, geo.lng], {
+      radius: isRec ? 9 : 7,
+      color:"#0d1320", weight:1.5,
+      fillColor: isRec ? "#f0c469" : "#d9a441", fillOpacity:.95
+    }).addTo(map);
+    const gq = encodeURIComponent(geo.addr ? s.name+" "+geo.addr : s.name+" 沖縄そば");
+    m.bindPopup(`
+      <div class="lp-name">${s.name}${isRec?" ★":""}</div>
+      <div class="lp-area">${s.area==="—"?"沖縄本島":s.area}${s.rank?"　"+s.rank:""}</div>
+      ${geo.addr?`<div class="lp-addr">${geo.addr}</div>`:""}
+      <div class="lp-links">
+        <a href="#shop/${slugOf(s)}" onclick="document.querySelector('.leaflet-popup-close-button')?.click()">記事を読む</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=${gq}" target="_blank" rel="noopener">Googleマップ</a>
+      </div>`);
+    m.on("click", ()=>{
+      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
+        <p style="color:var(--muted);font-size:.85rem">${s.desc}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
+    });
+  });
+  if(bounds.length) map.fitBounds(bounds, {padding:[30,30]});
+  return true;
+}
+window.addEventListener("load", ()=>{ try{ initLeaflet(); }catch(e){ console.warn("Leaflet無効:", e); } });
 
 // ============================================================
 // 記事ページ
