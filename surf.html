@@ -276,7 +276,8 @@
     ※ <b>サイズ</b>はうねりの向きとビーチの向きの一致度・周期から推定した<b>ブレイクサイズの目安</b>です（届かない向きのうねりや短周期の風波は割り引いて計算）。「沖合 ○m」はモデルの沖合有義波高そのままの参考値です。<br>
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
-    潮位は<b>予報期間中の最低潮位を0cmとした概算</b>（気象庁潮位表のcm値とおおむね対応しますが完全一致はしません）で、
+    潮位は<b>予報期間中の最低潮位を0cmとした概算</b>（気象庁潮位表のcm値とおおむね対応しますが完全一致はしません）。
+    沖縄本島の3ポイントは<b>那覇沖の潮位</b>を、その他は各ポイント直近の沖合点の潮位を使用しています。
     グラフの<span style="color:var(--poor);font-weight:700">120cm破線</span>はリーフポイントのエントリー目安です。風向は「吹いてくる方角」。データは1時間キャッシュされます。<br>
     ※ <b>台風について</b>: 波浪モデルは台風を含む風の予報にもとづくため台風うねりも反映されますが、予報期間（8日）より先や進路変更は反映されません。
     うねりが急に上がる日には <span class="surge-tag">⚠急上昇</span> を表示します。台風接近時は必ず
@@ -289,11 +290,19 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-05.3';
+const APP_VERSION = '2026-07-05.4';
+
+/* 潮位参照点: 検潮所に相当する沖合の海上点。スポットに tide:'naha' のように
+   指定すると、波データの取得点とは別にこの点の潮位を使う。
+   未指定のスポットはスポット直近の沖合点の潮位(最寄りデータ)を使う */
+const TIDE_STATIONS = {
+  naha: { name: '那覇', lat: 26.21, lon: 127.66 },
+};
 
 /* ===== スポット定義 =====
    facing: ビーチが海に向いている方角（度）。オフショア判定に使用
-   lbl: 地図上のラベル位置 r=右 l=左 t=上 b=下 */
+   lbl: 地図上のラベル位置 r=右 l=左 t=上 b=下
+   tide: 潮位参照点(TIDE_STATIONS)のキー。沖縄本島は那覇基準 */
 const SPOTS = [
   // 北海道・東北
   { id:'itanki',    name:'イタンキ浜',    pref:'室蘭',   region:'北海道・東北', lat:42.32, lon:141.04, facing:140, lbl:'l' },
@@ -329,9 +338,9 @@ const SPOTS = [
   { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州',        lat:31.86, lon:131.47, facing:100, lbl:'r' },
   { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州',        lat:33.66, lon:130.20, facing:350, lbl:'t' },
   // 沖縄
-  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3, dataLat:26.36, dataLon:127.68 },
-  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3, dataLat:26.33, dataLon:127.68 },
-  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b', dataLat:26.03, dataLon:127.70 },
+  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3, dataLat:26.36, dataLon:127.68, tide:'naha' },
+  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3, dataLat:26.33, dataLon:127.68, tide:'naha' },
+  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b', dataLat:26.03, dataLon:127.70, tide:'naha' },
   // 日本海
   { id:'yunohama',  name:'湯野浜',        pref:'山形',   region:'日本海',      lat:38.77, lon:139.73, facing:290, lbl:'t' },
   { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
@@ -341,7 +350,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v5';
+const CACHE_KEY = 'surf-cache-v6';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -435,7 +444,7 @@ async function fetchAll(force) {
       if (c && Date.now() - c.fetchedAt < CACHE_TTL) return c;
     } catch (e) { /* 壊れたキャッシュは無視 */ }
   }
-  let marine, wind;
+  let marine, wind, tideMap = {};
   if (DEMO) {
     ({ marine, wind } = demoData());
   } else {
@@ -448,15 +457,34 @@ async function fetchAll(force) {
       + `&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`;
     const wUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
       + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&timezone=Asia%2FTokyo&forecast_days=8`;
-    const [mRes, wRes] = await Promise.all([fetch(mUrl), fetch(wUrl)]);
+    // 潮位参照点(那覇など)の潮位だけを別途取得
+    const stKeys = [...new Set(SPOTS.map(s => s.tide).filter(Boolean))];
+    const tUrl = stKeys.length
+      ? `https://marine-api.open-meteo.com/v1/marine?latitude=${stKeys.map(k => TIDE_STATIONS[k].lat).join(',')}`
+        + `&longitude=${stKeys.map(k => TIDE_STATIONS[k].lon).join(',')}`
+        + `&hourly=sea_level_height_msl&timezone=Asia%2FTokyo&forecast_days=8&cell_selection=sea`
+      : null;
+    const [mRes, wRes, tRes] = await Promise.all([
+      fetch(mUrl), fetch(wUrl), tUrl ? fetch(tUrl) : Promise.resolve(null),
+    ]);
     if (!mRes.ok || !wRes.ok) throw new Error(`API error (marine:${mRes.status} wind:${wRes.status})`);
     marine = await mRes.json();
     wind = await wRes.json();
     if (!Array.isArray(marine)) marine = [marine];
     if (!Array.isArray(wind)) wind = [wind];
+    if (tRes && tRes.ok) {
+      let t = await tRes.json();
+      if (!Array.isArray(t)) t = [t];
+      stKeys.forEach((k, i) => {
+        if (t[i] && t[i].hourly) tideMap[k] = t[i].hourly.sea_level_height_msl;
+      });
+    } // 取得失敗時はスポット直近の潮位にフォールバック
   }
   const data = { fetchedAt: Date.now(), spots: {} };
   SPOTS.forEach((spot, i) => {
+    if (spot.tide && tideMap[spot.tide]) {
+      marine[i].hourly.sea_level_height_msl = tideMap[spot.tide];
+    }
     data.spots[spot.id] = processSpot(spot, marine[i], wind[i]);
   });
   if (!DEMO) {
@@ -941,7 +969,7 @@ function detailHtml(spot, sd) {
       <td>${r.sea != null && sd.seaBase != null ? Math.round((r.sea - sd.seaBase) * 100) + 'cm' : '—'}</td>
     </tr>`).join('');
   return `<div class="detail">
-    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}・期間最低潮位=0cmの概算）</h3>
+    <h3>潮位（${dayLabel(d.date, state.dayIdx).sub}${spot.tide ? '・' + TIDE_STATIONS[spot.tide].name + '基準' : ''}・期間最低潮位=0cmの概算）</h3>
     ${tideChartSvg(spot.id, sd, d)}
     <h3>3時間ごと</h3>
     <div class="table-wrap"><table class="hourly">
