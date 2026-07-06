@@ -277,7 +277,7 @@
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
     潮位は<b>予報期間中の最低潮位を0cmとした概算</b>（気象庁潮位表のcm値とおおむね対応しますが完全一致はしません）。
-    沖縄本島の3ポイントは<b>那覇沖の潮位</b>を、その他は各ポイント直近の沖合点の潮位を使用しています。
+    沖縄本島の3ポイントは<b>那覇沖の潮位</b>（気象庁潮位表と突き合わせた時刻補正つき）を、その他は各ポイント直近の沖合点の潮位を使用しています。
     グラフの<span style="color:var(--poor);font-weight:700">120cm破線</span>はリーフポイントのエントリー目安です。風向は「吹いてくる方角」。データは1時間キャッシュされます。<br>
     ※ <b>台風について</b>: 波浪モデルは台風を含む風の予報にもとづくため台風うねりも反映されますが、予報期間（8日）より先や進路変更は反映されません。
     うねりが急に上がる日には <span class="surge-tag">⚠急上昇</span> を表示します。台風接近時は必ず
@@ -290,14 +290,31 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-05.4';
+const APP_VERSION = '2026-07-06.1';
 
 /* 潮位参照点: 検潮所に相当する沖合の海上点。スポットに tide:'naha' のように
    指定すると、波データの取得点とは別にこの点の潮位を使う。
-   未指定のスポットはスポット直近の沖合点の潮位(最寄りデータ)を使う */
+   未指定のスポットはスポット直近の沖合点の潮位(最寄りデータ)を使う。
+   offsetMin: 気象庁潮位表と突き合わせた時刻補正(分)。世界潮汐モデルの
+   位相の系統誤差を補正する(例: 那覇はモデルが実測より42分早い) */
 const TIDE_STATIONS = {
-  naha: { name: '那覇', lat: 26.21, lon: 127.66 },
+  naha: { name: '那覇', lat: 26.21, lon: 127.66, offsetMin: 42 },
 };
+
+/* 毎時潮位系列を offsetMin 分だけ遅らせる(線形補間)。
+   モデルの満潮が実測より早く出る場合に正の値で補正する */
+function shiftTideSeries(values, offsetMin) {
+  if (!offsetMin || !values) return values;
+  const f = offsetMin / 60;
+  return values.map((_, i) => {
+    const t = i - f;
+    const i0 = Math.max(0, Math.min(values.length - 1, Math.floor(t)));
+    const i1 = Math.max(0, Math.min(values.length - 1, i0 + 1));
+    const a = values[i0], b = values[i1];
+    if (a == null || b == null) return null;
+    return a + (b - a) * Math.max(0, Math.min(1, t - i0));
+  });
+}
 
 /* ===== スポット定義 =====
    facing: ビーチが海に向いている方角（度）。オフショア判定に使用
@@ -350,7 +367,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v6';
+const CACHE_KEY = 'surf-cache-v7';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -476,7 +493,9 @@ async function fetchAll(force) {
       let t = await tRes.json();
       if (!Array.isArray(t)) t = [t];
       stKeys.forEach((k, i) => {
-        if (t[i] && t[i].hourly) tideMap[k] = t[i].hourly.sea_level_height_msl;
+        if (t[i] && t[i].hourly) {
+          tideMap[k] = shiftTideSeries(t[i].hourly.sea_level_height_msl, TIDE_STATIONS[k].offsetMin);
+        }
       });
     } // 取得失敗時はスポット直近の潮位にフォールバック
   }
