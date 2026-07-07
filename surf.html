@@ -273,7 +273,8 @@
   <div class="notice">
     ※ 評価の見方: <b>◎最高 ○良い △普通 ▽イマイチ ×ダメ</b>。サイズ・風向〈オフ/サイド/オンショア〉・風速・うねりの周期から算出した目安で、
     モモ〜コシ以下のサイズは風が良くても▽止まり、スネ以下やクローズ級は×になります。<br>
-    ※ <b>サイズ</b>はうねりの向きとビーチの向きの一致度・周期から推定した<b>ブレイクサイズの目安</b>です（届かない向きのうねりや短周期の風波は割り引いて計算）。「沖合 ○m」はモデルの沖合有義波高そのままの参考値です。<br>
+    ※ <b>サイズ</b>はうねりの向きとビーチの向きの一致度・周期から推定した<b>ブレイクサイズの目安</b>です（届かない向きのうねりや短周期の風波は割り引き、
+    沖縄などのリーフポイントは浅い地形でうねりが掘れる増幅を考慮）。「沖合 ○m」はモデルの沖合有義波高そのままの参考値です。<br>
     ※ 波高・周期・うねり向き・潮位は <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> の沖合モデル値（有義波高）にもとづく推定です。
     実際のブレイクサイズ・波数は各ポイントの地形や向きで変わるため、あくまで目安としてご利用ください。
     潮位は<b>予報期間中の最低潮位を0cmとした概算</b>（気象庁潮位表のcm値とおおむね対応しますが完全一致はしません）。
@@ -290,7 +291,7 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-06.1';
+const APP_VERSION = '2026-07-06.2';
 
 /* 潮位参照点: 検潮所に相当する沖合の海上点。スポットに tide:'naha' のように
    指定すると、波データの取得点とは別にこの点の潮位を使う。
@@ -355,9 +356,9 @@ const SPOTS = [
   { id:'kisakihama',name:'木崎浜',        pref:'宮崎',   region:'九州',        lat:31.86, lon:131.47, facing:100, lbl:'r' },
   { id:'itoshima',  name:'糸島',          pref:'福岡',   region:'九州',        lat:33.66, lon:130.20, facing:350, lbl:'t' },
   // 沖縄
-  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3, dataLat:26.36, dataLon:127.68, tide:'naha' },
-  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3, dataLat:26.33, dataLon:127.68, tide:'naha' },
-  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b', dataLat:26.03, dataLon:127.70, tide:'naha' },
+  { id:'mizugama',  name:'水釜',          pref:'嘉手納', region:'沖縄',        lat:26.352,lon:127.735,facing:270, lbl:'t', mapDy:-3, dataLat:26.36, dataLon:127.68, tide:'naha', reef:true },
+  { id:'sunabe',    name:'砂辺',          pref:'北谷',   region:'沖縄',        lat:26.335,lon:127.74, facing:280, lbl:'r', mapDy:3, dataLat:26.33, dataLon:127.68, tide:'naha', reef:true },
+  { id:'suicide',   name:'スーサイド（米須）', pref:'糸満', region:'沖縄',     lat:26.08, lon:127.71, facing:190, lbl:'b', dataLat:26.03, dataLon:127.70, tide:'naha', reef:true },
   // 日本海
   { id:'yunohama',  name:'湯野浜',        pref:'山形',   region:'日本海',      lat:38.77, lon:139.73, facing:290, lbl:'t' },
   { id:'sekiyahama',name:'関屋浜',        pref:'新潟',   region:'日本海',      lat:37.93, lon:139.02, facing:325, lbl:'t' },
@@ -367,7 +368,7 @@ const SPOTS = [
 ];
 const REGIONS = ['全国', ...[...new Set(SPOTS.map(s => s.region))]];
 
-const CACHE_KEY = 'surf-cache-v7';
+const CACHE_KEY = 'surf-cache-v8';
 const CACHE_TTL = 60 * 60 * 1000; // 1時間
 const DEMO = new URLSearchParams(location.search).has('demo');
 
@@ -567,7 +568,10 @@ function processSpot(spot, m, w) {
     // ブレイクサイズ推定(effH):
     // - ポイントに届く向きのうねりだけを数える(ビーチの向きとの一致度で減衰。
     //   横〜裏向きは島や地形に遮られるため急に減衰させる)
-    // - 周期が長いほどブレイクは大きい
+    // - 周期が長いほどブレイクは大きい。リーフ(reef:true)は浅い地形で
+    //   うねりが掘れて沖合波高より大きくブレイクするため増幅を強くし、
+    //   上限も沖合波高の1.6倍まで許容する
+    //   (実測: 2026-07-06 スーサイド 腹〜胸に対しアプリが過小 → リーフ増幅を導入)
     // - 風波(局地チョップ)は乗れるセットにならないので寄与を小さく(0.2)。
     //   これをしないと夏の西向きビーチが海風チョップでサイズ過大になる
     const expo = dir => {
@@ -575,9 +579,11 @@ function processSpot(spot, m, w) {
       const a = angDiff(dir, spot.facing);
       return a <= 40 ? 1 : a <= 65 ? 0.7 : a <= 90 ? 0.35 : a <= 115 ? 0.12 : 0.03;
     };
-    const pBoost = period >= 11 ? 1.15 : period >= 8 ? 1 : period >= 6 ? 0.85 : 0.7;
+    const pBoost = spot.reef
+      ? (period >= 11 ? 1.5 : period >= 8 ? 1.3 : period >= 6 ? 1.0 : 0.8)
+      : (period >= 11 ? 1.15 : period >= 8 ? 1 : period >= 6 ? 0.85 : 0.7);
     const effH = Math.min(
-      maxH,
+      spot.reef ? maxH * 1.6 : maxH,
       (swellH * expo(swellDir) * pBoost + windWaveH * expo(windWaveDir) * 0.2) * (spot.cal || 1)
     );
 
