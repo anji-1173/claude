@@ -291,7 +291,7 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-06.3';
+const APP_VERSION = '2026-07-06.4';
 
 /* 潮位参照点: 検潮所に相当する沖合の海上点。スポットに tide:'naha' のように
    指定すると、波データの取得点とは別にこの点の潮位を使う。
@@ -1113,7 +1113,7 @@ function renderUpdated() {
   const el = document.getElementById('updated');
   if (!state.data) { el.textContent = ''; return; }
   const t = new Date(state.data.fetchedAt);
-  el.textContent = `${DEMO ? '【デモデータ】' : ''}${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())} 取得`;
+  el.textContent = `${DEMO ? '【デモデータ】' : ''}${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())} 取得・v${APP_VERSION}`;
 }
 
 function renderError(err) {
@@ -1172,7 +1172,8 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => { /* 未対応環境は無視 */ });
 }
 
-/* 自分自身を取得して APP_VERSION を比較。新版が出ていれば更新バーを表示 */
+/* 自分自身を取得して APP_VERSION を比較。新版が出ていれば自動で再読込する。
+   (自動再読込は新版ごとに1回だけ試し、失敗時は手動の更新バーを出す) */
 async function checkForUpdate() {
   if (DEMO) return;
   try {
@@ -1181,6 +1182,14 @@ async function checkForUpdate() {
     const html = await res.text();
     const m = html.match(/APP_VERSION\s*=\s*'([^']+)'/);
     if (m && m[1] !== APP_VERSION) {
+      const key = 'auto-reload-' + m[1];
+      let tried = null;
+      try { tried = sessionStorage.getItem(key); } catch (e) { /* プライベートモード等 */ }
+      if (!tried) {
+        try { sessionStorage.setItem(key, '1'); } catch (e) { /* 保存不可なら手動バーへ */ }
+        location.replace(location.pathname + '?v=' + Date.now() + location.hash);
+        return;
+      }
       document.getElementById('updateBar').style.display = 'flex';
     }
   } catch (e) { /* オフライン等は無視 */ }
