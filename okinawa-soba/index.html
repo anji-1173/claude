@@ -328,6 +328,7 @@ section{margin-top:5rem}
 
 /* ===== マップ ===== */
 #leaflet-map{height:600px;border-radius:10px;background:#0f1626}
+.osm-dark{filter:invert(1) hue-rotate(190deg) brightness(.9) saturate(.45) contrast(.92)}
 .leaflet-container{font-family:var(--sans)}
 .leaflet-popup-content-wrapper{
   background:var(--panel);color:var(--text);border:1px solid var(--line);
@@ -1270,10 +1271,23 @@ function initLeaflet(){
   document.getElementById("map-wrap-real").hidden = false;
   document.getElementById("map-wrap-svg").hidden = true;
   const map = L.map("leaflet-map", {scrollWheelZoom:true}).setView([26.42, 127.95], 10);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+  const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
     maxZoom:19
   }).addTo(map);
+  // CARTOタイルが読み込めない環境では標準OSMタイルに自動フォールバック
+  let tileOK=false, swapped=false;
+  carto.on("tileload", ()=>{ tileOK=true; });
+  function swapToOSM(){
+    if(swapped||tileOK) return; swapped=true;
+    map.removeLayer(carto);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom:19, className:"osm-dark"
+    }).addTo(map);
+  }
+  carto.on("tileerror", swapToOSM);
+  setTimeout(swapToOSM, 4000);
   const info = document.getElementById("map-info-real");
   const bounds = [];
   SOBA_SHOPS.forEach(s=>{
