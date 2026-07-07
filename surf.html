@@ -291,7 +291,7 @@
 
 /* ビルド版数(更新のたびに増やす)。ページ自身を取得して比較し、
    ホーム画面アプリ等でキャッシュされていても新版を検知する */
-const APP_VERSION = '2026-07-06.2';
+const APP_VERSION = '2026-07-06.3';
 
 /* 潮位参照点: 検潮所に相当する沖合の海上点。スポットに tide:'naha' のように
    指定すると、波データの取得点とは別にこの点の潮位を使う。
@@ -1150,11 +1150,27 @@ document.addEventListener('click', ev => {
   const day = ev.target.closest('[data-day]');
   if (day) { state.dayIdx = +day.dataset.day; render(); return; }
 });
-document.getElementById('refreshBtn').addEventListener('click', () => load(true));
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  load(true);          // 波データを再取得
+  checkForUpdate();    // アプリ本体の新版も同時に確認
+});
 document.getElementById('reloadBtn').addEventListener('click', () => {
   // キャッシュを無視して再取得(ホーム画面アプリでも確実に新版を読む)
   location.replace(location.pathname + '?v=' + Date.now() + location.hash);
 });
+
+/* ホーム画面アプリはバックグラウンドから復帰してもページを再読込しないため、
+   前面に戻るたびに新版チェックと(古ければ)データ再取得を行う */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  checkForUpdate();
+  if (state.data && Date.now() - state.data.fetchedAt > CACHE_TTL) load(false);
+});
+
+/* Service Worker: ネットワーク優先キャッシュ。オンラインなら常に最新版を配信 */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => { /* 未対応環境は無視 */ });
+}
 
 /* 自分自身を取得して APP_VERSION を比較。新版が出ていれば更新バーを表示 */
 async function checkForUpdate() {
