@@ -242,19 +242,6 @@
    "photos/017/03.jpg"
   ]
  },
- "うちなぁそば星雲": {
-  "id": "018",
-  "photos": [
-   "photos/018/01.jpg",
-   "photos/018/02.jpg",
-   "photos/018/03.jpg",
-   "photos/018/04.jpg",
-   "photos/018/05.jpg",
-   "photos/018/06.jpg",
-   "photos/018/07.jpg",
-   "photos/018/08.jpg"
-  ]
- },
  "うちなあ家": {
   "id": "019",
   "photos": [
@@ -3317,6 +3304,19 @@
    "09.jpg",
    "10.jpg",
    "11.jpg"
+  ]
+ },
+ "うちなぁそば青雲": {
+  "id": "018",
+  "photos": [
+   "photos/018/01.jpg",
+   "photos/018/02.jpg",
+   "photos/018/03.jpg",
+   "photos/018/04.jpg",
+   "photos/018/05.jpg",
+   "photos/018/06.jpg",
+   "photos/018/07.jpg",
+   "photos/018/08.jpg"
   ]
  }
 }
