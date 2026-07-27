@@ -141,7 +141,6 @@
  "yu-i FACTORY（ユーイファクトリー）": {
   "id": "010",
   "photos": [
-   "photos/010/01.jpg",
    "photos/010/02.jpg",
    "photos/010/03.jpg",
    "photos/010/04.jpg",
@@ -801,7 +800,6 @@
   "id": "057",
   "photos": [
    "photos/057/01.jpg",
-   "photos/057/02.jpg",
    "photos/057/03.jpg",
    "photos/057/04.jpg",
    "photos/057/05.jpg",
@@ -1107,7 +1105,6 @@
  "まるの家": {
   "id": "080",
   "photos": [
-   "photos/080/01.jpg",
    "photos/080/02.jpg",
    "photos/080/03.jpg",
    "photos/080/04.jpg",
@@ -1147,7 +1144,6 @@
  "みはま食堂": {
   "id": "083",
   "photos": [
-   "photos/083/01.jpg",
    "photos/083/02.jpg",
    "photos/083/03.jpg",
    "photos/083/04.jpg",
@@ -1406,7 +1402,6 @@
  "シラノ": {
   "id": "103",
   "photos": [
-   "photos/103/01.jpg",
    "photos/103/02.jpg",
    "photos/103/03.jpg",
    "photos/103/04.jpg",
@@ -1643,7 +1638,6 @@
  "亀そばしまや": {
   "id": "121",
   "photos": [
-   "photos/121/01.jpg",
    "photos/121/02.jpg",
    "photos/121/03.jpg",
    "photos/121/04.jpg",
@@ -1830,7 +1824,6 @@
  "千代": {
   "id": "136",
   "photos": [
-   "photos/136/01.jpg",
    "photos/136/02.jpg",
    "photos/136/03.jpg",
    "photos/136/04.jpg",
@@ -2003,7 +1996,6 @@
  "大城そば家": {
   "id": "151",
   "photos": [
-   "photos/151/01.jpg",
    "photos/151/02.jpg",
    "photos/151/03.jpg",
    "photos/151/04.jpg",
@@ -2123,7 +2115,6 @@
   "photos": [
    "photos/158/01.jpg",
    "photos/158/02.jpg",
-   "photos/158/03.jpg",
    "photos/158/04.jpg",
    "photos/158/05.jpg",
    "photos/158/06.jpg",
@@ -2148,7 +2139,6 @@
  "宮古そばなかよし": {
   "id": "160",
   "photos": [
-   "photos/160/01.jpg",
    "photos/160/02.jpg",
    "photos/160/03.jpg",
    "photos/160/04.jpg",
@@ -2255,8 +2245,6 @@
  "島人そば": {
   "id": "170",
   "photos": [
-   "photos/170/01.jpg",
-   "photos/170/02.jpg",
    "photos/170/03.jpg",
    "photos/170/04.jpg",
    "photos/170/05.jpg",
@@ -2379,7 +2367,6 @@
  "我部祖河食堂コザ店": {
   "id": "180",
   "photos": [
-   "photos/180/01.jpg",
    "photos/180/02.jpg",
    "photos/180/03.jpg",
    "photos/180/04.jpg",
@@ -2439,7 +2426,6 @@
  "木灰そば とらや": {
   "id": "185",
   "photos": [
-   "photos/185/01.jpg",
    "photos/185/02.jpg",
    "photos/185/03.jpg",
    "photos/185/04.jpg",
@@ -2616,7 +2602,6 @@
  "沖縄そばゆい": {
   "id": "197",
   "photos": [
-   "photos/197/01.jpg",
    "photos/197/02.jpg",
    "photos/197/03.jpg",
    "photos/197/04.jpg",
@@ -2889,7 +2874,6 @@
  "白虎外伝": {
   "id": "216",
   "photos": [
-   "photos/216/01.jpg",
    "photos/216/02.jpg",
    "photos/216/03.jpg",
    "photos/216/04.jpg",
@@ -2905,7 +2889,6 @@
  "石くびり": {
   "id": "217",
   "photos": [
-   "photos/217/01.jpg",
    "photos/217/02.jpg",
    "photos/217/03.jpg",
    "photos/217/04.jpg",
@@ -2943,7 +2926,6 @@
  "米八そば": {
   "id": "220",
   "photos": [
-   "photos/220/01.jpg",
    "photos/220/02.jpg",
    "photos/220/03.jpg",
    "photos/220/04.jpg",
@@ -3136,8 +3118,6 @@
  "長寿そば": {
   "id": "235",
   "photos": [
-   "photos/235/01.jpg",
-   "photos/235/02.jpg",
    "photos/235/03.jpg",
    "photos/235/04.jpg",
    "photos/235/05.jpg",
