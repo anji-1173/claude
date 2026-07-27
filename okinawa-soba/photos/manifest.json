@@ -166,7 +166,6 @@
  "あがり家+": {
   "id": "011",
   "photos": [
-   "photos/011/01.jpg",
    "photos/011/02.jpg",
    "photos/011/03.jpg",
    "photos/011/04.jpg",
@@ -187,7 +186,6 @@
  "あじゃず": {
   "id": "012",
   "photos": [
-   "photos/012/01.jpg",
    "photos/012/02.jpg",
    "photos/012/03.jpg",
    "photos/012/04.jpg",
@@ -230,8 +228,7 @@
    "photos/016/03.jpg",
    "photos/016/04.jpg",
    "photos/016/05.jpg",
-   "photos/016/06.jpg",
-   "photos/016/07.jpg"
+   "photos/016/06.jpg"
   ]
  },
  "うかじそば": {
@@ -1091,8 +1088,7 @@
    "photos/078/05.jpg",
    "photos/078/06.jpg",
    "photos/078/07.jpg",
-   "photos/078/08.jpg",
-   "photos/078/09.jpg"
+   "photos/078/08.jpg"
   ]
  },
  "まるなが": {
@@ -1228,8 +1224,7 @@
    "photos/089/08.jpg",
    "photos/089/09.jpg",
    "photos/089/10.jpg",
-   "photos/089/11.jpg",
-   "photos/089/12.jpg"
+   "photos/089/11.jpg"
   ]
  },
  "めし屋ひろし": {
@@ -2731,7 +2726,6 @@
  "沖縄そば鶴亀": {
   "id": "203",
   "photos": [
-   "photos/203/01.jpg",
    "photos/203/02.jpg",
    "photos/203/03.jpg",
    "photos/203/04.jpg",
