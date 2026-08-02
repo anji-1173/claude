@@ -43,6 +43,15 @@
 - AI生成イラスト写真（店舗の絵・街並みの絵など）は**記事に載せない**。見つけたら毎回報告する。
 - フォルダが無い新店は、テキストのみの記事＋新カード＋ピンを先に作る。写真はアンジが
   GitHubのWebアップロード（https://github.com/anji-1173/okinawa-soba/upload/main）で上げてくれるので、後から統合する。
+- **アップロードページが使えない場合の写真受け取りルート（実績あり）**：
+  1. アンジが https://github.com/anji-1173/okinawa-soba/issues/new に写真を貼り付けて Issue を作成
+  2. Issue本文から `github.com/user-attachments/assets/…` のURLを抽出（このURLはセッションのプロキシで直接DL不可）
+  3. URLをハードコードした一時ワークフロー `.github/workflows/fetch-assets.yml`（workflow_dispatch,
+     permissions: contents: write, curlでDL→ `incoming/` にコミット）を main にプッシュし、
+     MCPの actions_run_trigger で実行 → git pull で受領
+  4. sharpでリサイズ（.rotate()→1200px inside, q78）して photos/NNN/ へ、記事・PHOTOS・manifest を更新
+  5. 後片付け：incoming/ とワークフローを git rm し、Issue をクローズする
+  ※チャットに貼られた写真は「見える」だけでファイル化できないので、必ずIssue経由で受け取る。
 - 記事の「画像」マーカー数より写真が少ない/位置が合わない分は無理に埋めず、未使用として報告する。
 
 ## 公開（デプロイ）手順
