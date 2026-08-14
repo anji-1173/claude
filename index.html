@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>タイムロガー</title>
+<meta name="description" content="自分専用のタイムロガー。毎日の行動記録を履歴として残せます。">
+
+<!-- アプリアイコン / ホーム画面追加(PWA) -->
+<link rel="icon" type="image/png" sizes="32x32" href="tl-icon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="tl-icon-512.png">
+<link rel="apple-touch-icon" href="tl-icon-180.png">
+<link rel="manifest" href="timelogger.webmanifest">
+<meta name="theme-color" content="#2456d6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="タイムロガー">
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --text: #1c1e21;
+    --text-sub: #65676b;
+    --border: #e0e2e6;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --danger: #dc2626;
+    --running: #16a34a;
+    --running-soft: #dcfce7;
+    --shadow: 0 1px 3px rgba(0,0,0,.08);
+    /* カテゴリ色(検証済みパレット) */
+    --s1: #2a78d6; --s2: #1baf7a; --s3: #eda100; --s4: #008300;
+    --s5: #4a3aa7; --s6: #e34948; --s7: #e87ba4; --s8: #eb6834;
+    --s-other: #898781;
+    /* カレンダーの濃淡(記録時間) */
+    --heat1: #cde2fb; --heat2: #9ec5f4; --heat3: #6da7ec; --heat4: #3987e5;
+    --grid: #e9eaee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #1f2228;
+      --text: #e8eaed;
+      --text-sub: #9aa0a6;
+      --border: #33363d;
+      --accent: #60a5fa;
+      --accent-soft: #1e3a5f;
+      --danger: #f87171;
+      --running: #4ade80;
+      --running-soft: #143520;
+      --shadow: 0 1px 3px rgba(0,0,0,.4);
+      /* ダーク面用に選び直したカテゴリ色 */
+      --s1: #3987e5; --s2: #199e70; --s3: #c98500; --s4: #008300;
+      --s5: #9085e9; --s6: #e66767; --s7: #d55181; --s8: #d95926;
+      --s-other: #898781;
+      --heat1: #0d366b; --heat2: #104281; --heat3: #184f95; --heat4: #1c5cab;
+      --grid: #2c2f36;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 16px; }
+  header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 8px 0 4px;
+  }
+  header h1 { font-size: 1.3rem; margin: 0; }
+  #clock { font-size: .9rem; color: var(--text-sub); font-variant-numeric: tabular-nums; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 0;
+    box-shadow: var(--shadow);
+  }
+  .card h2 { font-size: 1rem; margin: 0 0 10px; }
+
+  input, select, button, textarea {
+    font: inherit;
+    color: inherit;
+  }
+  input[type=text], input[type=datetime-local], input[type=date], select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  label { font-size: .8rem; color: var(--text-sub); display: block; margin-bottom: 2px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .row > div { flex: 1; min-width: 130px; }
+
+  button {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    cursor: pointer;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  button.danger-btn {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  button.small { padding: 4px 10px; font-size: .8rem; font-weight: 500; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* よく使う行動ボタン */
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .preset-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 600; font-size: .9rem;
+    padding: 8px 14px;
+    border-radius: 999px;
+  }
+  .preset-btn:hover, .preset-btn:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .preset-btn.preset-add {
+    border-style: dashed;
+    color: var(--text-sub);
+    font-weight: 500;
+  }
+  .presets.editing .preset-btn:not(.preset-add) {
+    border-color: var(--accent);
+    padding-right: 8px;
+  }
+  .preset-del {
+    display: inline-block;
+    margin-left: 6px;
+    color: var(--danger);
+    font-weight: 800;
+    padding: 0 4px;
+  }
+  .presets-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .presets-head button {
+    background: transparent; border: none; color: var(--accent);
+    font-size: .8rem; font-weight: 600; padding: 0 4px;
+  }
+
+  /* 進行中バナー(複数の記録を並行して表示) */
+  #runningBanner {
+    display: none;
+    background: var(--running-soft);
+    border: 1px solid var(--running);
+    border-radius: 12px;
+    padding: 4px 16px;
+    margin: 12px 0;
+  }
+  #runningBanner.active { display: block; }
+  .running-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 0;
+  }
+  .running-item + .running-item { border-top: 1px dashed var(--running); }
+  .running-item .pulse {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--running);
+    animation: pulse 1.5s infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  .running-info { flex: 1; min-width: 150px; }
+  .running-info .r-act { font-weight: 700; }
+  .running-info .r-elapsed { font-variant-numeric: tabular-nums; color: var(--text-sub); font-size: .9rem; }
+  .running-note { flex-basis: 100%; }
+  .running-note input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: .9rem;
+  }
+
+  /* タブ */
+  .tabs { display: flex; gap: 4px; margin: 16px 0 4px; border-bottom: 1px solid var(--border); }
+  .tabs button {
+    background: transparent; color: var(--text-sub);
+    border: none; border-bottom: 2px solid transparent;
+    border-radius: 0; padding: 8px 14px; font-weight: 600;
+  }
+  .tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 記録リスト */
+  .entry {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry .time {
+    font-variant-numeric: tabular-nums;
+    font-size: .85rem;
+    color: var(--text-sub);
+    white-space: nowrap;
+    min-width: 96px;
+  }
+  .entry .body { flex: 1; min-width: 0; }
+  .entry .activity { font-weight: 600; overflow-wrap: anywhere; }
+  .entry .note { font-size: .8rem; color: var(--text-sub); overflow-wrap: anywhere; }
+  .entry .dur { font-size: .85rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tag {
+    display: inline-block;
+    font-size: .7rem;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .entry .actions { display: flex; gap: 4px; }
+  .icon-btn {
+    background: transparent; border: none; color: var(--text-sub);
+    padding: 4px 6px; border-radius: 6px; font-size: .9rem;
+  }
+  .icon-btn:hover { background: var(--border); }
+
+  .day-group { margin-bottom: 8px; }
+  .day-head {
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+    padding: 10px 4px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .day-head .meta { font-size: .8rem; color: var(--text-sub); font-weight: 500; }
+  .day-body { display: none; }
+  .day-group.open .day-body { display: block; }
+
+  .summary-line {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .9rem; padding: 4px 0;
+  }
+  .summary-line .pct { color: var(--text-sub); font-variant-numeric: tabular-nums; }
+  .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 3px;
+    margin-right: 8px; vertical-align: -1px; flex-shrink: 0;
+  }
+  .summary-line .cat-name { display: flex; align-items: center; min-width: 0; }
+
+  /* 一日のタイムライン(0〜24時) */
+  .tl { margin: 4px 0 14px; }
+  .tl-track {
+    position: relative; height: 34px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .tl-grid {
+    position: absolute; top: 0; bottom: 0; width: 1px;
+    background: var(--grid);
+  }
+  .tl-block {
+    position: absolute; top: 3px; bottom: 3px;
+    border-radius: 3px;
+    box-shadow: 0 0 0 1px var(--card);
+    cursor: pointer;
+    min-width: 2px;
+  }
+  .tl-block.tl-running { animation: pulse 1.5s infinite; }
+  .tl-axis {
+    position: relative; height: 16px;
+    font-size: .68rem; color: var(--text-sub);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-axis span { position: absolute; transform: translateX(-50%); }
+  .tl-axis span:first-child { transform: none; }
+  .tl-axis span:last-child { transform: translateX(-100%); }
+  @media (prefers-reduced-motion: reduce) {
+    .tl-block.tl-running, #runningBanner .pulse { animation: none; }
+  }
+
+  /* 履歴の表示切替 */
+  .view-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+  .view-toggle button {
+    background: transparent; color: var(--text-sub);
+    border: 1px solid var(--border);
+    font-weight: 600; font-size: .85rem; padding: 6px 14px;
+  }
+  .view-toggle button.active {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent);
+  }
+
+  /* カレンダー */
+  .cal-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .cal-nav .cal-title { font-weight: 700; font-size: 1.05rem; }
+  .cal-nav button {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--border);
+    padding: 4px 14px; font-size: .9rem;
+  }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+  .cal-wd {
+    text-align: center; font-size: .7rem; color: var(--text-sub); padding: 2px 0;
+  }
+  .cal-wd.sun { color: var(--danger); }
+  .cal-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px;
+    font-size: .85rem; font-variant-numeric: tabular-nums;
+    background: var(--bg);
+    min-width: 0;
+  }
+  .cal-cell.blank { background: transparent; }
+  .cal-cell.has-log { cursor: pointer; }
+  .cal-cell .cal-hours { font-size: .62rem; opacity: .85; }
+  .cal-cell.heat0 .cal-hours { color: var(--text-sub); }
+  .cal-cell.heat1 { background: var(--heat1); }
+  .cal-cell.heat2 { background: var(--heat2); }
+  .cal-cell.heat3 { background: var(--heat3); }
+  .cal-cell.heat4 { background: var(--heat4); }
+  .cal-cell.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .cal-cell.today .cal-date { font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
+  #calDayDetail { margin-top: 16px; }
+  #calDayDetail h3 { font-size: .95rem; margin: 0 0 8px; }
+
+  .empty { color: var(--text-sub); text-align: center; padding: 24px 0; font-size: .9rem; }
+  .muted { color: var(--text-sub); font-size: .8rem; }
+  footer { text-align: center; padding: 20px 0 32px; }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--bg);
+    padding: 10px 20px; border-radius: 999px;
+    font-size: .85rem; opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 10;
+  }
+  #toast.show { opacity: 1; }
+
+  dialog {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    max-width: 480px; width: calc(100% - 32px);
+    padding: 20px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.4); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⏱ タイムロガー</h1>
+    <div id="clock"></div>
+  </header>
+
+  <!-- 進行中(複数並行OK) -->
+  <div id="runningBanner">
+    <div id="runningList"></div>
+  </div>
+
+  <!-- 新規記録 -->
+  <div class="card">
+    <h2>記録する</h2>
+    <div class="presets-head">
+      <label style="margin:0">よく使う行動(タップですぐ開始)</label>
+      <button id="presetEditToggle">編集</button>
+    </div>
+    <div class="presets" id="presets"></div>
+    <div class="row">
+      <div style="flex:2">
+        <label for="actInput">何をする?(していた?)</label>
+        <input type="text" id="actInput" placeholder="例: 仕事、読書、散歩…" list="actSuggest" autocomplete="off">
+        <datalist id="actSuggest"></datalist>
+      </div>
+      <div>
+        <label for="catInput">カテゴリ</label>
+        <input type="text" id="catInput" placeholder="例: 仕事" list="catSuggest" autocomplete="off">
+        <datalist id="catSuggest"></datalist>
+      </div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="startBtn">▶ 今から開始</button>
+      <button class="secondary" id="manualBtn">🕘 時間を指定して追加</button>
+    </div>
+    <div id="manualForm" style="display:none; margin-top:12px">
+      <div class="row">
+        <div>
+          <label for="manualStart">開始</label>
+          <input type="datetime-local" id="manualStart">
+        </div>
+        <div>
+          <label for="manualEnd">終了</label>
+          <input type="datetime-local" id="manualEnd">
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <label for="manualNote">メモ(任意)</label>
+        <input type="text" id="manualNote" placeholder="メモ">
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="manualSaveBtn">追加する</button>
+        <button class="secondary" id="manualCancelBtn">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button data-tab="today" class="active">今日</button>
+    <button data-tab="history">履歴</button>
+    <button data-tab="data">データ管理</button>
+  </div>
+
+  <!-- 今日 -->
+  <div class="tab-panel active" id="tab-today">
+    <div class="card">
+      <h2 id="todayTitle">今日の記録</h2>
+      <div id="todayTimeline"></div>
+      <div id="todaySummary"></div>
+      <div id="todayList"></div>
+    </div>
+  </div>
+
+  <!-- 履歴 -->
+  <div class="tab-panel" id="tab-history">
+    <div class="card">
+      <div class="view-toggle">
+        <button data-view="calendar" class="active">📅 カレンダー</button>
+        <button data-view="list">📋 リスト</button>
+      </div>
+
+      <!-- カレンダー表示 -->
+      <div id="histCalendar">
+        <div class="cal-nav">
+          <button id="calPrevBtn" aria-label="前の月">◀ 前月</button>
+          <span class="cal-title" id="calTitle"></span>
+          <button id="calNextBtn" aria-label="次の月">翌月 ▶</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div id="calDayDetail"></div>
+      </div>
+
+      <!-- リスト表示 -->
+      <div id="histList" style="display:none">
+        <div class="row" style="margin-bottom:8px">
+          <div style="flex:2">
+            <label for="searchInput">検索(行動・カテゴリ・メモ)</label>
+            <input type="text" id="searchInput" placeholder="キーワード">
+          </div>
+          <div>
+            <label for="monthFilter">月で絞り込み</label>
+            <select id="monthFilter"><option value="">すべて</option></select>
+          </div>
+        </div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- データ管理 -->
+  <div class="tab-panel" id="tab-data">
+    <div class="card">
+      <h2>バックアップ</h2>
+      <p class="muted">
+        記録はこのブラウザ(端末)の中に保存されています。ブラウザのデータを消したり端末を変えると記録が消えるため、
+        定期的に <b>JSON エクスポート</b> でバックアップを取ることをおすすめします。
+        別の端末に移すときは、そのファイルをインポートしてください(記録は重複せずに統合されます)。
+      </p>
+      <div class="row">
+        <button id="exportJsonBtn">⬇ JSON エクスポート</button>
+        <button class="secondary" id="exportCsvBtn">⬇ CSV エクスポート</button>
+        <button class="secondary" id="importBtn">⬆ JSON インポート</button>
+        <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+      </div>
+      <p class="muted" id="dataStats" style="margin-top:12px"></p>
+    </div>
+    <div class="card">
+      <h2>危険な操作</h2>
+      <button class="danger-btn" id="wipeBtn">すべての記録を削除する</button>
+    </div>
+  </div>
+
+  <footer class="muted">タイムロガー — データはあなたのブラウザにのみ保存されます</footer>
+</div>
+
+<!-- 編集ダイアログ -->
+<dialog id="editDialog">
+  <h2 style="margin-top:0">記録を編集</h2>
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div>
+      <label for="editActivity">行動</label>
+      <input type="text" id="editActivity">
+    </div>
+    <div>
+      <label for="editCategory">カテゴリ</label>
+      <input type="text" id="editCategory">
+    </div>
+    <div class="row">
+      <div>
+        <label for="editStart">開始</label>
+        <input type="datetime-local" id="editStart">
+      </div>
+      <div>
+        <label for="editEnd">終了</label>
+        <input type="datetime-local" id="editEnd">
+      </div>
+    </div>
+    <div>
+      <label for="editNote">メモ</label>
+      <input type="text" id="editNote">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="editSaveBtn">保存</button>
+      <button class="secondary" id="editCancelBtn">キャンセル</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ボタン追加/編集ダイアログ -->
+<dialog id="presetDialog">
+  <h2 style="margin-top:0" id="presetDialogTitle">ボタンを追加</h2>
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div class="row">
+      <div style="flex:0 0 90px; min-width:90px">
+        <label for="presetIcon">絵文字(任意)</label>
+        <input type="text" id="presetIcon" placeholder="🎾" maxlength="4">
+      </div>
+      <div>
+        <label for="presetName">行動名</label>
+        <input type="text" id="presetName" placeholder="例: テニス">
+      </div>
+    </div>
+    <div>
+      <label for="presetCat">カテゴリ(任意)</label>
+      <input type="text" id="presetCat" placeholder="例: 運動" list="catSuggest">
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="presetSaveBtn">保存</button>
+      <button class="secondary" id="presetCancelBtn">キャンセル</button>
+    </div>
+  </div>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+(() => {
+  const STORAGE_KEY = 'timelogger.entries.v1';
+
+  /** @type {{id:string, activity:string, category:string, start:string, end:string|null, note:string}[]} */
+  let entries = load();
+  let editingId = null;
+
+  // ---------- ストレージ ----------
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.filter(e => e && e.id && e.start) : [];
+    } catch { return []; }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ---------- ユーティリティ ----------
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  function dateKey(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  function fmtTime(iso) {
+    const d = new Date(iso);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtDateJa(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    const w = '日月火水木金土'[new Date(y, m - 1, d).getDay()];
+    return `${y}年${m}月${d}日(${w})`;
+  }
+  function fmtDur(ms) {
+    if (ms < 0) ms = 0;
+    const totalMin = Math.floor(ms / 60000);
+    const h = Math.floor(totalMin / 60), m = totalMin % 60;
+    if (h === 0) return `${m}分`;
+    return m === 0 ? `${h}時間` : `${h}時間${m}分`;
+  }
+  function fmtElapsed(ms) {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  }
+  function toLocalInput(iso) {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function todayKey() { return dateKey(new Date().toISOString()); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // 進行中の記録(複数並行できる)。開始が古い順に表示する
+  const runningAll = () => entries.filter(e => e.end === null)
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  // よく使う行動(ワンタップで開始)。構成は localStorage に保存され、画面から追加・編集できる
+  const PRESETS_KEY = 'timelogger.presets.v1';
+  const DEFAULT_PRESETS = [
+    { icon: '🚃', name: '移動', cat: '移動' },
+    { icon: '🍽️', name: '食事', cat: '生活' },
+    { icon: '🚶', name: 'ウォーキング', cat: '運動' },
+    { icon: '🏄', name: 'サーフィン', cat: '運動' },
+    { icon: '🏐', name: 'バレーボール', cat: '運動' },
+    { icon: '🍻', name: '飲み', cat: '交際' },
+    { icon: '🚿', name: 'シャワー', cat: '生活' },
+    { icon: '📚', name: '読書', cat: '趣味' },
+    { icon: '✏️', name: '勉強', cat: '勉強' },
+    { icon: '💼', name: '仕事', cat: '仕事' },
+  ];
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      if (!raw) return [...DEFAULT_PRESETS];
+      const data = JSON.parse(raw);
+      return Array.isArray(data) ? data.filter(p => p && p.name) : [...DEFAULT_PRESETS];
+    } catch { return [...DEFAULT_PRESETS]; }
+  }
+  let presets = loadPresets();
+  let presetEditing = false;      // 編集モード
+  let presetEditIndex = null;     // null = 新規追加
+  function savePresets() { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }
+
+  // ---------- 記録の開始/終了 ----------
+  function startActivity(activity, category) {
+    const id = uid();
+    entries.push({
+      id,
+      activity,
+      category,
+      start: new Date().toISOString(),
+      end: null,
+      note: ''
+    });
+    save();
+    toast(`「${activity}」を開始しました`);
+    renderAll();
+    const noteInput = document.querySelector(`#runningList input[data-note="${id}"]`);
+    if (noteInput) noteInput.focus({ preventScroll: true });
+  }
+  function startEntry() {
+    const activity = $('actInput').value.trim();
+    if (!activity) { toast('行動名を入力してください'); $('actInput').focus(); return; }
+    startActivity(activity, $('catInput').value.trim());
+    $('actInput').value = ''; $('catInput').value = '';
+  }
+  function stopEntry(id) {
+    const r = entries.find(e => e.id === id && e.end === null);
+    if (!r) return;
+    r.end = new Date().toISOString();
+    save();
+    toast(`「${r.activity}」を終了しました(${fmtDur(new Date(r.end) - new Date(r.start))})`);
+    renderAll();
+  }
+
+  // ---------- 手動追加 ----------
+  function saveManual() {
+    const activity = $('actInput').value.trim();
+    const startVal = $('manualStart').value;
+    const endVal = $('manualEnd').value;
+    if (!activity) { toast('行動名を入力してください'); return; }
+    if (!startVal || !endVal) { toast('開始と終了の時間を入力してください'); return; }
+    const start = new Date(startVal), end = new Date(endVal);
+    if (end <= start) { toast('終了は開始より後にしてください'); return; }
+    entries.push({
+      id: uid(),
+      activity,
+      category: $('catInput').value.trim(),
+      start: start.toISOString(),
+      end: end.toISOString(),
+      note: $('manualNote').value.trim()
+    });
+    save();
+    $('actInput').value = ''; $('catInput').value = ''; $('manualNote').value = '';
+    $('manualForm').style.display = 'none';
+    toast('記録を追加しました');
+    renderAll();
+  }
+
+  // ---------- 編集/削除 ----------
+  function openEdit(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    editingId = id;
+    $('editActivity').value = e.activity;
+    $('editCategory').value = e.category || '';
+    $('editStart').value = toLocalInput(e.start);
+    $('editEnd').value = e.end ? toLocalInput(e.end) : '';
+    $('editNote').value = e.note || '';
+    $('editEnd').disabled = e.end === null;
+    $('editDialog').showModal();
+  }
+  function saveEdit() {
+    const e = entries.find(x => x.id === editingId);
+    if (!e) return;
+    const activity = $('editActivity').value.trim();
+    if (!activity) { toast('行動名を入力してください'); return; }
+    // 入力欄が未変更なら元の値(秒まで)を保持する
+    const startVal = $('editStart').value;
+    const start = startVal === toLocalInput(e.start) ? new Date(e.start) : new Date(startVal);
+    if (isNaN(start)) { toast('開始時間が不正です'); return; }
+    if (e.end !== null) {
+      const endVal = $('editEnd').value;
+      const end = endVal === toLocalInput(e.end) ? new Date(e.end) : new Date(endVal);
+      if (isNaN(end) || end < start) { toast('終了は開始より後にしてください'); return; }
+      e.end = end.toISOString();
+    }
+    e.activity = activity;
+    e.category = $('editCategory').value.trim();
+    e.start = start.toISOString();
+    e.note = $('editNote').value.trim();
+    save();
+    $('editDialog').close();
+    toast('保存しました');
+    renderAll();
+  }
+  function deleteEntry(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    if (!confirm(`「${e.activity}」の記録を削除しますか?`)) return;
+    entries = entries.filter(x => x.id !== id);
+    save();
+    toast('削除しました');
+    renderAll();
+  }
+
+  // ---------- 描画 ----------
+  function entryHtml(e) {
+    const isRunning = e.end === null;
+    const dur = isRunning ? Date.now() - new Date(e.start) : new Date(e.end) - new Date(e.start);
+    return `
+      <div class="entry" data-id="${e.id}">
+        <div class="time">${fmtTime(e.start)} – ${isRunning ? '進行中' : fmtTime(e.end)}</div>
+        <div class="body">
+          <div class="activity">${escapeHtml(e.activity)}${e.category ? `<span class="tag">${escapeHtml(e.category)}</span>` : ''}</div>
+          ${e.note ? `<div class="note">${escapeHtml(e.note)}</div>` : ''}
+        </div>
+        <div class="dur">${fmtDur(dur)}</div>
+        <div class="actions">
+          <button class="icon-btn" data-act="edit" title="編集">✏️</button>
+          <button class="icon-btn" data-act="del" title="削除">🗑</button>
+        </div>
+      </div>`;
+  }
+
+  // カテゴリ → 色。初出順に固定スロットを割り当て(9個目以降とカテゴリなしはグレー)
+  function catColors() {
+    const map = new Map();
+    for (const e of [...entries].sort((a, b) => new Date(a.start) - new Date(b.start))) {
+      const c = e.category || '';
+      if (c && !map.has(c)) map.set(c, map.size < 8 ? `var(--s${map.size + 1})` : 'var(--s-other)');
+    }
+    map.set('', 'var(--s-other)');
+    return map;
+  }
+
+  function summaryHtml(dayEntries) {
+    const byCat = {};
+    let total = 0;
+    for (const e of dayEntries) {
+      const dur = Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start));
+      const cat = e.category || '';
+      byCat[cat] = (byCat[cat] || 0) + dur;
+      total += dur;
+    }
+    if (total <= 0) return '';
+    const colors = catColors();
+    const lines = Object.entries(byCat)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, ms]) =>
+        `<div class="summary-line">
+          <span class="cat-name"><span class="dot" style="background:${colors.get(cat)}"></span>${cat ? escapeHtml(cat) : '(カテゴリなし)'}</span>
+          <span class="pct">${fmtDur(ms)}(${Math.round(ms / total * 100)}%)</span>
+        </div>`)
+      .join('');
+    return `<div style="border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:4px">
+      <div class="summary-line" style="font-weight:700"><span>合計</span><span>${fmtDur(total)}</span></div>${lines}</div>`;
+  }
+
+  // 一日の時間軸バー(0〜24時)。日をまたぐ記録はその日の分だけ切り出して表示
+  function timelineHtml(dayKey) {
+    const dayStart = new Date(dayKey + 'T00:00:00').getTime();
+    const dayEnd = dayStart + 86400000;
+    const segs = [];
+    for (const e of entries) {
+      const s = new Date(e.start).getTime();
+      const en = e.end ? new Date(e.end).getTime() : Date.now();
+      if (s < dayEnd && en > dayStart && en > s) {
+        segs.push({ e, s: Math.max(s, dayStart), en: Math.min(en, dayEnd) });
+      }
+    }
+    if (!segs.length) return '';
+    const colors = catColors();
+    const blocks = segs.map(({ e, s, en }) => {
+      const left = (s - dayStart) / 864000;      // % (86400000ms / 100)
+      const width = Math.max((en - s) / 864000, .3);
+      const tip = `${fmtTime(new Date(s).toISOString())}–${e.end ? fmtTime(new Date(en).toISOString()) : '進行中'} ${e.activity}${e.category ? ` [${e.category}]` : ''}`;
+      return `<div class="tl-block${e.end ? '' : ' tl-running'}" data-id="${e.id}"
+        style="left:${left.toFixed(3)}%;width:${width.toFixed(3)}%;background:${colors.get(e.category || '')}"
+        title="${escapeHtml(tip)}"></div>`;
+    }).join('');
+    const grid = [25, 50, 75].map(p => `<div class="tl-grid" style="left:${p}%"></div>`).join('');
+    const axis = [0, 6, 12, 18, 24].map((h, i) =>
+      `<span style="left:${i * 25}%">${h}${h === 12 ? '時' : ''}</span>`).join('');
+    return `<div class="tl"><div class="tl-track">${grid}${blocks}</div><div class="tl-axis">${axis}</div></div>`;
+  }
+
+  let shownRunningIds = '';
+  function renderRunning() {
+    const rs = runningAll();
+    const banner = $('runningBanner');
+    banner.classList.toggle('active', rs.length > 0);
+    // 進行中の顔ぶれが変わったときだけDOMを作り直す(メモ入力中に消えないように)。
+    // 経過時間の数字だけは毎回その場で書き換える
+    const sig = rs.map(r => r.id).join(',');
+    if (sig !== shownRunningIds) {
+      shownRunningIds = sig;
+      $('runningList').innerHTML = rs.map(r => `
+        <div class="running-item" data-id="${r.id}">
+          <div class="pulse"></div>
+          <div class="running-info">
+            <div><span class="r-act">${escapeHtml(r.activity)}</span>${r.category ? `<span class="tag">${escapeHtml(r.category)}</span>` : ''}</div>
+            <div class="r-elapsed" data-elapsed="${r.id}"></div>
+          </div>
+          <button data-stop="${r.id}">■ 終了</button>
+          <div class="running-note">
+            <input type="text" data-note="${r.id}" value="${escapeHtml(r.note || '')}" placeholder="✏️ メモを追加(この記録に保存されます)">
+          </div>
+        </div>`).join('');
+    }
+    for (const r of rs) {
+      const el = banner.querySelector(`[data-elapsed="${r.id}"]`);
+      if (el) el.textContent = fmtElapsed(Date.now() - new Date(r.start)) + '(' + fmtTime(r.start) + ' 開始)';
+    }
+  }
+
+  function renderPresets() {
+    const box = $('presets');
+    box.classList.toggle('editing', presetEditing);
+    $('presetEditToggle').textContent = presetEditing ? '完了' : '編集';
+    box.innerHTML = presets.map((p, i) =>
+      `<button class="preset-btn" data-preset="${i}">${p.icon ? escapeHtml(p.icon) + ' ' : ''}${escapeHtml(p.name)}${
+        presetEditing ? '<span class="preset-del" data-del="' + i + '" title="削除">×</span>' : ''
+      }</button>`).join('') +
+      `<button class="preset-btn preset-add" id="presetAddBtn">+ ボタンを追加</button>`;
+  }
+
+  function openPresetDialog(index) {
+    presetEditIndex = index;
+    const p = index === null ? { icon: '', name: '', cat: '' } : presets[index];
+    $('presetDialogTitle').textContent = index === null ? 'ボタンを追加' : 'ボタンを編集';
+    $('presetIcon').value = p.icon || '';
+    $('presetName').value = p.name;
+    $('presetCat').value = p.cat || '';
+    $('presetDialog').showModal();
+  }
+  function savePresetDialog() {
+    const name = $('presetName').value.trim();
+    if (!name) { toast('行動名を入力してください'); $('presetName').focus(); return; }
+    const p = { icon: $('presetIcon').value.trim(), name, cat: $('presetCat').value.trim() };
+    if (presetEditIndex === null) presets.push(p);
+    else presets[presetEditIndex] = p;
+    savePresets();
+    $('presetDialog').close();
+    renderPresets();
+    toast(presetEditIndex === null ? `「${name}」ボタンを追加しました` : '保存しました');
+  }
+
+  function renderToday() {
+    const key = todayKey();
+    $('todayTitle').textContent = `今日の記録 — ${fmtDateJa(key)}`;
+    const list = entries
+      .filter(e => dateKey(e.start) === key)
+      .sort((a, b) => new Date(b.start) - new Date(a.start));
+    $('todayTimeline').innerHTML = timelineHtml(key);
+    $('todaySummary').innerHTML = summaryHtml(list);
+    $('todayList').innerHTML = list.length
+      ? list.map(entryHtml).join('')
+      : '<div class="empty">まだ記録がありません。上のフォームから記録を始めましょう。</div>';
+  }
+
+  function renderHistory() {
+    const q = $('searchInput').value.trim().toLowerCase();
+    const month = $('monthFilter').value;
+    const filtered = entries.filter(e => {
+      if (month && !dateKey(e.start).startsWith(month)) return false;
+      if (!q) return true;
+      return [e.activity, e.category, e.note].some(v => (v || '').toLowerCase().includes(q));
+    });
+    const byDay = {};
+    for (const e of filtered) (byDay[dateKey(e.start)] ||= []).push(e);
+    const days = Object.keys(byDay).sort().reverse();
+
+    if (!days.length) {
+      $('historyList').innerHTML = '<div class="empty">記録が見つかりません。</div>';
+      return;
+    }
+    $('historyList').innerHTML = days.map((day, i) => {
+      const dayEntries = byDay[day].sort((a, b) => new Date(b.start) - new Date(a.start));
+      const total = dayEntries.reduce((s, e) => s + Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start)), 0);
+      return `
+        <div class="day-group${i === 0 ? ' open' : ''}" data-day="${day}">
+          <div class="day-head">
+            <span>${fmtDateJa(day)}</span>
+            <span class="meta">${dayEntries.length}件 / ${fmtDur(total)}</span>
+          </div>
+          <div class="day-body">${timelineHtml(day)}${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ---------- カレンダー ----------
+  const now0 = new Date();
+  let calYear = now0.getFullYear();
+  let calMonth = now0.getMonth();      // 0-11
+  let selectedDay = todayKey();
+
+  function renderCalendar() {
+    $('calTitle').textContent = `${calYear}年${calMonth + 1}月`;
+
+    // 日ごとの合計時間(開始日でグループ)
+    const totals = {};
+    for (const e of entries) {
+      const k = dateKey(e.start);
+      totals[k] = (totals[k] || 0) + Math.max(0, (e.end ? new Date(e.end) : new Date()) - new Date(e.start));
+    }
+
+    const first = new Date(calYear, calMonth, 1);
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const tKey = todayKey();
+    let cells = '日月火水木金土'.split('').map((w, i) =>
+      `<div class="cal-wd${i === 0 ? ' sun' : ''}">${w}</div>`).join('');
+    for (let i = 0; i < first.getDay(); i++) cells += '<div class="cal-cell blank"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${calYear}-${pad(calMonth + 1)}-${pad(d)}`;
+      const ms = totals[key] || 0;
+      const hours = ms / 3600000;
+      const heat = ms <= 0 ? 0 : hours < 2 ? 1 : hours < 4 ? 2 : hours < 8 ? 3 : 4;
+      const cls = ['cal-cell', `heat${heat}`];
+      if (ms > 0) cls.push('has-log');
+      if (key === tKey) cls.push('today');
+      if (key === selectedDay) cls.push('selected');
+      const hoursLabel = ms > 0
+        ? `<span class="cal-hours">${hours >= 1 ? (Math.round(hours * 10) / 10) + 'h' : Math.round(ms / 60000) + 'm'}</span>`
+        : '';
+      cells += `<div class="${cls.join(' ')}" data-day="${key}"><span class="cal-date">${d}</span>${hoursLabel}</div>`;
+    }
+    $('calGrid').innerHTML = cells;
+    renderCalDayDetail();
+  }
+
+  function renderCalDayDetail() {
+    const box = $('calDayDetail');
+    if (!selectedDay) { box.innerHTML = '<div class="empty">日付をタップすると、その日の記録が表示されます。</div>'; return; }
+    const dayEntries = entries
+      .filter(e => dateKey(e.start) === selectedDay)
+      .sort((a, b) => new Date(b.start) - new Date(a.start));
+    const tl = timelineHtml(selectedDay);
+    if (!dayEntries.length && !tl) {
+      box.innerHTML = `<h3>${fmtDateJa(selectedDay)}</h3><div class="empty">この日の記録はありません。</div>`;
+      return;
+    }
+    box.innerHTML = `<h3>${fmtDateJa(selectedDay)}</h3>${tl}${summaryHtml(dayEntries)}${dayEntries.map(entryHtml).join('')}`;
+  }
+
+  function renderMonthFilter() {
+    const sel = $('monthFilter');
+    const cur = sel.value;
+    const months = [...new Set(entries.map(e => dateKey(e.start).slice(0, 7)))].sort().reverse();
+    sel.innerHTML = '<option value="">すべて</option>' +
+      months.map(m => `<option value="${m}">${m.replace('-', '年')}月</option>`).join('');
+    if (months.includes(cur)) sel.value = cur;
+  }
+
+  function renderSuggestions() {
+    const acts = [...new Set(entries.map(e => e.activity))].slice(-200).reverse();
+    const cats = [...new Set(entries.map(e => e.category).filter(Boolean))].sort();
+    $('actSuggest').innerHTML = acts.map(a => `<option value="${escapeHtml(a)}">`).join('');
+    $('catSuggest').innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">`).join('');
+  }
+
+  function renderStats() {
+    const days = new Set(entries.map(e => dateKey(e.start)));
+    const first = entries.length ? [...days].sort()[0] : null;
+    $('dataStats').textContent = entries.length
+      ? `現在 ${entries.length} 件の記録(${days.size} 日分、最初の記録: ${first})`
+      : 'まだ記録がありません。';
+  }
+
+  function renderAll() {
+    renderRunning();
+    renderToday();
+    renderCalendar();
+    renderHistory();
+    renderMonthFilter();
+    renderSuggestions();
+    renderStats();
+  }
+
+  // ---------- エクスポート/インポート ----------
+  function download(filename, text, mime) {
+    const blob = new Blob([text], { type: mime });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function stamp() {
+    const d = new Date();
+    return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+  }
+  function exportJson() {
+    download(`timelogger-backup-${stamp()}.json`,
+      JSON.stringify({ app: 'timelogger', version: 1, exportedAt: new Date().toISOString(), entries }, null, 2),
+      'application/json');
+    toast('JSON をエクスポートしました');
+  }
+  function exportCsv() {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [['date', 'start', 'end', 'activity', 'category', 'note', 'minutes']];
+    for (const e of [...entries].sort((a, b) => new Date(a.start) - new Date(b.start))) {
+      const min = e.end ? Math.round((new Date(e.end) - new Date(e.start)) / 60000) : '';
+      rows.push([dateKey(e.start), e.start, e.end || '', e.activity, e.category, e.note, min]);
+    }
+    download(`timelogger-${stamp()}.csv`, '﻿' + rows.map(r => r.map(esc).join(',')).join('\n'), 'text/csv');
+    toast('CSV をエクスポートしました');
+  }
+  function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const imported = Array.isArray(data) ? data : data.entries;
+        if (!Array.isArray(imported)) throw new Error('形式が不正');
+        const existing = new Set(entries.map(e => e.id));
+        let added = 0;
+        for (const e of imported) {
+          if (e && e.id && e.start && e.activity !== undefined && !existing.has(e.id)) {
+            entries.push({
+              id: String(e.id),
+              activity: String(e.activity),
+              category: String(e.category || ''),
+              start: e.start,
+              end: e.end ?? null,
+              note: String(e.note || '')
+            });
+            existing.add(e.id);
+            added++;
+          }
+        }
+        save();
+        renderAll();
+        toast(`${added} 件の記録をインポートしました`);
+      } catch {
+        toast('インポートに失敗しました。ファイル形式を確認してください。');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ---------- イベント ----------
+  $('startBtn').addEventListener('click', startEntry);
+  $('actInput').addEventListener('keydown', e => { if (e.key === 'Enter') startEntry(); });
+
+  // 進行中リスト: 個別の終了ボタンとメモ入力
+  $('runningBanner').addEventListener('click', ev => {
+    const stopBtn = ev.target.closest('[data-stop]');
+    if (stopBtn) stopEntry(stopBtn.dataset.stop);
+  });
+  $('runningBanner').addEventListener('input', ev => {
+    const noteInput = ev.target.closest('[data-note]');
+    if (!noteInput) return;
+    const r = entries.find(e => e.id === noteInput.dataset.note);
+    if (r) { r.note = noteInput.value.trim(); save(); }
+  });
+  $('runningBanner').addEventListener('keydown', ev => {
+    if (ev.key === 'Enter' && ev.target.closest('[data-note]')) {
+      ev.target.blur();
+      toast('メモを保存しました');
+    }
+  });
+
+  // よく使う行動ボタン
+  $('presets').addEventListener('click', ev => {
+    const del = ev.target.closest('[data-del]');
+    if (del) {
+      const i = Number(del.dataset.del);
+      if (confirm(`「${presets[i].name}」ボタンを削除しますか?(過去の記録は消えません)`)) {
+        presets.splice(i, 1);
+        savePresets();
+        renderPresets();
+      }
+      return;
+    }
+    if (ev.target.closest('#presetAddBtn')) { openPresetDialog(null); return; }
+    const btn = ev.target.closest('[data-preset]');
+    if (!btn) return;
+    const i = Number(btn.dataset.preset);
+    if (presetEditing) { openPresetDialog(i); return; }
+    const p = presets[i];
+    startActivity(p.name, p.cat);
+  });
+  $('presetEditToggle').addEventListener('click', () => {
+    presetEditing = !presetEditing;
+    renderPresets();
+  });
+  $('presetSaveBtn').addEventListener('click', savePresetDialog);
+  $('presetCancelBtn').addEventListener('click', () => $('presetDialog').close());
+  $('presetName').addEventListener('keydown', ev => { if (ev.key === 'Enter') savePresetDialog(); });
+
+  $('manualBtn').addEventListener('click', () => {
+    const form = $('manualForm');
+    const show = form.style.display === 'none';
+    form.style.display = show ? 'block' : 'none';
+    if (show) {
+      const now = new Date();
+      $('manualEnd').value = toLocalInput(now.toISOString());
+      $('manualStart').value = toLocalInput(new Date(now - 3600000).toISOString());
+    }
+  });
+  $('manualCancelBtn').addEventListener('click', () => { $('manualForm').style.display = 'none'; });
+  $('manualSaveBtn').addEventListener('click', saveManual);
+
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b === btn));
+      document.querySelectorAll('.tab-panel').forEach(p =>
+        p.classList.toggle('active', p.id === 'tab-' + btn.dataset.tab));
+    });
+  });
+
+  document.body.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-act]');
+    if (btn) {
+      const id = btn.closest('.entry').dataset.id;
+      if (btn.dataset.act === 'edit') openEdit(id);
+      if (btn.dataset.act === 'del') deleteEntry(id);
+      return;
+    }
+    const block = ev.target.closest('.tl-block');
+    if (block) { openEdit(block.dataset.id); return; }
+    const cell = ev.target.closest('.cal-cell[data-day]');
+    if (cell) {
+      selectedDay = cell.dataset.day;
+      renderCalendar();
+      return;
+    }
+    const head = ev.target.closest('.day-head');
+    if (head) head.closest('.day-group').classList.toggle('open');
+  });
+
+  // 履歴: カレンダー/リスト切替と月ナビゲーション
+  document.querySelectorAll('.view-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+      $('histCalendar').style.display = btn.dataset.view === 'calendar' ? '' : 'none';
+      $('histList').style.display = btn.dataset.view === 'list' ? '' : 'none';
+    });
+  });
+  $('calPrevBtn').addEventListener('click', () => {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  });
+  $('calNextBtn').addEventListener('click', () => {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  });
+
+  $('searchInput').addEventListener('input', renderHistory);
+  $('monthFilter').addEventListener('change', renderHistory);
+
+  $('editSaveBtn').addEventListener('click', saveEdit);
+  $('editCancelBtn').addEventListener('click', () => $('editDialog').close());
+
+  $('exportJsonBtn').addEventListener('click', exportJson);
+  $('exportCsvBtn').addEventListener('click', exportCsv);
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', ev => {
+    if (ev.target.files[0]) importJson(ev.target.files[0]);
+    ev.target.value = '';
+  });
+  $('wipeBtn').addEventListener('click', () => {
+    if (!confirm('本当にすべての記録を削除しますか?この操作は取り消せません。')) return;
+    if (!confirm('最終確認: 削除する前に JSON エクスポートでバックアップを取りましたか?「OK」で完全に削除します。')) return;
+    entries = [];
+    save();
+    renderAll();
+    toast('すべての記録を削除しました');
+  });
+
+  // 時計 & 経過時間の更新
+  setInterval(() => {
+    const d = new Date();
+    $('clock').textContent = `${fmtDateJa(dateKey(d.toISOString()))} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    if (runningAll().length) renderRunning();
+  }, 1000);
+
+  // 日付が変わったら「今日」を更新
+  let lastDay = todayKey();
+  setInterval(() => {
+    if (todayKey() !== lastDay) { lastDay = todayKey(); renderAll(); }
+  }, 30000);
+
+  renderPresets();
+  renderAll();
+})();
+</script>
+</body>
+</html>
