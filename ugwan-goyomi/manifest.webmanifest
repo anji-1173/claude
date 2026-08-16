@@ -1,0 +1,17 @@
+{
+  "name": "御願ごよみ",
+  "short_name": "御願ごよみ",
+  "description": "沖縄の年中行事カレンダー。旧盆・シーミー・彼岸などの日付と、仏壇・お墓のお供えの並べ方が分かります。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDF0EC",
+  "theme_color": "#1D4B57",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

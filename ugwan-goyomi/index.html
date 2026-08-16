@@ -1,0 +1,2454 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>御願ごよみ</title>
+<meta name="description" content="沖縄の年中行事カレンダー。旧盆・シーミー・彼岸などの日付と、仏壇・お墓のお供えの並べ方が分かります。">
+<meta name="theme-color" content="#EDF0EC" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F171A" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="御願ごよみ">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  /* ---- palette: 琉球藍 / 月桃 / 線香の火 ---- */
+  :root{
+    --paper:#EDF0EC;
+    --card:#FFFFFF;
+    --ink:#17242A;
+    --ink-soft:#4A5D63;
+    --ink-faint:#849699;
+    --line:#D3DAD4;
+    --ai:#1D4B57;            /* 琉球藍 */
+    --gettou:#6F8C63;        /* 月桃の葉 */
+    --hi:#C2703D;            /* 線香の火 */
+    --hi-wash:#F5E7DC;
+    --shadow:0 1px 2px rgba(23,36,42,.06), 0 8px 24px rgba(23,36,42,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0F171A; --card:#17232A; --ink:#E3EAE5; --ink-soft:#A3B3B2;
+      --ink-faint:#6E8080; --line:#26383F; --ai:#77B4BF; --gettou:#9CBB8E;
+      --hi:#E0995F; --hi-wash:#2A2019;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0F171A; --card:#17232A; --ink:#E3EAE5; --ink-soft:#A3B3B2;
+    --ink-faint:#6E8080; --line:#26383F; --ai:#77B4BF; --gettou:#9CBB8E;
+    --hi:#E0995F; --hi-wash:#2A2019;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);
+  }
+  :root{
+    --serif:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Songti SC",serif;
+    --sans:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",system-ui,sans-serif;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+    font-size:16px;line-height:1.75;-webkit-text-size-adjust:100%;
+  }
+  .wrap{
+    max-width:34rem;margin:0 auto;
+    padding:calc(1.25rem + env(safe-area-inset-top)) calc(1.1rem + env(safe-area-inset-right))
+            calc(4rem + env(safe-area-inset-bottom)) calc(1.1rem + env(safe-area-inset-left));
+  }
+
+  header{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1.5rem}
+  .brand{font-family:var(--serif);font-size:1.5rem;letter-spacing:.14em;margin:0;color:var(--ai)}
+  .brand-sub{font-size:.75rem;letter-spacing:.18em;color:var(--ink-faint)}
+
+  /* ---- 次の御願 ---- */
+  .next{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:1.25rem 1.15rem;box-shadow:var(--shadow);border-top:3px solid var(--hi);
+    display:flex;flex-direction:column;gap:.5rem;
+  }
+  .eyebrow{font-size:.7rem;letter-spacing:.22em;color:var(--hi);font-weight:700}
+  .next h2{font-family:var(--serif);font-size:1.9rem;margin:0;line-height:1.3;text-wrap:balance}
+  .next .kana{font-size:.8rem;color:var(--ink-soft);letter-spacing:.08em}
+  .count{display:flex;align-items:baseline;gap:.4rem;margin-top:.2rem}
+  .count .num{font-family:var(--serif);font-size:3.1rem;line-height:1;color:var(--hi);font-variant-numeric:tabular-nums}
+  .count .unit{font-size:.95rem;color:var(--ink-soft)}
+  .next .when{font-size:.95rem;font-variant-numeric:tabular-nums}
+  .next .memo{font-size:.88rem;color:var(--ink-soft);margin:0;border-top:1px dashed var(--line);padding-top:.6rem}
+
+  /* ---- 場所バッジ ---- */
+  .place{
+    display:inline-flex;align-items:center;gap:.3rem;font-size:.7rem;letter-spacing:.08em;
+    padding:.12rem .5rem;border-radius:999px;border:1px solid;white-space:nowrap;
+  }
+  .place.haka{color:var(--ai);border-color:var(--ai);background:transparent}
+  .place.butsudan{color:var(--gettou);border-color:var(--gettou);background:transparent}
+
+  /* ---- 年の切り替え ---- */
+  .yearbar{display:flex;align-items:center;justify-content:center;gap:.7rem;margin:2.2rem 0 .9rem}
+  .yearbar button{
+    font:inherit;color:var(--ai);background:transparent;border:1px solid var(--line);
+    width:2.2rem;height:2.2rem;border-radius:50%;cursor:pointer;line-height:1;
+  }
+  .yearbar button:hover:not(:disabled){background:var(--card)}
+  .yearbar button:disabled{opacity:.3;cursor:default}
+  .yearbar button:focus-visible,summary:focus-visible,.today:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+  .yearlabel{font-family:var(--serif);font-size:1.3rem;letter-spacing:.08em;font-variant-numeric:tabular-nums;min-width:5.5rem;text-align:center}
+  .today{
+    display:block;margin:0 auto .6rem;font:inherit;font-size:.78rem;color:var(--ink-soft);
+    background:transparent;border:0;border-bottom:1px solid var(--line);cursor:pointer;padding:0 .2rem;
+  }
+  .today[hidden]{display:none}
+  .hint{font-size:.74rem;color:var(--ink-faint);text-align:center;margin:0 0 .7rem}
+
+  /* ---- 一覧 ---- */
+  ol.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.55rem}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .item.past{opacity:.72}
+  .item.soon{border-color:var(--hi)}
+  .item summary{display:flex;gap:.85rem;align-items:flex-start;padding:.85rem .95rem;cursor:pointer;list-style:none}
+  .item summary::-webkit-details-marker{display:none}
+  .date{flex:0 0 4.3rem;font-variant-numeric:tabular-nums;font-family:var(--serif);color:var(--ai);line-height:1.25}
+  .date .md{font-size:1.15rem}
+  .date .span{display:block;font-size:.72rem;color:var(--ink-faint);font-family:var(--sans)}
+  .head{flex:1;min-width:0}
+  .head .nm{font-family:var(--serif);font-size:1.12rem;line-height:1.4}
+  .head .kyu{font-size:.72rem;color:var(--ink-faint)}
+  .head .badges{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+  .chev{flex:0 0 auto;color:var(--ink-faint);font-size:.7rem;padding-top:.45rem;transition:transform .2s}
+  .item[open] .chev{transform:rotate(90deg)}
+  @media (prefers-reduced-motion:reduce){.chev{transition:none}}
+  .tag{display:inline-block;font-size:.66rem;letter-spacing:.08em;padding:.05rem .4rem;border-radius:4px;background:var(--hi-wash);color:var(--hi);margin-left:.35rem;vertical-align:.1em}
+  .tag.done{background:transparent;color:var(--ink-faint);border:1px solid var(--line)}
+
+  .body{padding:0 .95rem 1rem;border-top:1px solid var(--line);padding-top:.85rem}
+  .body p{margin:0 0 .7rem;font-size:.9rem;color:var(--ink-soft)}
+  .body h3{font-size:.7rem;letter-spacing:.2em;color:var(--gettou);margin:1.1rem 0 .4rem;font-weight:700}
+  .body ul{margin:0;padding-left:1.1rem;font-size:.9rem;color:var(--ink-soft)}
+  .body li{margin-bottom:.25rem}
+  .body li b,.body p b{color:var(--ink);font-weight:600}
+  .where{
+    background:var(--paper);border-radius:8px;padding:.6rem .7rem;font-size:.85rem;
+    color:var(--ink-soft);display:flex;gap:.55rem;align-items:flex-start;
+  }
+  .where .w-ico{flex:0 0 auto;font-family:var(--serif);color:var(--ai);font-size:.95rem;line-height:1.5}
+  .days{display:flex;flex-direction:column;gap:.35rem;margin:.2rem 0 .3rem}
+  .day{display:flex;gap:.6rem;font-size:.9rem;align-items:baseline}
+  .day .d{font-variant-numeric:tabular-nums;color:var(--ai);font-family:var(--serif);flex:0 0 4.6rem}
+  .day .t{color:var(--ink-soft)}
+  .day .t b{color:var(--ink);font-weight:600}
+
+  /* ---- 図解 ---- */
+  .dg{margin:.5rem 0 1.3rem}
+  .dg .cap{font-size:.78rem;color:var(--ink);margin-bottom:.45rem;font-weight:600}
+  .alt{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden;padding:.4rem}
+  .svgfig{width:100%;height:auto;display:block}
+  .svgfig .obj{fill:var(--card);stroke:var(--ai);stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+  .svgfig .obj-f{fill:var(--ai);stroke:none}
+  .svgfig .soft{fill:var(--paper);stroke:var(--line);stroke-width:1.2}
+  .svgfig .frame{fill:none;stroke:var(--ai);stroke-width:1.8}
+  .svgfig .shelf{fill:none;stroke:var(--line);stroke-width:1.4}
+  .svgfig .dash{fill:none;stroke:var(--line);stroke-width:1.2;stroke-dasharray:4 4}
+  .svgfig .flame{fill:var(--hi);stroke:none}
+  .svgfig .hot{fill:none;stroke:var(--hi);stroke-width:1.5}
+  .svgfig .bdg{fill:var(--hi)}
+  .svgfig .bdg-t{fill:#fff;font-size:9.5px;font-weight:700;text-anchor:middle;font-family:var(--sans)}
+  .svgfig .ax{fill:var(--ink-faint);font-size:10.5px;text-anchor:middle;font-family:var(--sans)}
+  .svgfig .ax-b{fill:var(--ai);font-size:11.5px;font-weight:700;text-anchor:middle;font-family:var(--sans)}
+
+  /* 位置の表 */
+  .pos{width:100%;border-collapse:collapse;font-size:.72rem;margin-top:.6rem;table-layout:fixed}
+  .pos th,.pos td{border:1px solid var(--line);padding:.32rem .16rem;text-align:center;line-height:1.45;word-break:normal;line-break:strict;overflow-wrap:break-word}
+  .pos thead th{background:var(--paper);color:var(--ink-faint);font-size:.65rem;font-weight:600}
+  .pos tbody th{background:var(--paper);color:var(--ai);font-size:.65rem;font-weight:600;width:2.9rem}
+  .pos td.mid{color:var(--ai);font-weight:600}
+  .pos td.non{color:var(--ink-faint)}
+  .pos .n{
+    display:inline-block;min-width:1.05rem;height:1.05rem;line-height:1.05rem;border-radius:50%;
+    background:var(--hi);color:#fff;font-size:.6rem;font-weight:700;margin-right:.15rem;vertical-align:.05em;
+  }
+  .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:.28rem;padding:.5rem}
+  .mochi{
+    aspect-ratio:1;border-radius:50%;border:1px solid var(--line);background:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:.55rem;color:var(--ink-faint);
+  }
+  .mochi.iro{border-color:var(--hi);color:var(--hi)}
+  .arrowlab{text-align:center;font-size:.62rem;color:var(--ink-faint);padding:.25rem 0}
+  .arrowlab.top{border-bottom:1px dashed var(--line)}
+  .viewer{text-align:center;font-size:.64rem;color:var(--ink-faint);margin-top:.35rem}
+  .dgnote{font-size:.72rem;color:var(--ink-faint);margin:.4rem 0 0;line-height:1.7}
+
+  /* ---- お知らせ ---- */
+  .alert{
+    margin:1.6rem 0 0;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gettou);
+    border-radius:0 10px 10px 0;padding:.85rem .95rem;font-size:.82rem;color:var(--ink-soft);
+  }
+  .alert b{color:var(--ink)}
+  .btn{
+    display:block;margin-top:.75rem;padding:.6rem .8rem;text-align:center;
+    background:var(--ai);color:var(--card);text-decoration:none;border-radius:8px;
+    font-size:.85rem;font-weight:600;letter-spacing:.02em;
+  }
+  .btn:hover{opacity:.9}
+  .btn:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+
+  .note{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--line);font-size:.78rem;color:var(--ink-faint);line-height:1.85}
+  .note b{color:var(--ink-soft)}
+  .note a{color:var(--ai)}
+  .note ul{padding-left:1.1rem;margin:.3rem 0}
+  .note h3{font-size:.7rem;letter-spacing:.2em;color:var(--gettou);margin:1.2rem 0 .2rem;font-weight:700}
+  .warn{margin-top:.9rem;padding:.7rem .85rem;border-left:3px solid var(--gettou);background:var(--card);border-radius:0 8px 8px 0;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1 class="brand">御願ごよみ</h1>
+    <div class="brand-sub">OKINAWA / 先祖供養の年中行事</div>
+  </header>
+
+  <section class="next" id="next" aria-live="polite"></section>
+
+  <div class="alert">
+    <b>スマホに通知を出すには。</b>
+    このページは、閉じている間はスマホを鳴らせません（ブラウザの制限です）。
+    下のボタンからカレンダーに取り込んでおくと、<b>1か月前・1週間前・前日の朝9時</b>に、
+    いつもの通知が鳴ります。取り込みは最初の1回だけです。
+    <a class="btn" href="okinawa-gyoji.ics" download>カレンダーに取り込む（2026〜2100年）</a>
+  </div>
+
+  <div class="yearbar">
+    <button id="prev" type="button" aria-label="前の年">◀</button>
+    <div class="yearlabel" id="yearlabel"></div>
+    <button id="nextY" type="button" aria-label="次の年">▶</button>
+  </div>
+  <button class="today" id="backToday" type="button" hidden>今年にもどる</button>
+
+  <p class="hint">過ぎた行事もタップすると、やり方とお供えの配置図を見られます。</p>
+  <ol class="list" id="list"></ol>
+
+  <div class="note">
+    <div id="accuracy"></div>
+    <div class="warn">
+      やり方は地域や家によってかなり違います。ここに書いたのは「よくある形」です。
+      迷ったときは、家の年長者に聞くのがいちばん確かです。
+    </div>
+    <h3>つきあわせた出どころ</h3>
+    <ul>
+      <li>二十四節気・旧暦：<a href="https://eco.mtk.nao.ac.jp/koyomi/" rel="noopener">国立天文台 暦計算室</a>（暦要項）</li>
+      <li>行事・お供え：<a href="https://www.oki-memorial.org/" rel="noopener">沖縄メモリアル整備協会</a>、<a href="https://www.ryuukyuu.co.jp/" rel="noopener">株式会社 琉球</a>、<a href="https://www.okinawastory.jp/feature/kurashi/basic" rel="noopener">おきなわ物語</a></li>
+    </ul>
+  </div>
+</div>
+
+<script id="koyomi" type="application/json">[
+ {
+  "year": 2026,
+  "juurukunichi": "2026-03-04",
+  "seimei_start": "2026-04-05",
+  "seimei_end": "2026-04-19",
+  "haru_higan": [
+   "2026-03-17",
+   "2026-03-20",
+   "2026-03-23"
+  ],
+  "tanabata": "2026-08-19",
+  "obon": [
+   "2026-08-25",
+   "2026-08-26",
+   "2026-08-27"
+  ],
+  "aki_higan": [
+   "2026-09-20",
+   "2026-09-23",
+   "2026-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2027,
+  "juurukunichi": "2027-02-22",
+  "seimei_start": "2027-04-05",
+  "seimei_end": "2027-04-19",
+  "haru_higan": [
+   "2027-03-18",
+   "2027-03-21",
+   "2027-03-24"
+  ],
+  "tanabata": "2027-08-08",
+  "obon": [
+   "2027-08-14",
+   "2027-08-15",
+   "2027-08-16"
+  ],
+  "aki_higan": [
+   "2027-09-20",
+   "2027-09-23",
+   "2027-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2028,
+  "juurukunichi": "2028-02-11",
+  "seimei_start": "2028-04-04",
+  "seimei_end": "2028-04-18",
+  "haru_higan": [
+   "2028-03-17",
+   "2028-03-20",
+   "2028-03-23"
+  ],
+  "tanabata": "2028-08-26",
+  "obon": [
+   "2028-09-01",
+   "2028-09-02",
+   "2028-09-03"
+  ],
+  "aki_higan": [
+   "2028-09-19",
+   "2028-09-22",
+   "2028-09-25"
+  ],
+  "leap": [
+   "閏5月"
+  ]
+ },
+ {
+  "year": 2029,
+  "juurukunichi": "2029-02-28",
+  "seimei_start": "2029-04-04",
+  "seimei_end": "2029-04-19",
+  "haru_higan": [
+   "2029-03-17",
+   "2029-03-20",
+   "2029-03-23"
+  ],
+  "tanabata": "2029-08-16",
+  "obon": [
+   "2029-08-22",
+   "2029-08-23",
+   "2029-08-24"
+  ],
+  "aki_higan": [
+   "2029-09-20",
+   "2029-09-23",
+   "2029-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2030,
+  "juurukunichi": "2030-02-18",
+  "seimei_start": "2030-04-05",
+  "seimei_end": "2030-04-19",
+  "haru_higan": [
+   "2030-03-17",
+   "2030-03-20",
+   "2030-03-23"
+  ],
+  "tanabata": "2030-08-05",
+  "obon": [
+   "2030-08-11",
+   "2030-08-12",
+   "2030-08-13"
+  ],
+  "aki_higan": [
+   "2030-09-20",
+   "2030-09-23",
+   "2030-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2031,
+  "juurukunichi": "2031-02-07",
+  "seimei_start": "2031-04-05",
+  "seimei_end": "2031-04-19",
+  "haru_higan": [
+   "2031-03-18",
+   "2031-03-21",
+   "2031-03-24"
+  ],
+  "tanabata": "2031-08-24",
+  "obon": [
+   "2031-08-30",
+   "2031-08-31",
+   "2031-09-01"
+  ],
+  "aki_higan": [
+   "2031-09-20",
+   "2031-09-23",
+   "2031-09-26"
+  ],
+  "leap": [
+   "閏3月"
+  ]
+ },
+ {
+  "year": 2032,
+  "juurukunichi": "2032-02-26",
+  "seimei_start": "2032-04-04",
+  "seimei_end": "2032-04-18",
+  "haru_higan": [
+   "2032-03-17",
+   "2032-03-20",
+   "2032-03-23"
+  ],
+  "tanabata": "2032-08-12",
+  "obon": [
+   "2032-08-18",
+   "2032-08-19",
+   "2032-08-20"
+  ],
+  "aki_higan": [
+   "2032-09-19",
+   "2032-09-22",
+   "2032-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2033,
+  "juurukunichi": "2033-02-15",
+  "seimei_start": "2033-04-04",
+  "seimei_end": "2033-04-19",
+  "haru_higan": [
+   "2033-03-17",
+   "2033-03-20",
+   "2033-03-23"
+  ],
+  "tanabata": "2033-08-01",
+  "obon": [
+   "2033-08-07",
+   "2033-08-08",
+   "2033-08-09"
+  ],
+  "aki_higan": [
+   "2033-09-20",
+   "2033-09-23",
+   "2033-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2034,
+  "juurukunichi": "2034-03-06",
+  "seimei_start": "2034-04-05",
+  "seimei_end": "2034-04-19",
+  "haru_higan": [
+   "2034-03-17",
+   "2034-03-20",
+   "2034-03-23"
+  ],
+  "tanabata": "2034-08-20",
+  "obon": [
+   "2034-08-26",
+   "2034-08-27",
+   "2034-08-28"
+  ],
+  "aki_higan": [
+   "2034-09-20",
+   "2034-09-23",
+   "2034-09-26"
+  ],
+  "leap": [
+   "閏11月"
+  ]
+ },
+ {
+  "year": 2035,
+  "juurukunichi": "2035-02-23",
+  "seimei_start": "2035-04-05",
+  "seimei_end": "2035-04-19",
+  "haru_higan": [
+   "2035-03-18",
+   "2035-03-21",
+   "2035-03-24"
+  ],
+  "tanabata": "2035-08-10",
+  "obon": [
+   "2035-08-16",
+   "2035-08-17",
+   "2035-08-18"
+  ],
+  "aki_higan": [
+   "2035-09-20",
+   "2035-09-23",
+   "2035-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2036,
+  "juurukunichi": "2036-02-12",
+  "seimei_start": "2036-04-04",
+  "seimei_end": "2036-04-18",
+  "haru_higan": [
+   "2036-03-17",
+   "2036-03-20",
+   "2036-03-23"
+  ],
+  "tanabata": "2036-08-28",
+  "obon": [
+   "2036-09-03",
+   "2036-09-04",
+   "2036-09-05"
+  ],
+  "aki_higan": [
+   "2036-09-19",
+   "2036-09-22",
+   "2036-09-25"
+  ],
+  "leap": [
+   "閏6月"
+  ]
+ },
+ {
+  "year": 2037,
+  "juurukunichi": "2037-03-02",
+  "seimei_start": "2037-04-04",
+  "seimei_end": "2037-04-19",
+  "haru_higan": [
+   "2037-03-17",
+   "2037-03-20",
+   "2037-03-23"
+  ],
+  "tanabata": "2037-08-17",
+  "obon": [
+   "2037-08-23",
+   "2037-08-24",
+   "2037-08-25"
+  ],
+  "aki_higan": [
+   "2037-09-20",
+   "2037-09-23",
+   "2037-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2038,
+  "juurukunichi": "2038-02-19",
+  "seimei_start": "2038-04-05",
+  "seimei_end": "2038-04-19",
+  "haru_higan": [
+   "2038-03-17",
+   "2038-03-20",
+   "2038-03-23"
+  ],
+  "tanabata": "2038-08-07",
+  "obon": [
+   "2038-08-13",
+   "2038-08-14",
+   "2038-08-15"
+  ],
+  "aki_higan": [
+   "2038-09-20",
+   "2038-09-23",
+   "2038-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2039,
+  "juurukunichi": "2039-02-08",
+  "seimei_start": "2039-04-05",
+  "seimei_end": "2039-04-19",
+  "haru_higan": [
+   "2039-03-18",
+   "2039-03-21",
+   "2039-03-24"
+  ],
+  "tanabata": "2039-08-26",
+  "obon": [
+   "2039-09-01",
+   "2039-09-02",
+   "2039-09-03"
+  ],
+  "aki_higan": [
+   "2039-09-20",
+   "2039-09-23",
+   "2039-09-26"
+  ],
+  "leap": [
+   "閏5月"
+  ]
+ },
+ {
+  "year": 2040,
+  "juurukunichi": "2040-02-27",
+  "seimei_start": "2040-04-04",
+  "seimei_end": "2040-04-18",
+  "haru_higan": [
+   "2040-03-17",
+   "2040-03-20",
+   "2040-03-23"
+  ],
+  "tanabata": "2040-08-14",
+  "obon": [
+   "2040-08-20",
+   "2040-08-21",
+   "2040-08-22"
+  ],
+  "aki_higan": [
+   "2040-09-19",
+   "2040-09-22",
+   "2040-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2041,
+  "juurukunichi": "2041-02-16",
+  "seimei_start": "2041-04-04",
+  "seimei_end": "2041-04-19",
+  "haru_higan": [
+   "2041-03-17",
+   "2041-03-20",
+   "2041-03-23"
+  ],
+  "tanabata": "2041-08-03",
+  "obon": [
+   "2041-08-09",
+   "2041-08-10",
+   "2041-08-11"
+  ],
+  "aki_higan": [
+   "2041-09-20",
+   "2041-09-23",
+   "2041-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2042,
+  "juurukunichi": "2042-02-06",
+  "seimei_start": "2042-04-05",
+  "seimei_end": "2042-04-19",
+  "haru_higan": [
+   "2042-03-17",
+   "2042-03-20",
+   "2042-03-23"
+  ],
+  "tanabata": "2042-08-22",
+  "obon": [
+   "2042-08-28",
+   "2042-08-29",
+   "2042-08-30"
+  ],
+  "aki_higan": [
+   "2042-09-20",
+   "2042-09-23",
+   "2042-09-26"
+  ],
+  "leap": [
+   "閏2月"
+  ]
+ },
+ {
+  "year": 2043,
+  "juurukunichi": "2043-02-25",
+  "seimei_start": "2043-04-05",
+  "seimei_end": "2043-04-19",
+  "haru_higan": [
+   "2043-03-18",
+   "2043-03-21",
+   "2043-03-24"
+  ],
+  "tanabata": "2043-08-11",
+  "obon": [
+   "2043-08-17",
+   "2043-08-18",
+   "2043-08-19"
+  ],
+  "aki_higan": [
+   "2043-09-20",
+   "2043-09-23",
+   "2043-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2044,
+  "juurukunichi": "2044-02-14",
+  "seimei_start": "2044-04-04",
+  "seimei_end": "2044-04-18",
+  "haru_higan": [
+   "2044-03-17",
+   "2044-03-20",
+   "2044-03-23"
+  ],
+  "tanabata": "2044-07-31",
+  "obon": [
+   "2044-08-06",
+   "2044-08-07",
+   "2044-08-08"
+  ],
+  "aki_higan": [
+   "2044-09-19",
+   "2044-09-22",
+   "2044-09-25"
+  ],
+  "leap": [
+   "閏7月"
+  ]
+ },
+ {
+  "year": 2045,
+  "juurukunichi": "2045-03-04",
+  "seimei_start": "2045-04-04",
+  "seimei_end": "2045-04-19",
+  "haru_higan": [
+   "2045-03-17",
+   "2045-03-20",
+   "2045-03-23"
+  ],
+  "tanabata": "2045-08-19",
+  "obon": [
+   "2045-08-25",
+   "2045-08-26",
+   "2045-08-27"
+  ],
+  "aki_higan": [
+   "2045-09-19",
+   "2045-09-22",
+   "2045-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2046,
+  "juurukunichi": "2046-02-21",
+  "seimei_start": "2046-04-04",
+  "seimei_end": "2046-04-19",
+  "haru_higan": [
+   "2046-03-17",
+   "2046-03-20",
+   "2046-03-23"
+  ],
+  "tanabata": "2046-08-08",
+  "obon": [
+   "2046-08-14",
+   "2046-08-15",
+   "2046-08-16"
+  ],
+  "aki_higan": [
+   "2046-09-20",
+   "2046-09-23",
+   "2046-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2047,
+  "juurukunichi": "2047-02-10",
+  "seimei_start": "2047-04-05",
+  "seimei_end": "2047-04-19",
+  "haru_higan": [
+   "2047-03-18",
+   "2047-03-21",
+   "2047-03-24"
+  ],
+  "tanabata": "2047-08-27",
+  "obon": [
+   "2047-09-02",
+   "2047-09-03",
+   "2047-09-04"
+  ],
+  "aki_higan": [
+   "2047-09-20",
+   "2047-09-23",
+   "2047-09-26"
+  ],
+  "leap": [
+   "閏5月"
+  ]
+ },
+ {
+  "year": 2048,
+  "juurukunichi": "2048-02-29",
+  "seimei_start": "2048-04-04",
+  "seimei_end": "2048-04-18",
+  "haru_higan": [
+   "2048-03-17",
+   "2048-03-20",
+   "2048-03-23"
+  ],
+  "tanabata": "2048-08-16",
+  "obon": [
+   "2048-08-22",
+   "2048-08-23",
+   "2048-08-24"
+  ],
+  "aki_higan": [
+   "2048-09-19",
+   "2048-09-22",
+   "2048-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2049,
+  "juurukunichi": "2049-02-17",
+  "seimei_start": "2049-04-04",
+  "seimei_end": "2049-04-19",
+  "haru_higan": [
+   "2049-03-17",
+   "2049-03-20",
+   "2049-03-23"
+  ],
+  "tanabata": "2049-08-05",
+  "obon": [
+   "2049-08-11",
+   "2049-08-12",
+   "2049-08-13"
+  ],
+  "aki_higan": [
+   "2049-09-19",
+   "2049-09-22",
+   "2049-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2050,
+  "juurukunichi": "2050-02-07",
+  "seimei_start": "2050-04-04",
+  "seimei_end": "2050-04-19",
+  "haru_higan": [
+   "2050-03-17",
+   "2050-03-20",
+   "2050-03-23"
+  ],
+  "tanabata": "2050-08-23",
+  "obon": [
+   "2050-08-29",
+   "2050-08-30",
+   "2050-08-31"
+  ],
+  "aki_higan": [
+   "2050-09-20",
+   "2050-09-23",
+   "2050-09-26"
+  ],
+  "leap": [
+   "閏3月"
+  ]
+ },
+ {
+  "year": 2051,
+  "juurukunichi": "2051-02-26",
+  "seimei_start": "2051-04-05",
+  "seimei_end": "2051-04-19",
+  "haru_higan": [
+   "2051-03-18",
+   "2051-03-21",
+   "2051-03-24"
+  ],
+  "tanabata": "2051-08-13",
+  "obon": [
+   "2051-08-19",
+   "2051-08-20",
+   "2051-08-21"
+  ],
+  "aki_higan": [
+   "2051-09-20",
+   "2051-09-23",
+   "2051-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2052,
+  "juurukunichi": "2052-02-16",
+  "seimei_start": "2052-04-04",
+  "seimei_end": "2052-04-18",
+  "haru_higan": [
+   "2052-03-17",
+   "2052-03-20",
+   "2052-03-23"
+  ],
+  "tanabata": "2052-08-01",
+  "obon": [
+   "2052-08-07",
+   "2052-08-08",
+   "2052-08-09"
+  ],
+  "aki_higan": [
+   "2052-09-19",
+   "2052-09-22",
+   "2052-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2053,
+  "juurukunichi": "2053-02-04",
+  "seimei_start": "2053-04-04",
+  "seimei_end": "2053-04-18",
+  "haru_higan": [
+   "2053-03-17",
+   "2053-03-20",
+   "2053-03-23"
+  ],
+  "tanabata": "2053-08-20",
+  "obon": [
+   "2053-08-26",
+   "2053-08-27",
+   "2053-08-28"
+  ],
+  "aki_higan": [
+   "2053-09-19",
+   "2053-09-22",
+   "2053-09-25"
+  ],
+  "leap": [
+   "閏1月"
+  ]
+ },
+ {
+  "year": 2054,
+  "juurukunichi": "2054-02-23",
+  "seimei_start": "2054-04-04",
+  "seimei_end": "2054-04-19",
+  "haru_higan": [
+   "2054-03-17",
+   "2054-03-20",
+   "2054-03-23"
+  ],
+  "tanabata": "2054-08-10",
+  "obon": [
+   "2054-08-16",
+   "2054-08-17",
+   "2054-08-18"
+  ],
+  "aki_higan": [
+   "2054-09-20",
+   "2054-09-23",
+   "2054-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2055,
+  "juurukunichi": "2055-02-12",
+  "seimei_start": "2055-04-05",
+  "seimei_end": "2055-04-19",
+  "haru_higan": [
+   "2055-03-18",
+   "2055-03-21",
+   "2055-03-24"
+  ],
+  "tanabata": "2055-08-29",
+  "obon": [
+   "2055-09-04",
+   "2055-09-05",
+   "2055-09-06"
+  ],
+  "aki_higan": [
+   "2055-09-20",
+   "2055-09-23",
+   "2055-09-26"
+  ],
+  "leap": [
+   "閏6月"
+  ]
+ },
+ {
+  "year": 2056,
+  "juurukunichi": "2056-03-01",
+  "seimei_start": "2056-04-04",
+  "seimei_end": "2056-04-18",
+  "haru_higan": [
+   "2056-03-17",
+   "2056-03-20",
+   "2056-03-23"
+  ],
+  "tanabata": "2056-08-17",
+  "obon": [
+   "2056-08-23",
+   "2056-08-24",
+   "2056-08-25"
+  ],
+  "aki_higan": [
+   "2056-09-19",
+   "2056-09-22",
+   "2056-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2057,
+  "juurukunichi": "2057-02-19",
+  "seimei_start": "2057-04-04",
+  "seimei_end": "2057-04-18",
+  "haru_higan": [
+   "2057-03-17",
+   "2057-03-20",
+   "2057-03-23"
+  ],
+  "tanabata": "2057-08-06",
+  "obon": [
+   "2057-08-12",
+   "2057-08-13",
+   "2057-08-14"
+  ],
+  "aki_higan": [
+   "2057-09-19",
+   "2057-09-22",
+   "2057-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2058,
+  "juurukunichi": "2058-02-08",
+  "seimei_start": "2058-04-04",
+  "seimei_end": "2058-04-19",
+  "haru_higan": [
+   "2058-03-17",
+   "2058-03-20",
+   "2058-03-23"
+  ],
+  "tanabata": "2058-08-25",
+  "obon": [
+   "2058-08-31",
+   "2058-09-01",
+   "2058-09-02"
+  ],
+  "aki_higan": [
+   "2058-09-20",
+   "2058-09-23",
+   "2058-09-26"
+  ],
+  "leap": [
+   "閏4月"
+  ]
+ },
+ {
+  "year": 2059,
+  "juurukunichi": "2059-02-27",
+  "seimei_start": "2059-04-05",
+  "seimei_end": "2059-04-19",
+  "haru_higan": [
+   "2059-03-17",
+   "2059-03-20",
+   "2059-03-23"
+  ],
+  "tanabata": "2059-08-14",
+  "obon": [
+   "2059-08-20",
+   "2059-08-21",
+   "2059-08-22"
+  ],
+  "aki_higan": [
+   "2059-09-20",
+   "2059-09-23",
+   "2059-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2060,
+  "juurukunichi": "2060-02-17",
+  "seimei_start": "2060-04-04",
+  "seimei_end": "2060-04-18",
+  "haru_higan": [
+   "2060-03-17",
+   "2060-03-20",
+   "2060-03-23"
+  ],
+  "tanabata": "2060-08-02",
+  "obon": [
+   "2060-08-08",
+   "2060-08-09",
+   "2060-08-10"
+  ],
+  "aki_higan": [
+   "2060-09-19",
+   "2060-09-22",
+   "2060-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2061,
+  "juurukunichi": "2061-02-06",
+  "seimei_start": "2061-04-04",
+  "seimei_end": "2061-04-18",
+  "haru_higan": [
+   "2061-03-17",
+   "2061-03-20",
+   "2061-03-23"
+  ],
+  "tanabata": "2061-08-21",
+  "obon": [
+   "2061-08-27",
+   "2061-08-28",
+   "2061-08-29"
+  ],
+  "aki_higan": [
+   "2061-09-19",
+   "2061-09-22",
+   "2061-09-25"
+  ],
+  "leap": [
+   "閏3月"
+  ]
+ },
+ {
+  "year": 2062,
+  "juurukunichi": "2062-02-24",
+  "seimei_start": "2062-04-04",
+  "seimei_end": "2062-04-19",
+  "haru_higan": [
+   "2062-03-17",
+   "2062-03-20",
+   "2062-03-23"
+  ],
+  "tanabata": "2062-08-11",
+  "obon": [
+   "2062-08-17",
+   "2062-08-18",
+   "2062-08-19"
+  ],
+  "aki_higan": [
+   "2062-09-20",
+   "2062-09-23",
+   "2062-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2063,
+  "juurukunichi": "2063-02-13",
+  "seimei_start": "2063-04-05",
+  "seimei_end": "2063-04-19",
+  "haru_higan": [
+   "2063-03-17",
+   "2063-03-20",
+   "2063-03-23"
+  ],
+  "tanabata": "2063-08-01",
+  "obon": [
+   "2063-08-07",
+   "2063-08-08",
+   "2063-08-09"
+  ],
+  "aki_higan": [
+   "2063-09-20",
+   "2063-09-23",
+   "2063-09-26"
+  ],
+  "leap": [
+   "閏7月"
+  ]
+ },
+ {
+  "year": 2064,
+  "juurukunichi": "2064-03-03",
+  "seimei_start": "2064-04-04",
+  "seimei_end": "2064-04-18",
+  "haru_higan": [
+   "2064-03-17",
+   "2064-03-20",
+   "2064-03-23"
+  ],
+  "tanabata": "2064-08-19",
+  "obon": [
+   "2064-08-25",
+   "2064-08-26",
+   "2064-08-27"
+  ],
+  "aki_higan": [
+   "2064-09-19",
+   "2064-09-22",
+   "2064-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2065,
+  "juurukunichi": "2065-02-20",
+  "seimei_start": "2065-04-04",
+  "seimei_end": "2065-04-18",
+  "haru_higan": [
+   "2065-03-17",
+   "2065-03-20",
+   "2065-03-23"
+  ],
+  "tanabata": "2065-08-08",
+  "obon": [
+   "2065-08-14",
+   "2065-08-15",
+   "2065-08-16"
+  ],
+  "aki_higan": [
+   "2065-09-19",
+   "2065-09-22",
+   "2065-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2066,
+  "juurukunichi": "2066-02-10",
+  "seimei_start": "2066-04-04",
+  "seimei_end": "2066-04-19",
+  "haru_higan": [
+   "2066-03-17",
+   "2066-03-20",
+   "2066-03-23"
+  ],
+  "tanabata": "2066-08-27",
+  "obon": [
+   "2066-09-02",
+   "2066-09-03",
+   "2066-09-04"
+  ],
+  "aki_higan": [
+   "2066-09-20",
+   "2066-09-23",
+   "2066-09-26"
+  ],
+  "leap": [
+   "閏5月"
+  ]
+ },
+ {
+  "year": 2067,
+  "juurukunichi": "2067-03-01",
+  "seimei_start": "2067-04-05",
+  "seimei_end": "2067-04-19",
+  "haru_higan": [
+   "2067-03-17",
+   "2067-03-20",
+   "2067-03-23"
+  ],
+  "tanabata": "2067-08-16",
+  "obon": [
+   "2067-08-22",
+   "2067-08-23",
+   "2067-08-24"
+  ],
+  "aki_higan": [
+   "2067-09-20",
+   "2067-09-23",
+   "2067-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2068,
+  "juurukunichi": "2068-02-18",
+  "seimei_start": "2068-04-04",
+  "seimei_end": "2068-04-18",
+  "haru_higan": [
+   "2068-03-17",
+   "2068-03-20",
+   "2068-03-23"
+  ],
+  "tanabata": "2068-08-04",
+  "obon": [
+   "2068-08-10",
+   "2068-08-11",
+   "2068-08-12"
+  ],
+  "aki_higan": [
+   "2068-09-19",
+   "2068-09-22",
+   "2068-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2069,
+  "juurukunichi": "2069-02-07",
+  "seimei_start": "2069-04-04",
+  "seimei_end": "2069-04-18",
+  "haru_higan": [
+   "2069-03-17",
+   "2069-03-20",
+   "2069-03-23"
+  ],
+  "tanabata": "2069-08-23",
+  "obon": [
+   "2069-08-29",
+   "2069-08-30",
+   "2069-08-31"
+  ],
+  "aki_higan": [
+   "2069-09-19",
+   "2069-09-22",
+   "2069-09-25"
+  ],
+  "leap": [
+   "閏4月"
+  ]
+ },
+ {
+  "year": 2070,
+  "juurukunichi": "2070-02-26",
+  "seimei_start": "2070-04-04",
+  "seimei_end": "2070-04-19",
+  "haru_higan": [
+   "2070-03-17",
+   "2070-03-20",
+   "2070-03-23"
+  ],
+  "tanabata": "2070-08-12",
+  "obon": [
+   "2070-08-18",
+   "2070-08-19",
+   "2070-08-20"
+  ],
+  "aki_higan": [
+   "2070-09-20",
+   "2070-09-23",
+   "2070-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2071,
+  "juurukunichi": "2071-02-15",
+  "seimei_start": "2071-04-05",
+  "seimei_end": "2071-04-19",
+  "haru_higan": [
+   "2071-03-17",
+   "2071-03-20",
+   "2071-03-23"
+  ],
+  "tanabata": "2071-08-02",
+  "obon": [
+   "2071-08-08",
+   "2071-08-09",
+   "2071-08-10"
+  ],
+  "aki_higan": [
+   "2071-09-20",
+   "2071-09-23",
+   "2071-09-26"
+  ],
+  "leap": [
+   "閏8月"
+  ]
+ },
+ {
+  "year": 2072,
+  "juurukunichi": "2072-03-05",
+  "seimei_start": "2072-04-04",
+  "seimei_end": "2072-04-18",
+  "haru_higan": [
+   "2072-03-17",
+   "2072-03-20",
+   "2072-03-23"
+  ],
+  "tanabata": "2072-08-20",
+  "obon": [
+   "2072-08-26",
+   "2072-08-27",
+   "2072-08-28"
+  ],
+  "aki_higan": [
+   "2072-09-19",
+   "2072-09-22",
+   "2072-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2073,
+  "juurukunichi": "2073-02-22",
+  "seimei_start": "2073-04-04",
+  "seimei_end": "2073-04-18",
+  "haru_higan": [
+   "2073-03-17",
+   "2073-03-20",
+   "2073-03-23"
+  ],
+  "tanabata": "2073-08-10",
+  "obon": [
+   "2073-08-16",
+   "2073-08-17",
+   "2073-08-18"
+  ],
+  "aki_higan": [
+   "2073-09-19",
+   "2073-09-22",
+   "2073-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2074,
+  "juurukunichi": "2074-02-11",
+  "seimei_start": "2074-04-04",
+  "seimei_end": "2074-04-19",
+  "haru_higan": [
+   "2074-03-17",
+   "2074-03-20",
+   "2074-03-23"
+  ],
+  "tanabata": "2074-08-28",
+  "obon": [
+   "2074-09-03",
+   "2074-09-04",
+   "2074-09-05"
+  ],
+  "aki_higan": [
+   "2074-09-19",
+   "2074-09-22",
+   "2074-09-25"
+  ],
+  "leap": [
+   "閏6月"
+  ]
+ },
+ {
+  "year": 2075,
+  "juurukunichi": "2075-03-02",
+  "seimei_start": "2075-04-05",
+  "seimei_end": "2075-04-19",
+  "haru_higan": [
+   "2075-03-17",
+   "2075-03-20",
+   "2075-03-23"
+  ],
+  "tanabata": "2075-08-18",
+  "obon": [
+   "2075-08-24",
+   "2075-08-25",
+   "2075-08-26"
+  ],
+  "aki_higan": [
+   "2075-09-20",
+   "2075-09-23",
+   "2075-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2076,
+  "juurukunichi": "2076-02-20",
+  "seimei_start": "2076-04-04",
+  "seimei_end": "2076-04-18",
+  "haru_higan": [
+   "2076-03-17",
+   "2076-03-20",
+   "2076-03-23"
+  ],
+  "tanabata": "2076-08-06",
+  "obon": [
+   "2076-08-12",
+   "2076-08-13",
+   "2076-08-14"
+  ],
+  "aki_higan": [
+   "2076-09-19",
+   "2076-09-22",
+   "2076-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2077,
+  "juurukunichi": "2077-02-08",
+  "seimei_start": "2077-04-04",
+  "seimei_end": "2077-04-18",
+  "haru_higan": [
+   "2077-03-17",
+   "2077-03-20",
+   "2077-03-23"
+  ],
+  "tanabata": "2077-08-24",
+  "obon": [
+   "2077-08-30",
+   "2077-08-31",
+   "2077-09-01"
+  ],
+  "aki_higan": [
+   "2077-09-19",
+   "2077-09-22",
+   "2077-09-25"
+  ],
+  "leap": [
+   "閏4月"
+  ]
+ },
+ {
+  "year": 2078,
+  "juurukunichi": "2078-02-27",
+  "seimei_start": "2078-04-04",
+  "seimei_end": "2078-04-19",
+  "haru_higan": [
+   "2078-03-17",
+   "2078-03-20",
+   "2078-03-23"
+  ],
+  "tanabata": "2078-08-14",
+  "obon": [
+   "2078-08-20",
+   "2078-08-21",
+   "2078-08-22"
+  ],
+  "aki_higan": [
+   "2078-09-19",
+   "2078-09-22",
+   "2078-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2079,
+  "juurukunichi": "2079-02-17",
+  "seimei_start": "2079-04-04",
+  "seimei_end": "2079-04-19",
+  "haru_higan": [
+   "2079-03-17",
+   "2079-03-20",
+   "2079-03-23"
+  ],
+  "tanabata": "2079-08-03",
+  "obon": [
+   "2079-08-09",
+   "2079-08-10",
+   "2079-08-11"
+  ],
+  "aki_higan": [
+   "2079-09-20",
+   "2079-09-23",
+   "2079-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2080,
+  "juurukunichi": "2080-02-06",
+  "seimei_start": "2080-04-04",
+  "seimei_end": "2080-04-18",
+  "haru_higan": [
+   "2080-03-17",
+   "2080-03-20",
+   "2080-03-23"
+  ],
+  "tanabata": "2080-08-21",
+  "obon": [
+   "2080-08-27",
+   "2080-08-28",
+   "2080-08-29"
+  ],
+  "aki_higan": [
+   "2080-09-19",
+   "2080-09-22",
+   "2080-09-25"
+  ],
+  "leap": [
+   "閏3月"
+  ]
+ },
+ {
+  "year": 2081,
+  "juurukunichi": "2081-02-24",
+  "seimei_start": "2081-04-04",
+  "seimei_end": "2081-04-18",
+  "haru_higan": [
+   "2081-03-17",
+   "2081-03-20",
+   "2081-03-23"
+  ],
+  "tanabata": "2081-08-11",
+  "obon": [
+   "2081-08-17",
+   "2081-08-18",
+   "2081-08-19"
+  ],
+  "aki_higan": [
+   "2081-09-19",
+   "2081-09-22",
+   "2081-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2082,
+  "juurukunichi": "2082-02-13",
+  "seimei_start": "2082-04-04",
+  "seimei_end": "2082-04-18",
+  "haru_higan": [
+   "2082-03-17",
+   "2082-03-20",
+   "2082-03-23"
+  ],
+  "tanabata": "2082-08-01",
+  "obon": [
+   "2082-08-07",
+   "2082-08-08",
+   "2082-08-09"
+  ],
+  "aki_higan": [
+   "2082-09-19",
+   "2082-09-22",
+   "2082-09-25"
+  ],
+  "leap": [
+   "閏7月"
+  ]
+ },
+ {
+  "year": 2083,
+  "juurukunichi": "2083-03-04",
+  "seimei_start": "2083-04-04",
+  "seimei_end": "2083-04-19",
+  "haru_higan": [
+   "2083-03-17",
+   "2083-03-20",
+   "2083-03-23"
+  ],
+  "tanabata": "2083-08-19",
+  "obon": [
+   "2083-08-25",
+   "2083-08-26",
+   "2083-08-27"
+  ],
+  "aki_higan": [
+   "2083-09-20",
+   "2083-09-23",
+   "2083-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2084,
+  "juurukunichi": "2084-02-21",
+  "seimei_start": "2084-04-04",
+  "seimei_end": "2084-04-18",
+  "haru_higan": [
+   "2084-03-17",
+   "2084-03-20",
+   "2084-03-23"
+  ],
+  "tanabata": "2084-08-08",
+  "obon": [
+   "2084-08-14",
+   "2084-08-15",
+   "2084-08-16"
+  ],
+  "aki_higan": [
+   "2084-09-19",
+   "2084-09-22",
+   "2084-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2085,
+  "juurukunichi": "2085-02-10",
+  "seimei_start": "2085-04-04",
+  "seimei_end": "2085-04-18",
+  "haru_higan": [
+   "2085-03-17",
+   "2085-03-20",
+   "2085-03-23"
+  ],
+  "tanabata": "2085-08-26",
+  "obon": [
+   "2085-09-01",
+   "2085-09-02",
+   "2085-09-03"
+  ],
+  "aki_higan": [
+   "2085-09-19",
+   "2085-09-22",
+   "2085-09-25"
+  ],
+  "leap": [
+   "閏5月"
+  ]
+ },
+ {
+  "year": 2086,
+  "juurukunichi": "2086-03-01",
+  "seimei_start": "2086-04-04",
+  "seimei_end": "2086-04-18",
+  "haru_higan": [
+   "2086-03-17",
+   "2086-03-20",
+   "2086-03-23"
+  ],
+  "tanabata": "2086-08-15",
+  "obon": [
+   "2086-08-21",
+   "2086-08-22",
+   "2086-08-23"
+  ],
+  "aki_higan": [
+   "2086-09-19",
+   "2086-09-22",
+   "2086-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2087,
+  "juurukunichi": "2087-02-18",
+  "seimei_start": "2087-04-04",
+  "seimei_end": "2087-04-19",
+  "haru_higan": [
+   "2087-03-17",
+   "2087-03-20",
+   "2087-03-23"
+  ],
+  "tanabata": "2087-08-05",
+  "obon": [
+   "2087-08-11",
+   "2087-08-12",
+   "2087-08-13"
+  ],
+  "aki_higan": [
+   "2087-09-20",
+   "2087-09-23",
+   "2087-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2088,
+  "juurukunichi": "2088-02-08",
+  "seimei_start": "2088-04-04",
+  "seimei_end": "2088-04-18",
+  "haru_higan": [
+   "2088-03-17",
+   "2088-03-20",
+   "2088-03-23"
+  ],
+  "tanabata": "2088-08-23",
+  "obon": [
+   "2088-08-29",
+   "2088-08-30",
+   "2088-08-31"
+  ],
+  "aki_higan": [
+   "2088-09-19",
+   "2088-09-22",
+   "2088-09-25"
+  ],
+  "leap": [
+   "閏4月"
+  ]
+ },
+ {
+  "year": 2089,
+  "juurukunichi": "2089-02-26",
+  "seimei_start": "2089-04-04",
+  "seimei_end": "2089-04-18",
+  "haru_higan": [
+   "2089-03-17",
+   "2089-03-20",
+   "2089-03-23"
+  ],
+  "tanabata": "2089-08-12",
+  "obon": [
+   "2089-08-18",
+   "2089-08-19",
+   "2089-08-20"
+  ],
+  "aki_higan": [
+   "2089-09-19",
+   "2089-09-22",
+   "2089-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2090,
+  "juurukunichi": "2090-02-14",
+  "seimei_start": "2090-04-04",
+  "seimei_end": "2090-04-18",
+  "haru_higan": [
+   "2090-03-17",
+   "2090-03-20",
+   "2090-03-23"
+  ],
+  "tanabata": "2090-08-02",
+  "obon": [
+   "2090-08-08",
+   "2090-08-09",
+   "2090-08-10"
+  ],
+  "aki_higan": [
+   "2090-09-19",
+   "2090-09-22",
+   "2090-09-25"
+  ],
+  "leap": [
+   "閏8月"
+  ]
+ },
+ {
+  "year": 2091,
+  "juurukunichi": "2091-03-05",
+  "seimei_start": "2091-04-04",
+  "seimei_end": "2091-04-19",
+  "haru_higan": [
+   "2091-03-17",
+   "2091-03-20",
+   "2091-03-23"
+  ],
+  "tanabata": "2091-08-21",
+  "obon": [
+   "2091-08-27",
+   "2091-08-28",
+   "2091-08-29"
+  ],
+  "aki_higan": [
+   "2091-09-20",
+   "2091-09-23",
+   "2091-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2092,
+  "juurukunichi": "2092-02-23",
+  "seimei_start": "2092-04-04",
+  "seimei_end": "2092-04-18",
+  "haru_higan": [
+   "2092-03-16",
+   "2092-03-19",
+   "2092-03-22"
+  ],
+  "tanabata": "2092-08-09",
+  "obon": [
+   "2092-08-15",
+   "2092-08-16",
+   "2092-08-17"
+  ],
+  "aki_higan": [
+   "2092-09-19",
+   "2092-09-22",
+   "2092-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2093,
+  "juurukunichi": "2093-02-11",
+  "seimei_start": "2093-04-04",
+  "seimei_end": "2093-04-18",
+  "haru_higan": [
+   "2093-03-17",
+   "2093-03-20",
+   "2093-03-23"
+  ],
+  "tanabata": "2093-08-28",
+  "obon": [
+   "2093-09-03",
+   "2093-09-04",
+   "2093-09-05"
+  ],
+  "aki_higan": [
+   "2093-09-19",
+   "2093-09-22",
+   "2093-09-25"
+  ],
+  "leap": [
+   "閏6月"
+  ]
+ },
+ {
+  "year": 2094,
+  "juurukunichi": "2094-03-02",
+  "seimei_start": "2094-04-04",
+  "seimei_end": "2094-04-18",
+  "haru_higan": [
+   "2094-03-17",
+   "2094-03-20",
+   "2094-03-23"
+  ],
+  "tanabata": "2094-08-17",
+  "obon": [
+   "2094-08-23",
+   "2094-08-24",
+   "2094-08-25"
+  ],
+  "aki_higan": [
+   "2094-09-19",
+   "2094-09-22",
+   "2094-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2095,
+  "juurukunichi": "2095-02-20",
+  "seimei_start": "2095-04-04",
+  "seimei_end": "2095-04-19",
+  "haru_higan": [
+   "2095-03-17",
+   "2095-03-20",
+   "2095-03-23"
+  ],
+  "tanabata": "2095-08-06",
+  "obon": [
+   "2095-08-12",
+   "2095-08-13",
+   "2095-08-14"
+  ],
+  "aki_higan": [
+   "2095-09-20",
+   "2095-09-23",
+   "2095-09-26"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2096,
+  "juurukunichi": "2096-02-09",
+  "seimei_start": "2096-04-04",
+  "seimei_end": "2096-04-18",
+  "haru_higan": [
+   "2096-03-16",
+   "2096-03-19",
+   "2096-03-22"
+  ],
+  "tanabata": "2096-08-24",
+  "obon": [
+   "2096-08-30",
+   "2096-08-31",
+   "2096-09-01"
+  ],
+  "aki_higan": [
+   "2096-09-19",
+   "2096-09-22",
+   "2096-09-25"
+  ],
+  "leap": [
+   "閏4月"
+  ]
+ },
+ {
+  "year": 2097,
+  "juurukunichi": "2097-02-27",
+  "seimei_start": "2097-04-04",
+  "seimei_end": "2097-04-18",
+  "haru_higan": [
+   "2097-03-17",
+   "2097-03-20",
+   "2097-03-23"
+  ],
+  "tanabata": "2097-08-14",
+  "obon": [
+   "2097-08-20",
+   "2097-08-21",
+   "2097-08-22"
+  ],
+  "aki_higan": [
+   "2097-09-19",
+   "2097-09-22",
+   "2097-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2098,
+  "juurukunichi": "2098-02-16",
+  "seimei_start": "2098-04-04",
+  "seimei_end": "2098-04-18",
+  "haru_higan": [
+   "2098-03-17",
+   "2098-03-20",
+   "2098-03-23"
+  ],
+  "tanabata": "2098-08-03",
+  "obon": [
+   "2098-08-09",
+   "2098-08-10",
+   "2098-08-11"
+  ],
+  "aki_higan": [
+   "2098-09-19",
+   "2098-09-22",
+   "2098-09-25"
+  ],
+  "leap": []
+ },
+ {
+  "year": 2099,
+  "juurukunichi": "2099-02-05",
+  "seimei_start": "2099-04-04",
+  "seimei_end": "2099-04-19",
+  "haru_higan": [
+   "2099-03-17",
+   "2099-03-20",
+   "2099-03-23"
+  ],
+  "tanabata": "2099-08-22",
+  "obon": [
+   "2099-08-28",
+   "2099-08-29",
+   "2099-08-30"
+  ],
+  "aki_higan": [
+   "2099-09-20",
+   "2099-09-23",
+   "2099-09-26"
+  ],
+  "leap": [
+   "閏3月"
+  ]
+ },
+ {
+  "year": 2100,
+  "juurukunichi": "2100-02-24",
+  "seimei_start": "2100-04-05",
+  "seimei_end": "2100-04-19",
+  "haru_higan": [
+   "2100-03-17",
+   "2100-03-20",
+   "2100-03-23"
+  ],
+  "tanabata": "2100-08-12",
+  "obon": [
+   "2100-08-18",
+   "2100-08-19",
+   "2100-08-20"
+  ],
+  "aki_higan": [
+   "2100-09-20",
+   "2100-09-23",
+   "2100-09-26"
+  ],
+  "leap": []
+ }
+]</script>
+<script>
+const DATA = JSON.parse(document.getElementById('koyomi').textContent);
+const BY_YEAR = {}; DATA.forEach(r => BY_YEAR[r.year] = r);
+const YEARS = DATA.map(r => r.year);
+const MIN_Y = YEARS[0], MAX_Y = YEARS[YEARS.length - 1];
+const CONFIRMED_UNTIL = 2027;
+
+const WD = ['日','月','火','水','木','金','土'];
+const d = s => { const [y,m,dd] = s.split('-').map(Number); return new Date(y, m-1, dd); };
+const md = s => { const t = d(s); return `${t.getMonth()+1}月${t.getDate()}日`; };
+const mdw = s => `${md(s)}(${WD[d(s).getDay()]})`;
+const today = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+
+/* ---------- 図解のパーツ ---------- */
+const STEM = 'style="fill:none;stroke:var(--gettou);stroke-width:1.5;stroke-linecap:round"';
+const ROD  = 'style="fill:none;stroke:var(--ai);stroke-width:5;stroke-linecap:round"';
+
+const P = {
+  badge:(x,y,n)=>`<circle cx="${x}" cy="${y}" r="8" class="bdg"/><text x="${x}" y="${y+3.4}" class="bdg-t">${n}</text>`,
+  /* 湯のみ（お茶・お水） */
+  cup:(x,b)=>`<ellipse cx="${x}" cy="${b}" rx="12" ry="3.2" class="obj"/>
+              <path d="M${x-9} ${b-16} h18 l-2 14 h-14 z" class="obj"/>`,
+  /* 徳利（お酒） */
+  bottle:(x,b)=>`<path d="M${x-4} ${b-30} h8 v7 l6 7 v16 h-20 v-16 l6 -7 z" class="obj"/>`,
+  /* 花いけ */
+  flower:(x,b)=>`<path d="M${x} ${b-22} L${x-10} ${b-44} M${x} ${b-22} L${x} ${b-50} M${x} ${b-22} L${x+10} ${b-43}" ${STEM}/>
+                 <circle cx="${x-10}" cy="${b-44}" r="4.5" class="obj"/><circle cx="${x}" cy="${b-50}" r="4.5" class="obj"/><circle cx="${x+10}" cy="${b-43}" r="4.5" class="obj"/>
+                 <path d="M${x-9} ${b-22} h18 l-3 22 h-12 z" class="obj"/>`,
+  /* 位牌（トートーメー） */
+  ihai:(x,b)=>`<path d="M${x-24} ${b-7} h48 v7 h-48 z" class="obj"/>
+               <rect x="${x-17}" y="${b-62}" width="34" height="55" rx="3" class="obj-f"/>`,
+  /* 香炉（ウコール）＋線香 */
+  censer:(x,b)=>`<path d="M${x-9} ${b-16} v-26 M${x} ${b-16} v-30 M${x+9} ${b-16} v-26" class="hot"/>
+                 <circle cx="${x-9}" cy="${b-44}" r="2.2" class="flame"/><circle cx="${x}" cy="${b-48}" r="2.2" class="flame"/><circle cx="${x+9}" cy="${b-44}" r="2.2" class="flame"/>
+                 <path d="M${x-20} ${b-16} h40 l-6 16 h-28 z" class="obj"/>`,
+  /* ろうそく */
+  candle:(x,b)=>`<path d="M${x} ${b-42} q6 7 0 11 q-6 -4 0 -11 z" class="flame"/>
+                 <rect x="${x-4}" y="${b-31}" width="8" height="31" class="obj"/>`,
+  /* 果物の盛り合わせ */
+  fruit:(x,b)=>`<circle cx="${x}" cy="${b-20}" r="8.5" class="obj"/>
+                <circle cx="${x-9}" cy="${b-9}" r="8.5" class="obj"/><circle cx="${x+9}" cy="${b-9}" r="8.5" class="obj"/>
+                <ellipse cx="${x}" cy="${b}" rx="23" ry="4.5" class="obj"/>`,
+  /* 重箱（横から） */
+  jubakoSide:(x,b)=>`<rect x="${x-26}" y="${b-26}" width="52" height="13" rx="2" class="obj"/>
+                     <rect x="${x-26}" y="${b-13}" width="52" height="13" rx="2" class="obj"/>`,
+  /* 重箱（上から） */
+  jubakoTop:(x,y,w,h)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2.5" class="obj"/>
+                        <path d="M${x+w/2} ${y} v${h} M${x} ${y+h/2} h${w}" class="shelf"/>`,
+  /* さとうきび（グーサンウージ） */
+  uji:(x1,y1,x2,y2)=>{
+    let t = '';
+    for(let i=1;i<7;i++){ const r=i/7; t += `<circle cx="${x1+(x2-x1)*r}" cy="${y1+(y2-y1)*r}" r="2" class="obj-f"/>`; }
+    return `<path d="M${x1} ${y1} L${x2} ${y2}" style="fill:none;stroke:var(--gettou);stroke-width:4;stroke-linecap:round"/>${t}`;
+  },
+  /* 拝む人 */
+  person:(x,y)=>`<circle cx="${x}" cy="${y}" r="8" class="obj"/><path d="M${x-13} ${y+19} q13 -13 26 0" class="obj"/>`,
+};
+
+const posTable = (cols, rows) => `
+  <table class="pos">
+    <thead><tr><th></th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr><th>${r[0]}</th>${r.slice(1).map(c=>
+      c === null ? '<td class="non">—</td>' :
+      `<td class="${c[2] ? 'mid' : ''}">${c[0] ? `<span class="n">${c[0]}</span>` : ''}${c[1]}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+
+/* 仏壇（正面から見た図） */
+function dgButsudan(withUji){
+  return `
+  <div class="dg">
+    <div class="cap">仏壇のお供え（正面から見た図）</div>
+    <div class="alt">
+      <svg class="svgfig" viewBox="0 0 340 330" role="img" aria-label="仏壇のお供えの配置図">
+        <rect x="18" y="10" width="304" height="248" rx="6" class="frame"/>
+        <rect x="27" y="18" width="286" height="232" class="soft"/>
+        <path d="M27 104 h286 M27 178 h286" class="shelf"/>
+        ${withUji ? P.uji(14,300,30,28) + P.uji(326,300,310,28) : ''}
+        ${P.flower(72,104)}${P.ihai(170,104)}${P.flower(268,104)}
+        ${P.cup(62,178)}${P.bottle(132,178)}${P.cup(208,178)}${P.cup(278,178)}
+        ${P.fruit(52,250)}${P.candle(110,250)}${P.censer(170,250)}${P.candle(230,250)}${P.fruit(288,250)}
+        ${P.jubakoSide(170,296)}
+        ${P.badge(198,50,1)}${P.badge(50,54,2)}${P.badge(44,166,3)}${P.badge(114,150,4)}
+        ${P.badge(232,158,5)}${P.badge(144,206,6)}${P.badge(94,214,7)}${P.badge(24,228,8)}
+        ${P.badge(134,278,9)}${withUji ? P.badge(30,44,10) : ''}
+        <text x="72" y="322" class="ax">← 向かって左</text>
+        <text x="170" y="322" class="ax-b">中央</text>
+        <text x="268" y="322" class="ax">向かって右 →</text>
+      </svg>
+    </div>
+    ${posTable(['左端','左','中央','右','右端'], [
+      ['上段', null, ['2','花'], ['1','トートーメー',true], ['2','花'], null],
+      ['中段', ['3','お茶'], ['4','お酒'], null, ['5','お水'], ['3','お茶']],
+      ['下段', ['8','果物'], ['7','ロウソク'], ['6','ウコール',true], ['7','ロウソク'], ['8','果物']],
+      ['手前', null, null, ['9','重箱',true], null, null],
+    ])}
+    <p class="dgnote">
+      ①トートーメー＝位牌、⑥ウコール＝香炉です。「左・右」は<b>拝む人から見た向き</b>です。中段はまん中を空けて、<b>その左にお酒、右にお水</b>、いちばん外側にお茶を対で置きます。
+      ${withUji ? '<br>旧盆は、仏壇の<b>左右の柱にグーサンウージ</b>（さとうきび2本ずつ）を立てかけます（⑩）。' : ''}
+    </p>
+  </div>`;
+}
+
+/* お墓（上から見た図） */
+function dgHaka(){
+  const sweets = (x,b) => `
+    <rect x="${x-14}" y="${b-18}" width="12" height="10" rx="2" class="obj"/>
+    <rect x="${x+2}"  y="${b-18}" width="12" height="10" rx="2" class="obj"/>
+    <rect x="${x-6}"  y="${b-9}"  width="12" height="9"  rx="2" class="obj"/>
+    <ellipse cx="${x}" cy="${b}" rx="22" ry="4.5" class="obj"/>`;
+  const hashi = (x,y) => `<path d="M${x} ${y} h13 M${x} ${y+3.5} h13" style="fill:none;stroke:var(--hi);stroke-width:1.4;stroke-linecap:round"/>`;
+  return `
+  <div class="dg">
+    <div class="cap">お墓のお供え（上から見た図）</div>
+    <div class="alt">
+      <svg class="svgfig" viewBox="0 0 340 384" role="img" aria-label="お墓のお供えの配置図">
+        <rect x="70" y="12" width="200" height="52" rx="5" class="obj"/>
+        <rect x="152" y="44" width="36" height="20" class="obj-f"/>
+        <text x="170" y="36" class="ax-b">お墓</text>
+        <rect x="26" y="76" width="288" height="252" rx="8" class="dash"/>
+        ${P.flower(70,140)}${P.censer(170,140)}${P.flower(270,140)}
+        ${P.jubakoTop(114,160,52,32)}${P.jubakoTop(174,160,52,32)}
+        ${P.jubakoTop(114,196,52,32)}${P.jubakoTop(174,196,52,32)}
+        ${hashi(118,156)}${hashi(118,192)}
+        ${P.fruit(62,218)}${sweets(278,218)}
+        ${P.cup(140,268)}${P.cup(170,268)}${P.bottle(200,268)}
+        <rect x="240" y="250" width="74" height="62" rx="5" class="dash"/>
+        ${P.jubakoTop(248,256,28,20)}${P.jubakoTop(280,256,28,20)}
+        <ellipse cx="277" cy="294" rx="15" ry="7" class="obj"/>
+        <path d="M277 286 q5 5 0 8 q-5 -3 0 -8 z" class="flame"/>
+        ${P.person(170,332)}
+        ${P.badge(286,26,1)}${P.badge(46,102,2)}${P.badge(138,102,3)}${P.badge(100,152,4)}
+        ${P.badge(32,198,5)}${P.badge(308,198,6)}${P.badge(122,252,7)}${P.badge(234,246,8)}
+        ${P.badge(146,330,9)}
+        <text x="70" y="376" class="ax">← 向かって左</text>
+        <text x="170" y="376" class="ax-b">中央</text>
+        <text x="270" y="376" class="ax">向かって右 →</text>
+      </svg>
+    </div>
+    ${posTable(['左','中央','右'], [
+      ['奥',     null,         ['1','お墓',true],        null],
+      ['墓前',   ['2','花'],   ['3','ウコール',true],    ['2','花']],
+      ['供え物', ['5','果物'], ['4','重箱（4つ）',true], ['6','お菓子']],
+      ['手前',   null,         ['7','お茶・お水・お酒'], ['8','ヒジャイガミ',true]],
+      ['人',     null,         ['9','拝む人'],           null],
+    ])}
+    <p class="dgnote">
+      ③<b>ウコール</b>はお墓に据えてある香炉です。ここにヒラウコー（線香）を供えます。ご先祖様へは<b>タヒラ＝12本</b>、
+      ほかの家族は<b>半ヒラ＝3本</b>が目安。花は<b>左右に一対</b>、重箱はその手前に広げ、<b>お箸はおかず重の左上</b>（オレンジの印）に置きます。
+    </p>
+    <p class="dgnote">
+      ⑧<b>ヒジャイガミ（左の神）</b>は土地の神様で、お墓に<b>向かって右手前</b>にいます。<b>ご先祖様より先に</b>こちらへ拝みます。
+      供えるのは泡盛・シルカビ（白紙）・カタシー（重箱2つ）・ヒラウコー。<b>ウチカビを焼くのも、この右手前</b>のカビバーチ（金属のボウル）です。
+    </p>
+  </div>`;
+}
+
+/* 重箱の中身 */
+function dgJubako(kei){
+  const kama = kei ? '赤かまぼこ' : '白かまぼこ';
+  const kobu = kei ? '結び昆布' : '返し昆布';
+
+  const taimo   = (x,y) => `<circle cx="${x}" cy="${y}" r="14" class="obj"/><path d="M${x} ${y-14} v-6" ${STEM}/>`;
+  const niku    = (x,y) => `<rect x="${x-24}" y="${y-13}" width="48" height="26" rx="3" class="obj"/>
+                            <path d="M${x-24} ${y-4} h48 M${x-24} ${y+4} h48" class="shelf"/>
+                            <rect x="${x-24}" y="${kei ? y+7 : y-13}" width="48" height="6" class="obj-f"/>`;
+  const gobou   = (x,y) => `<path d="M${x-13} ${y+13} l7 -26" ${ROD}/><path d="M${x} ${y+13} l3 -26" ${ROD}/><path d="M${x+13} ${y+13} l-1 -26" ${ROD}/>`;
+  const tofu    = (x,y) => `<rect x="${x-20}" y="${y-12}" width="40" height="24" rx="3" class="obj"/><path d="M${x-20} ${y+12} l40 -24" class="shelf"/>`;
+  const kamabo  = (x,y,red) => `<path d="M${x-17} ${y+11} q0 -22 17 -22 q17 0 17 22 z" class="obj"/>
+                                ${red ? `<path d="M${x-17} ${y+11} q0 -22 17 -22 q17 0 17 22 z" style="fill:var(--hi);opacity:.85;stroke:none"/>
+                                        <path d="M${x-12} ${y+11} q0 -15 12 -15 q12 0 12 15 z" style="fill:var(--card);stroke:none"/>` : ''}`;
+  const konnya  = (x,y) => `<path d="M${x-16} ${y+10} l7 -20 h18 l-7 20 z" class="obj"/><path d="M${x-4} ${y+4} l5 -8" class="shelf"/>`;
+  const tempura = (x,y) => `<path d="M${x-17} ${y+5} q2 -16 17 -16 q15 0 17 16 q-17 9 -34 0 z" class="obj"/>`;
+  const musubi  = (x,y) => kei
+    ? `<circle cx="${x-8}" cy="${y}" r="7.5" class="obj"/><circle cx="${x+8}" cy="${y}" r="7.5" class="obj"/><rect x="${x-4}" y="${y-6}" width="8" height="12" rx="2" class="obj-f"/>`
+    : `<rect x="${x-15}" y="${y-9}" width="30" height="18" rx="4" class="obj"/><path d="M${x-5} ${y-9} v18 M${x+5} ${y-9} v18" class="shelf"/>`;
+  const castella= (x,y) => `<rect x="${x-19}" y="${y-11}" width="38" height="22" rx="2" class="obj"/><path d="M${x-19} ${y} h38" class="shelf"/>`;
+
+  return `
+  <div class="dg">
+    <div class="cap">おかず重の詰め方（9品・3×3）</div>
+    <div class="alt">
+      <svg class="svgfig" viewBox="0 0 340 256" role="img" aria-label="おかず重の詰め方の図">
+        <text x="170" y="14" class="ax">▲ この面を仏壇・お墓に向ける（ご先祖様側）</text>
+        <rect x="22" y="24" width="296" height="180" rx="4" class="frame"/>
+        <path d="M121 24 v180 M219 24 v180 M22 84 h296 M22 144 h296" class="shelf"/>
+        ${taimo(71,54)}${niku(170,54)}${gobou(269,54)}
+        ${tofu(71,114)}${kamabo(170,114,kei)}${konnya(269,114)}
+        ${tempura(71,174)}${musubi(170,174)}${castella(269,174)}
+        ${P.badge(38,40,1)}${P.badge(137,40,2)}${P.badge(235,40,3)}
+        ${P.badge(38,100,4)}${P.badge(137,100,5)}${P.badge(235,100,6)}
+        ${P.badge(38,160,7)}${P.badge(137,160,8)}${P.badge(235,160,9)}
+        <text x="71" y="224" class="ax-b">左</text>
+        <text x="170" y="224" class="ax-b">中央</text>
+        <text x="269" y="224" class="ax-b">右</text>
+        <text x="170" y="246" class="ax">▼ 拝む人側</text>
+      </svg>
+    </div>
+    ${posTable(['左','中央','右'], [
+      ['奥',     ['1','田芋'],     ['2','三枚肉（' + (kei ? '皮を下' : '皮を上') + '）',true], ['3','ごぼう']],
+      ['真ん中', ['4','揚げ豆腐'], ['5',kama,true],                                            ['6','こんにゃく']],
+      ['手前',   ['7','天ぷら'],   ['8',kobu,true],                                            ['9','カステラかまぼこ']],
+    ])}
+    <p class="dgnote">
+      「奥」が<b>仏壇・お墓に近いほう</b>、「手前」が<b>拝む人側</b>です。
+      大事なのは<b>まん中の縦一列</b>（②⑤⑧）。左右の6マスは家によって入れ替わります（品数は3・5・7・9の奇数で）。
+    </p>
+
+    <div class="dg" style="margin-top:1.1rem">
+      <div class="cap">もち重の詰め方（15個・3×5）</div>
+      <div class="alt">
+        <div class="grid5">
+          ${Array.from({length:15}, (_,i) => {
+            const inner = Math.floor(i/5) === 1 && i%5 >= 1 && i%5 <= 3;   // 中央の3つ
+            const iro = kei && !inner;
+            return `<div class="mochi ${iro ? 'iro' : ''}">${iro ? '色' : '白'}</div>`;
+          }).join('')}
+        </div>
+      </div>
+      <p class="dgnote">${kei
+        ? 'お祝いの行事なので<b>色餅（あん・黒糖・よもぎ）を使い、白餅をまん中に置きます</b>。並べ方は家によって違いますが、数は15・25・35個と奇数に。'
+        : '供養の行事なので、<b>白餅だけ</b>にします。数は15・25・35個と奇数に。'}</p>
+    </div>
+
+    <p class="dgnote">
+      <b>${kei ? '慶事用（お祝い側）' : '弔事用（供養側）'}</b>の重箱です。
+      見分けるのは3点 ―― ${kei ? '赤かまぼこ・色餅・結び昆布' : '白かまぼこ・白餅・返し昆布'}。
+    </p>
+  </div>`;
+}
+
+/* ---------- 行事の中身 ---------- */
+const INFO = {
+  juuru: {
+    name:'ジュウルクニチー', kana:'十六日祭 / グソーの正月', kyu:'旧暦1月16日',
+    place:'haka', placeLabel:'お墓',
+    where:'<b>お墓</b>に行く行事です。ただし沖縄本島南部では、亡くなって2年以内の家（ミージュールクニチー）が墓前で行い、それ以外は<b>家の仏壇</b>で拝むだけ、という家も多くあります。本島北部・宮古・八重山では、シーミーより盛大にお墓へ行く地域も。',
+    memo:'あの世（グソー）のお正月。この日から、その年のお墓参りが始まります。',
+    what:'お墓を掃除し、重箱やお菓子を供えて拝みます。ウチカビを焼いてお金を届けます。',
+    dg:['haka','jubako-chou'],
+    sonae:['<b>ウサンミ</b>（重箱）または簡単なお菓子・果物','<b>ヒラウコー</b>（ご先祖様へはタヒラ＝12本、ほかの家族は3本）','<b>ウチカビ</b>（あの世のお金）','お茶、お酒、花']
+  },
+  seimei: {
+    name:'シーミー', kana:'清明祭', kyu:'二十四節気の清明から、穀雨の前日まで',
+    place:'haka', placeLabel:'お墓',
+    where:'<b>お墓</b>だけの行事です。仏壇では行いません。門中墓に一族が集まり、供えたごちそうをその場でいただきます。',
+    memo:'一族でお墓に集まり、掃除をして、供えたごちそうをその場でいただく行事です。',
+    what:'期間中のどこか1日、親族が集まりやすい日曜に行う家がほとんどです。日程は年長者が決めることが多いので、早めに確認しておくと安心です。',
+    dg:['haka','jubako-kei'],
+    sonae:['<b>ウサンミ</b>（おかず重2・もち重2＝チュクン）','果物・お菓子の盛り合わせ','<b>ヒラウコー</b>（タヒラ＝12本）、<b>ウチカビ</b>','お茶、お水、お酒、花','掃除道具、レジャーシート']
+  },
+  haruhigan: {
+    name:'春の彼岸', kana:'', kyu:'春分の日をはさんだ7日間',
+    place:'butsudan', placeLabel:'仏壇',
+    where:'<b>家の仏壇</b>と、台所の<b>ヒヌカン（火の神）</b>に手を合わせます。沖縄では、お墓には行かない家がほとんどです。',
+    memo:'重箱は要りません。ふだんの拝みを、少していねいにする日です。',
+    what:'中日（春分の日）を中心に、期間内のどこかで拝みます。',
+    dg:['butsudan'],
+    sonae:['ジューシー（炊き込みご飯）やお餅','果物、お菓子','<b>ヒラウコー</b>','お茶、お水、花']
+  },
+  akihigan: {
+    name:'秋の彼岸', kana:'', kyu:'秋分の日をはさんだ7日間',
+    place:'butsudan', placeLabel:'仏壇',
+    where:'<b>家の仏壇</b>と、台所の<b>ヒヌカン（火の神）</b>に手を合わせます。春の彼岸と同じ形です。',
+    memo:'重箱は要りません。ふだんの拝みを、少していねいにする日です。',
+    what:'中日（秋分の日）を中心に、期間内のどこかで拝みます。',
+    dg:['butsudan'],
+    sonae:['ジューシー（炊き込みご飯）やお餅','果物、お菓子','<b>ヒラウコー</b>','お茶、お水、花']
+  },
+  tanabata: {
+    name:'旧暦七夕', kana:'ヒーナシタナバタ', kyu:'旧暦7月7日',
+    place:'both', placeLabel:'お墓と仏壇',
+    where:'<b>お墓の掃除</b>に行き、家では<b>仏壇の手入れ</b>をします。拝みそのものは軽めで、この日の主役は掃除と準備です。',
+    memo:'ご先祖様に「もうすぐ旧盆です」とお知らせする日です。',
+    what:'神様の目が届かない「日無し」の日とされ、ふだんは日取りを選ぶお墓事・仏壇事を、この日は気にせず進められます（お墓の修繕、仏壇の掃除など）。この日は掃除が主役なので、お供えは軽めで大丈夫です。',
+    dg:['haka'],
+    sonae:['掃除道具（この日の主役です）','<b>ヒラウコー</b>','お茶、果物']
+  },
+  obon: {
+    name:'旧盆', kana:'ウンケー・ナカビ・ウークイ', kyu:'旧暦7月13日〜15日',
+    place:'butsudan', placeLabel:'仏壇（家）',
+    where:'<b>お墓には行きません。</b>3日間、ご先祖様は家にいます。お迎えとお見送りは<b>家の門の前</b>で、おもてなしは<b>仏壇</b>で行います。',
+    memo:'一年でいちばん大きな行事。ご先祖様を家に迎えて、3日間もてなし、送り出します。',
+    what:'',
+    dg:['butsudan-uji','jubako-kei'],
+    days:[
+      ['ウンケー（お迎え）','夕方、門の前で線香を焚いてお迎え。仏壇に<b>ウンケージューシー</b>（しょうが入り炊き込みご飯）を供えます。'],
+      ['ナカビ（中日）','親戚まわり・お中元の日。仏壇には朝・昼・晩の三度の食事を供えます。'],
+      ['ウークイ（お送り）','いちばん大事な日。重箱を供え、夜に<b>ウチカビ</b>を焼いてお見送りします。']
+    ],
+    sonae:['<b>ウサンミ</b>（重箱）','<b>グーサンウージ</b>（さとうきび＝あの世の杖）を仏壇の左右に','果物の盛り合わせ、お菓子','<b>ウチカビ</b>（人数分）','<b>ヒラウコー</b>、お酒、お茶']
+  }
+};
+
+function diagrams(keys){
+  return keys.map(k =>
+    k === 'butsudan'      ? dgButsudan(false) :
+    k === 'butsudan-uji'  ? dgButsudan(true)  :
+    k === 'haka'          ? dgHaka()          :
+    k === 'jubako-kei'    ? dgJubako(true)    :
+    k === 'jubako-chou'   ? dgJubako(false)   : ''
+  ).join('');
+}
+
+function eventsOf(y){
+  const r = BY_YEAR[y]; if(!r) return [];
+  const ev = [
+    {key:'juuru',     start:r.juurukunichi,  end:r.juurukunichi},
+    {key:'seimei',    start:r.seimei_start,  end:r.seimei_end},
+    {key:'haruhigan', start:r.haru_higan[0], end:r.haru_higan[2], center:r.haru_higan[1]},
+    {key:'tanabata',  start:r.tanabata,      end:r.tanabata, leadTo:r.obon[0]},
+    {key:'obon',      start:r.obon[0],       end:r.obon[2], dates:r.obon},
+    {key:'akihigan',  start:r.aki_higan[0],  end:r.aki_higan[2], center:r.aki_higan[1]},
+  ];
+  ev.forEach(e => Object.assign(e, INFO[e.key], {year:y}));
+  return ev.sort((a,b) => a.start < b.start ? -1 : 1);
+}
+
+function allFrom(y){
+  let out = [];
+  for(let k = y; k <= Math.min(y + 1, MAX_Y); k++) out = out.concat(eventsOf(k));
+  return out;
+}
+
+/* 七夕 → 旧盆 までの日数を、実際の日付で書く */
+function leadText(e){
+  if(e.key !== 'tanabata' || !e.leadTo) return '';
+  const gap = Math.round((d(e.leadTo) - d(e.start)) / 86400000);
+  return `この日は <b>${mdw(e.start)}</b>。その<b>${gap}日後</b>の <b>${mdw(e.leadTo)}</b> から旧盆（ウンケー）が始まります。`;
+}
+
+const placeBadge = e =>
+  e.place === 'both'
+    ? `<span class="place haka">お墓</span><span class="place butsudan">仏壇</span>`
+    : `<span class="place ${e.place}">${e.placeLabel}</span>`;
+
+/* ---- 次の御願 ---- */
+function renderNext(){
+  const t = today();
+  const list = allFrom(Math.max(MIN_Y, Math.min(t.getFullYear(), MAX_Y)));
+  const up = list.find(e => d(e.end) >= t);
+  const box = document.getElementById('next');
+  if(!up){ box.innerHTML = '<div class="eyebrow">つぎの御願</div><p class="memo">この先のデータがありません。</p>'; return null; }
+
+  const days = Math.round((d(up.start) - t) / 86400000);
+  const when = up.start === up.end ? mdw(up.start) : `${mdw(up.start)} 〜 ${mdw(up.end)}`;
+
+  box.innerHTML = `
+    <div class="eyebrow">つぎの御願</div>
+    <h2>${up.name}</h2>
+    <div class="kana">${up.kana ? up.kana + ' ／ ' : ''}${up.kyu}</div>
+    ${days <= 0 ? `<div class="count"><span class="num">今</span><span class="unit">まさに、その期間です</span></div>`
+                : `<div class="count"><span class="num">${days}</span><span class="unit">日後</span></div>`}
+    <div class="when">${up.year}年 ${when}</div>
+    <div class="head"><div class="badges">${placeBadge(up)}</div></div>
+    <p class="memo">${up.memo}${leadText(up) ? '<br>' + leadText(up) : ''}</p>`;
+  return up;
+}
+
+/* ---- 年の一覧 ---- */
+let viewYear;
+function renderYear(y){
+  viewYear = y;
+  document.getElementById('yearlabel').textContent = `${y}年`;
+  document.getElementById('prev').disabled = y <= MIN_Y;
+  document.getElementById('nextY').disabled = y >= MAX_Y;
+  document.getElementById('backToday').hidden = (y === thisYear);
+
+  const t = today();
+  const ul = document.getElementById('list');
+  ul.innerHTML = '';
+  eventsOf(y).forEach(e => {
+    const past = d(e.end) < t;
+    const soon = !past && upNext && upNext.key === e.key && upNext.year === e.year;
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <details class="item ${past ? 'past' : ''} ${soon ? 'soon' : ''}">
+        <summary>
+          <div class="date">
+            <span class="md">${md(e.start)}</span>
+            ${e.start !== e.end ? `<span class="span">〜 ${md(e.end)}</span>` : `<span class="span">${WD[d(e.start).getDay()]}曜日</span>`}
+          </div>
+          <div class="head">
+            <div class="nm">${e.name}${soon ? '<span class="tag">つぎ</span>' : (past ? '<span class="tag done">済</span>' : '')}</div>
+            <div class="kyu">${e.kyu}</div>
+            <div class="badges">${placeBadge(e)}</div>
+          </div>
+          <div class="chev">▶</div>
+        </summary>
+        <div class="body">
+          <p>${e.memo}</p>
+          ${e.key === 'tanabata' ? `<h3>旧盆までの日数</h3><p>${leadText(e)}<br>
+            旧暦では、七夕が<b>7月7日</b>・旧盆の初日が<b>7月13日</b>。あいだが6日あくので「およそ1週間前」と言われます。</p>` : ''}
+          <h3>どこでする？</h3>
+          <div class="where"><span class="w-ico">${e.place === 'haka' ? '墓' : e.place === 'butsudan' ? '壇' : '両'}</span><span>${e.where}</span></div>
+          ${e.dates ? `<h3>3日間の流れ</h3><div class="days">${
+            e.dates.map((dd,i) => `<div class="day"><span class="d">${mdw(dd)}</span><span class="t"><b>${e.days[i][0]}</b>　${e.days[i][1]}</span></div>`).join('')
+          }</div>` : ''}
+          ${e.center ? `<h3>中日</h3><p>${mdw(e.center)}</p>` : ''}
+          ${e.what ? `<h3>すること</h3><p>${e.what}</p>` : ''}
+          ${e.dg.length ? `<h3>並べ方</h3>${diagrams(e.dg)}` : ''}
+          <h3>お供えの目安</h3>
+          <ul>${e.sonae.map(s => `<li>${s}</li>`).join('')}</ul>
+        </div>
+      </details>`;
+    ul.appendChild(li);
+  });
+
+  const acc = document.getElementById('accuracy');
+  if(y <= CONFIRMED_UNTIL){
+    acc.innerHTML = `<b>${y}年の日付は確定です。</b>国立天文台が公表した暦要項の二十四節気にもとづいています。`;
+  }else if(y === 2033 || y === 2034){
+    acc.innerHTML = `<b>${y}年は、旧暦そのものが未確定です。</b>2033年秋から2034年春にかけては、閏月をどこに入れるか決まっていません（旧暦2033年問題）。ここでは有力案の「閏11月」で計算しています。近づいたら必ず確認してください。`;
+  }else{
+    acc.innerHTML = `<b>${y}年の日付は計算による予測です。</b>国立天文台が確定させるのは翌年分までなので、その先は天文計算の値です。ずれることはほとんどありませんが、絶対ではありません。`;
+  }
+}
+
+const thisYear = Math.max(MIN_Y, Math.min(today().getFullYear(), MAX_Y));
+const upNext = renderNext();
+renderYear(thisYear);
+
+document.getElementById('prev').onclick = () => renderYear(viewYear - 1);
+document.getElementById('nextY').onclick = () => renderYear(viewYear + 1);
+document.getElementById('backToday').onclick = () => renderYear(thisYear);
+</script>
+</body>
+</html>
