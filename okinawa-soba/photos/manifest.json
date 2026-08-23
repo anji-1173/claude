@@ -3355,5 +3355,15 @@
    "photos/252/07.jpg",
    "photos/252/06.jpg"
   ]
+ },
+ "美里そば": {
+  "id": "253",
+  "photos": [
+   "photos/253/04.jpg",
+   "photos/253/01.jpg",
+   "photos/253/02.jpg",
+   "photos/253/03.jpg",
+   "photos/253/05.jpg"
+  ]
  }
 }
