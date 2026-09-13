@@ -3393,5 +3393,16 @@
 "photos/255/10.jpg",
 "photos/255/01.jpg"
 ]
+},
+"沖縄そば まんま家": {
+"id": "256",
+"photos": [
+"photos/256/03.jpg",
+"photos/256/01.jpg",
+"photos/256/02.jpg",
+"photos/256/04.jpg",
+"photos/256/06.jpg",
+"photos/256/05.jpg"
+]
 }
 }
