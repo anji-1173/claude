@@ -6248,8 +6248,14 @@ document.getElementById("region-filters").addEventListener("click", e=>{
     btn.classList.add("active");
     activeRegion = btn.dataset.region;
   }else if(btn.dataset.tag){
-    btn.classList.toggle("active");
-    btn.classList.contains("active") ? activeTags.add(btn.dataset.tag) : activeTags.delete(btn.dataset.tag);
+    // タグ系は単一選択：最新タップで他のタグは解除（同じものを再タップで解除）
+    const wasActive = btn.classList.contains("active");
+    document.querySelectorAll(".chip[data-tag]").forEach(c=>c.classList.remove("active"));
+    activeTags.clear();
+    if(!wasActive){
+      btn.classList.add("active");
+      activeTags.add(btn.dataset.tag);
+    }
   }
   render();
 });
