@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>沖縄そば巡りの旅</title>
 <meta name="description" content="沖縄本島の沖縄そば屋全店制覇を目指す、沖縄そば食べ歩きブログ">
+<link rel="manifest" href="app.webmanifest">
+<meta name="theme-color" content="#043a5c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="沖縄そば巡り">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -622,7 +630,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
     沖縄本島の沖縄そば屋、全店制覇が目標。<br>
     食べ歩いたお店を少しずつ紹介しています。
   </p>
-  <div class="copy">OKINAWA SOBA JOURNEY</div>
+  <div class="copy">OKINAWA SOBA JOURNEY　<span id="app-version" style="opacity:.7"></span></div>
 </footer>
 
 <div id="lightbox" class="lightbox" hidden>
@@ -6490,6 +6498,23 @@ document.getElementById("stat-articles").textContent = allArticles.length + "+";
 render();
 buildMap();
 route();
+
+// ===== PWA / 自動更新（ネットワーク優先SW）=====
+const APP_VERSION = '2026.09.17.1';
+(function(){ const vc = document.getElementById('app-version'); if(vc) vc.textContent = 'ver ' + APP_VERSION; })();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      reg.update();
+      setInterval(() => reg.update(), 60 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update(); });
+    }).catch(() => {});
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return; refreshing = true; location.reload();
+    });
+  });
+}
 </script>
 </body>
 </html>
