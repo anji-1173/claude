@@ -6201,22 +6201,10 @@ function render(){
     }
     return true;
   });
-  if(activeTags.has("オススメ")){
-    const rankNum = s => { const m = (s.rank||"").match(/\d+/); return m ? +m[0] : 999; };
-    items.sort((a,b)=>rankNum(a)-rankNum(b));
-  }
-  if(activeTags.has("変わり種")){
-    // noteの変わり種シリーズの読み込み順（⑯→①）
-    const KAWARI_ORDER = ["チキンの丸焼きこっころこ","おきなわ長寿そば","yu-i FACTORY（ユーイファクトリー）","麺処 まんねん","海老そばとwine PARMI","沖縄そば 金太郎","喫茶ジャーン","I lulu cafe","貝出汁沖縄そばキセキ","そば＆酒膳処一本松","くくる","パパイヤとスブイ","名護曲","むかしむかし","和","伊覇そば"];
-    const ki = s => { const i = KAWARI_ORDER.indexOf(s.name); return i<0 ? 999 : i; };
-    items.sort((a,b)=>ki(a)-ki(b));
-  }
-  if(activeTags.has("オススメにも引けを取らない")){
-    // noteのまとめ記事の掲載順（1件目から）
-    const RIVAL_ORDER = ["おおしろそば","金月そば","二見そば","さくら食堂","沖縄ポークそば","うちなーイタリアンSOLA","うむさんの庭","三色屋","米八そば","木灰そば とらや","読谷山そば"];
-    const oi = s => { const i = RIVAL_ORDER.indexOf(s.name); return i<0 ? 999 : i; };
-    items.sort((a,b)=>oi(a)-oi(b));
-  }
+  // 表示順は「北→南」（緯度の高い順）。同緯度は西→東（経度の小さい順）。
+  const latOf = s => { const g = SHOP_GEO[s.name]; return g && typeof g.lat === "number" ? g.lat : -90; };
+  const lngOf = s => { const g = SHOP_GEO[s.name]; return g && typeof g.lng === "number" ? g.lng : 999; };
+  items.sort((a,b)=> (latOf(b) - latOf(a)) || (lngOf(a) - lngOf(b)));
   grid.innerHTML = items.length ? items.map(s=>{
     const g = galleryOf(s);
     return `
