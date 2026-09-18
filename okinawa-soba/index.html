@@ -6201,10 +6201,20 @@ function render(){
     }
     return true;
   });
-  // 表示順は「北→南」（緯度の高い順）。同緯度は西→東（経度の小さい順）。
+  // 並び順：オススメ＝note順（暫定順位）、オススメにも引けを取らない＝note掲載順、
+  //          それ以外（変わり種・地域・通常）＝北→南（緯度の高い順、同緯度は西→東）。
+  const RIVAL_ORDER = ["おおしろそば","金月そば","二見そば","さくら食堂","沖縄ポークそば","うちなーイタリアンSOLA","うむさんの庭","三色屋","米八そば","木灰そば とらや","読谷山そば"];
   const latOf = s => { const g = SHOP_GEO[s.name]; return g && typeof g.lat === "number" ? g.lat : -90; };
   const lngOf = s => { const g = SHOP_GEO[s.name]; return g && typeof g.lng === "number" ? g.lng : 999; };
-  items.sort((a,b)=> (latOf(b) - latOf(a)) || (lngOf(a) - lngOf(b)));
+  if(activeTags.has("オススメ")){
+    const rankNum = s => { const m = (s.rank||"").match(/\d+/); return m ? +m[0] : 999; };
+    items.sort((a,b)=>rankNum(a)-rankNum(b));
+  }else if(activeTags.has("オススメにも引けを取らない")){
+    const oi = s => { const i = RIVAL_ORDER.indexOf(s.name); return i<0 ? 999 : i; };
+    items.sort((a,b)=>oi(a)-oi(b));
+  }else{
+    items.sort((a,b)=> (latOf(b) - latOf(a)) || (lngOf(a) - lngOf(b)));
+  }
   grid.innerHTML = items.length ? items.map(s=>{
     const g = galleryOf(s);
     return `
@@ -6213,7 +6223,7 @@ function render(){
         ${bowlSVG}
         ${g.length ? `<img class="photo" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
         <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
-        ${s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""}
+        ${(()=>{ if(activeTags.has("オススメにも引けを取らない")){ const i=RIVAL_ORDER.indexOf(s.name); if(i>=0) return `<span class="rank-badge">${i+1}軒目</span>`; } return s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""; })()}
         ${g.length>1 ? `<span class="photo-count">📷 ${g.length}枚</span>` : ""}
       </div>
       <div class="body">
