@@ -1,7 +1,7 @@
 // 沖縄そば巡りの旅 — Service Worker（ネットワーク優先）
 // バージョンを上げると新SWとして再インストールされ、古いキャッシュを掃除する。
 // デプロイのたびに CACHE_VERSION を更新する（自動更新スクリプトが差し替える）。
-const CACHE_VERSION = '2026.09.17.1';
+const CACHE_VERSION = '2026.09.18.1';
 const CACHE = 'okinawa-soba-' + CACHE_VERSION;
 
 self.addEventListener('install', (e) => {
