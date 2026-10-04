@@ -1,0 +1,34 @@
+# 使い方:
+#   1. このファイルを .github/workflows/fetch-assets.yml としてリポジトリにコピーする
+#   2. {{UUID_LIST}} を、Issue本文/コメントから抽出した
+#      github.com/user-attachments/assets/<uuid> のUUID部分を空白区切りで並べたものに置換する
+#      （例: 6e289a11-...  624c7e39-...  9764caac-...）
+#   3. main にコミット＆プッシュ
+#   4. mcp__github__actions_run_trigger の run_workflow で実行（workflow_id: fetch-assets.yml）
+#   5. 数十秒待ってから `git pull` すると incoming/01.jpg, 02.jpg... が届く
+#   6. 使い終わったら incoming/ とこのファイル自体を git rm してコミットし、後片付けする
+name: fetch-issue-assets
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download issue attachments
+        run: |
+          mkdir -p incoming
+          i=1
+          for u in {{UUID_LIST}}; do
+            curl -sL "https://github.com/user-attachments/assets/$u" -o incoming/$(printf %02d $i).jpg
+            i=$((i+1))
+          done
+          file incoming/*
+      - name: commit
+        run: |
+          git config user.name github-actions
+          git config user.email actions@users.noreply.github.com
+          git add incoming
+          git commit -m "写真をIssueから取り込み [skip ci]"
+          git push
