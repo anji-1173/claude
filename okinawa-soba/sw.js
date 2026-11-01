@@ -24,6 +24,8 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // 外部（フォント等）はそのまま
+  // 動画（Range要求）はSWを通さずブラウザに任せる（iPhoneでの再生のため）
+  if (req.headers.has('range') || /\.(mp4|mov|webm)$/i.test(url.pathname)) return;
   e.respondWith((async () => {
     try {
       const fresh = await fetch(req);

@@ -470,6 +470,7 @@ section{margin-top:5rem}
 .art-quote .aq-meta{display:block;margin-top:.6rem;color:var(--muted);font-size:.75rem}
 .art-fig{margin:2.2rem 0;max-width:40em}
 .art-fig img{width:100%;border-radius:8px;border:1px solid var(--line);cursor:pointer;display:block}
+.art-fig video{width:100%;border-radius:8px;border:1px solid var(--line);display:block;background:#000}
 .art-fig figcaption{color:var(--muted);font-size:.78rem;line-height:1.7;margin-top:.6rem;letter-spacing:.03em}
 .art-stars{font-family:var(--sans);color:#0a7ea4;font-weight:600;letter-spacing:.12em;font-size:1.02rem}
 .art-nav{
@@ -6624,7 +6625,7 @@ function renderArticle(slug){
     ${g.length ? `<img class="art-hero" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" id="art-hero-img">` : ""}
     ${g.length>1 ? `<div class="art-gallery" id="art-gallery">` +
         g.map((p,i)=>`<img src="${encodeURI(p)}" alt="${s.name}の写真${i+1}" loading="lazy" data-i="${i}">`).join("") + `</div>` : ""}
-    <div class="art-body">${paras.map(p=> (typeof p==="object"&&p.html) ? p.html : (typeof p==="object"&&p.img) ? `<figure class="art-fig"><img src="${encodeURI(p.img)}" alt="${p.cap||s.name}" loading="lazy"><figcaption>${p.cap||""}</figcaption></figure>` : `<p>${p}</p>`).join("")}</div>
+    <div class="art-body">${paras.map(p=> (typeof p==="object"&&p.html) ? p.html : (typeof p==="object"&&p.video) ? `<figure class="art-fig art-video"><video src="${encodeURI(p.video)}"${p.poster?` poster="${encodeURI(p.poster)}"`:""} controls playsinline preload="metadata"></video><figcaption>${p.cap||""}</figcaption></figure>` : (typeof p==="object"&&p.img) ? `<figure class="art-fig"><img src="${encodeURI(p.img)}" alt="${p.cap||s.name}" loading="lazy"><figcaption>${p.cap||""}</figcaption></figure>` : `<p>${p}</p>`).join("")}</div>
     <div class="art-nav">
       <a href="#shop/${slugOf(prev)}"><span class="lbl">← 前のお店</span>${prev.name}</a>
       <a href="#shop/${slugOf(next)}" style="text-align:right"><span class="lbl">次のお店 →</span>${next.name}</a>
