@@ -25,28 +25,28 @@
     ['三枚肉そば', 'sanmai-niku soba (noodle soup with pork belly)', '산마이니쿠 소바(삼겹살 소바)', '三層肉沖繩麵', '五花肉冲绳面'],
     ['アーサそば|あーさそば', 'āsa soba (noodle soup with sea lettuce)', '아사 소바(파래 소바)', '石蓴沖繩麵', '石莼冲绳面'],
     ['ゆし豆腐そば|ゆしどうふそば', 'yushi-dofu soba (noodle soup with soft tofu)', '유시두부 소바(순두부 소바)', '嫩豆腐沖繩麵', '嫩豆腐冲绳面'],
-    ['本ソーキ', 'hon-soki (bone-in pork spare ribs)', '혼소키(뼈 있는 돼지갈비)', '帶骨排骨', '带骨排骨'],
-    ['軟骨ソーキ|なんこつソーキ', 'nankotsu-soki (soft-bone pork ribs)', '난코츠소키(연골 돼지갈비)', '軟骨排骨', '软骨排骨'],
-    ['ソーキ', 'soki (pork spare ribs)', '소키(돼지갈비)', '排骨', '排骨'],
-    ['三枚肉', 'sanmai-niku (braised pork belly)', '산마이니쿠(삼겹살 조림)', '三層肉', '五花肉'],
-    ['てびち|テビチ|てぃびち', 'tebichi (braised pig\'s feet)', '테비치(돼지족 조림)', '豬腳', '猪脚'],
+    ['本ソーキ', 'hon-soki (bone-in pork spare ribs)', '혼소키(뼈 있는 돼지갈비)', '帶骨排骨', '带骨排骨', 'plain'],
+    ['軟骨ソーキ|なんこつソーキ', 'nankotsu-soki (soft-bone pork ribs)', '난코츠소키(연골 돼지갈비)', '軟骨排骨', '软骨排骨', 'plain'],
+    ['ソーキ', 'soki (pork spare ribs)', '소키(돼지갈비)', '排骨', '排骨', 'plain'],
+    ['三枚肉', 'sanmai-niku (braised pork belly)', '산마이니쿠(삼겹살 조림)', '三層肉', '五花肉', 'plain'],
+    ['てびち|テビチ|てぃびち', 'tebichi (braised pig\'s feet)', '테비치(돼지족 조림)', '豬腳', '猪脚', 'plain'],
     ['じゅーしー|ジューシー|じゅうしい|じゅうしぃ|ジューシィ|じゅーしぃ', 'jushi (Okinawan seasoned rice)', '주시(오키나와식 영양밥)', '沖繩炊飯', '冲绳炊饭'],
-    ['コーレーグース|こーれーぐーす', 'kōrēgūsu (chili pepper steeped in awamori)', '코레구스(고추를 담근 아와모리)', '島辣椒泡盛', '岛辣椒泡盛'],
+    ['コーレーグース|こーれーぐーす', 'kōrēgūsu (chili pepper steeped in awamori)', '코레구스(고추를 담근 아와모리)', '島辣椒泡盛', '岛辣椒泡盛', 'plain'],
     ['紅生姜', 'pickled red ginger', '붉은 생강 초절임', '紅薑', '红姜'],
-    ['かまぼこ|カマボコ', 'kamaboko (fish cake)', '가마보코(어묵)', '魚板', '鱼板'],
-    ['中身汁|中味汁|なかみ汁', 'nakami-jiru (pork offal soup)', '나카미지루(돼지 내장국)', '豬內臟湯', '猪内脏汤'],
+    ['かまぼこ|カマボコ', 'kamaboko (fish cake)', '가마보코(어묵)', '魚板', '鱼板', 'plain'],
+    ['中身汁|中味汁|なかみ汁', 'nakami-jiru (pork offal soup)', '나카미지루(돼지 내장국)', '豬內臟湯', '猪内脏汤', 'plain'],
     ['中身そば|中味そば|なかみそば', 'nakami soba (noodle soup with pork offal)', '나카미 소바(돼지 내장 소바)', '豬內臟沖繩麵', '猪内脏冲绳面'],
-    ['骨汁', 'kotsu-jiru (pork bone soup)', '코츠지루(돼지뼈 국)', '大骨湯', '大骨汤'],
-    ['ゆし豆腐|ゆしどうふ|ゆしどーふ|ゆし豆富', 'yushi-dofu (soft fresh Okinawan tofu)', '유시두부(오키나와식 순두부)', '沖繩嫩豆腐', '冲绳嫩豆腐'],
-    ['島豆腐', 'shima-dofu (firm Okinawan tofu)', '시마두부(오키나와식 단단한 두부)', '沖繩島豆腐', '冲绳岛豆腐'],
-    ['アーサ|あーさ|アーサー', 'āsa (green sea lettuce)', '아사(파래)', '石蓴', '石莼'],
+    ['骨汁', 'kotsu-jiru (pork bone soup)', '코츠지루(돼지뼈 국)', '大骨湯', '大骨汤', 'plain'],
+    ['ゆし豆腐|ゆしどうふ|ゆしどーふ|ゆし豆富', 'yushi-dofu (soft fresh Okinawan tofu)', '유시두부(오키나와식 순두부)', '沖繩嫩豆腐', '冲绳嫩豆腐', 'plain'],
+    ['島豆腐', 'shima-dofu (firm Okinawan tofu)', '시마두부(오키나와식 단단한 두부)', '沖繩島豆腐', '冲绳岛豆腐', 'plain'],
+    ['アーサ|あーさ|アーサー', 'āsa (green sea lettuce)', '아사(파래)', '石蓴', '石莼', 'plain'],
     ['ちゃんぷるー|チャンプルー|ちゃんぷる|チャンプル', 'champuru (Okinawan stir-fry)', '참프루(오키나와식 볶음)', '什錦炒', '什锦炒'],
-    ['ゴーヤー|ゴーヤ', 'goya (bitter melon)', '고야(여주)', '苦瓜', '苦瓜'],
+    ['ゴーヤー|ゴーヤ', 'goya (bitter melon)', '고야(여주)', '苦瓜', '苦瓜', 'plain'],
     ['泡盛', 'awamori (Okinawan rice spirit)', '아와모리(오키나와 소주)', '泡盛（沖繩燒酒）', '泡盛（冲绳烧酒）'],
     ['ぜんざい', 'Okinawan zenzai (shaved ice with sweet beans)', '젠자이(단팥 빙수)', '沖繩紅豆冰', '冲绳红豆冰'],
-    ['いなむるち|イナムルチ', 'inamuruchi (Okinawan miso pork soup)', '이나무루치(오키나와식 된장 돼지고기국)', '沖繩味噌豬肉湯', '冲绳味噌猪肉汤'],
-    ['クーブイリチー', 'kubu irichi (stir-fried kelp)', '쿠부이리치(다시마 볶음)', '炒昆布絲', '炒昆布丝'],
-    ['ミミガー', 'mimiga (pig ear)', '미미가(돼지귀)', '豬耳朵', '猪耳朵'],
+    ['いなむるち|イナムルチ', 'inamuruchi (Okinawan miso pork soup)', '이나무루치(오키나와식 된장 돼지고기국)', '沖繩味噌豬肉湯', '冲绳味噌猪肉汤', 'plain'],
+    ['クーブイリチー', 'kubu irichi (stir-fried kelp)', '쿠부이리치(다시마 볶음)', '炒昆布絲', '炒昆布丝', 'plain'],
+    ['ミミガー', 'mimiga (pig ear)', '미미가(돼지귀)', '豬耳朵', '猪耳朵', 'plain'],
     ['歌三線', 'uta-sanshin (singing with the sanshin)', '우타산신(산신 연주와 노래)', '三線彈唱', '三线弹唱'],
     ['三線', 'sanshin (Okinawan three-string lute)', '산신(오키나와 삼현 악기)', '三線（沖繩三弦琴）', '三线（冲绳三弦琴）'],
     ['安里屋ユンタ', 'Asadoya Yunta (Okinawan folk song)', '아사도야 윤타(오키나와 민요)', '安里屋Yunta（沖繩民謠）', '安里屋Yunta（冲绳民谣）'],
@@ -58,7 +58,7 @@
     ['歯応え|歯ごたえ', 'chewiness', '씹는 맛', '嚼勁', '嚼劲'],
     ['茹で加減', 'doneness', '삶은 정도', '煮麵的軟硬', '煮面的软硬'],
     ['一杯', 'bowl', '한 그릇', '一碗', '一碗'],
-    ['そば処', 'soba-dokoro ', '소바도코로 ', '麵館', '面馆'],
+    ['そば処', 'soba-dokoro ', '소바도코로 ', '沖繩麵館', '冲绳面馆'],
     ['そば屋', 'soba shop', '소바 가게', '沖繩麵店', '冲绳面店'],
     ['そば', 'soba', '소바', '麵', '面'],
     ['麺　　：', 'Noodles: ', '면: ', '麵：', '面：', 'label'],
@@ -84,12 +84,17 @@
   // ---- 用語集の差し替え
   // 文中には短い訳語だけを埋め込む（かっこ書きの説明まで Google が訳し直して誤訳になるため）。
   // 説明は記事の最後に「用語集」としてまとめて表示する（ここは Google に訳させない）。
-  var re = null, map = {}, label = {}, pad = (lang === 'en' || lang === 'ko');
+  var re = null, map = {}, label = {}, inline = {}, pad = (lang === 'en' || lang === 'ko');
   var short = function (s) { return s.replace(/\s*[（(][^（）()]*[）)]\s*$/, ''); };
   if (col) {
     var keys = [];
     GLOSSARY.forEach(function (row) {
-      row[0].split('|').forEach(function (k) { map[k] = row[col]; if (row[5] === 'label') label[k] = 1; keys.push(k); });
+      row[0].split('|').forEach(function (k) {
+        map[k] = row[col]; if (row[5] === 'label') label[k] = 1;
+        // 英語では具の名前をローマ字で埋めると Google が勝手に誤った説明を付けるので、普通の英語で埋める
+        if (row[5] === 'plain' && lang === 'en') inline[k] = row[col].replace(/^.*?[（(]([^（）()]*)[）)]\s*$/, '$1');
+        keys.push(k);
+      });
     });
     keys.sort(function (a, b) { return b.length - a.length; });
     re = new RegExp(keys.map(function (k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|'), 'g');
@@ -138,7 +143,8 @@
         t.nodeValue = s.replace(re, function (k) {
           var full = map[k];
           if (inArticle && full !== short(full)) used[full] = 1;
-          return pad ? ' ' + short(full) + ' ' : short(full);
+          var w = inline[k] || short(full);
+          return pad ? ' ' + w + ' ' : w;
         });
       });
       renderGlossary(box);
