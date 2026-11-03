@@ -53,7 +53,7 @@ description: 沖縄そばブログ（沖縄本島の沖縄そば屋食べ歩き�
 2. 写真がある場合は `scripts/make_contact_sheet.js` でコンタクトシートを作り、内容を1枚ずつ確認する（詳細は4節）。
 3. 本文を作成・配置する（1節のルールに従う）。写真がある場合は文章の流れに合った位置に `{img:...}` を差し込む。
 4. カードの説明文（60〜100字程度）・地域・タグを更新する。地図ピンは自分でネット検索して確定する（5節）。
-4.5 `node tools/build_seo.mjs` を実行し、お店ごとの検索用ページ（shop/）と sitemap.xml を作り直す（SEO。詳細は okinawa-soba/CLAUDE.md の「SEO」節）。shop/ と sitemap.xml も一緒にコミットする。
+4.5 多言語化とSEO：okinawa-soba/CLAUDE.md の「多言語表示」節の手順どおり、`node tools/i18n_extract.mjs` → `i18n_todo.mjs` → 翻訳（en/ko/zh-TW）→ `i18n_build.mjs` → `build_seo.mjs` を実行する。生成物（i18n/*.js・shop/・en/ ko/ zh-TW/ zh-CN/・sitemap.xml）も一緒にコミットする。
 5. `scripts/verify_article.js` （Playwright）で全記事を検証する（6節）。
 6. `main` ブランチへコミット＆プッシュし、GitHub Pagesのビルド成功まで確認する（7節）。
 7. 決まった書式で日本語報告する（8節）。

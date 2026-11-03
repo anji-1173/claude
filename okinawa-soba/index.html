@@ -16,7 +16,26 @@
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
+<link rel="alternate" hreflang="x-default" href="https://anji-1173.github.io/okinawa-soba/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Blog","name":"沖縄そば巡りの旅","url":"https://anji-1173.github.io/okinawa-soba/","inLanguage":"ja","description":"沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を実食レビューと麺・スープ・具の星評価で紹介。","author":{"@type":"Person","name":"アンジ"}}</script>
+<script>
+// 表示言語：?lang= → 保存した言語 → ブラウザの言語（検索ロボットは日本語のまま）
+(function(){
+  var L=['ja','en','ko','zh-TW','zh-CN'], q=null, s=null, lang;
+  try{ q=new URLSearchParams(location.search).get('lang'); }catch(e){}
+  try{ s=localStorage.getItem('soba-lang'); }catch(e){}
+  if(q && L.indexOf(q)>=0){ lang=q; try{ localStorage.setItem('soba-lang', q); }catch(e){} }
+  else if(s && L.indexOf(s)>=0) lang=s;
+  else if(/bot|crawl|spider|slurp|google|bing|yandex|baidu|lighthouse|headless/i.test(navigator.userAgent)) lang='ja';
+  else {
+    var n=((navigator.languages&&navigator.languages[0])||navigator.language||'ja').toLowerCase();
+    lang=/^ja/.test(n)?'ja':/^ko/.test(n)?'ko':/^zh-(tw|hk|mo|hant)/.test(n)?'zh-TW':/^zh/.test(n)?'zh-CN':'en';
+  }
+  window.SOBA_LANG=lang;
+  document.documentElement.lang=lang;
+  if(lang!=='ja') document.write('<script src="i18n/'+lang+'.js"><\/script>');
+})();
+</script>
 <link rel="manifest" href="app.webmanifest">
 <meta name="theme-color" content="#043a5c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -420,6 +439,7 @@ section{margin-top:5rem}
 .map-info a:hover{color:var(--gold2);padding-left:.5rem}
 .map-info a .mi-area{color:var(--muted);font-size:.72rem;margin-left:.5rem}
 
+.art-orig{color:var(--muted);font-size:.85rem;margin:-.2rem 0 .6rem;letter-spacing:.05em}
 /* ===== お店別ページ一覧（SEO） ===== */
 .seo-index{max-width:1100px;margin:0 auto 2rem;padding:0 16px;font-size:.85rem}
 .seo-index details{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:1rem 1.4rem}
@@ -668,6 +688,20 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
 </div>
 
 <script>
+// ===== 多言語：表示用ヘルパー（データのキーは日本語の店名のまま） =====
+const LANG = window.SOBA_LANG || "ja";
+const I18 = (LANG!=="ja" && window.I18N) ? window.I18N : null;
+const UI_JA = {"lang_name": "日本語", "title": "沖縄そば巡りの旅｜沖縄本島の沖縄そば屋 食べ歩きレビュー", "meta_desc": "沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を、写真付きの実食レビューと麺・スープ・具の星評価で紹介。地図からお店も探せます。", "site": "沖縄そば巡りの旅", "brand": "沖縄そば<span class=\"wave\">巡り</span>の旅", "brand_sub": "沖縄本島・沖縄そば屋 全店制覇をめざす食べ歩きブログ", "nav_search_ph": "🔍 店名・地名・キーワード", "nav_shops": "お店一覧", "nav_map": "マップ", "nav_archive": "全記事", "hero_tate": "一杯入魂", "hero_h1": "すすった数だけ、<br>島を知る。", "hero_goal": "沖縄本島・沖縄そば屋 <span class=\"accent\">全店制覇</span> への道", "hero_sub": "沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を\n      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、\n      24時間無人営業の変わり種まで──今日もどこかで、すすっています。", "btn_shops": "お店をさがす", "btn_map": "マップでさがす", "stat_shops": "食べ歩いた店", "stat_reports": "巡礼レポート", "stat_all": "全域", "stat_cover": "本島カバー", "sec_shops": "お店をさがす", "sec_shops_lead": "エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。", "r_all": "すべて", "r_naha": "那覇", "r_south": "南部", "r_central": "中部", "r_north": "北部", "r_other": "その他", "tag_オススメ": "オススメ", "tag_オススメにも引けを取らない": "オススメにも引けを取らない", "tag_変わり種": "変わり種", "tag_古民家": "古民家", "tag_閉店": "閉店", "search_ph": "店名・キーワードで検索", "count": "{0}軒", "empty": "条件に合うお店が見つかりませんでした。フィルターを変えてみてください。", "honto": "沖縄本島", "nth": "{0}軒目", "photos": "📷 {0}枚", "read": "記事を読む", "read_arrow": "→ 記事を読む", "card_aria": "{0}の記事を読む", "photo_alt": "{0}の沖縄そば", "gallery_alt": "{0}の写真{1}", "sec_map": "マップでさがす", "map_lead": "ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）", "map_ph_real": "🍜 地図のピンか、下のエリアボタンを選んでください。", "map_ph_svg": "🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。", "map_aria": "沖縄本島の沖縄そばマップ", "sea_ecs": "東シナ海", "sea_pac": "太平洋", "yanbaru": "やんばる", "motobu": "本部半島", "naha_label": "那覇", "gmaps": "Googleマップ", "sec_archive": "全記事アーカイブ", "archive_lead": "本サイトに掲載中の食べ歩き記事の一覧です。店名を選ぶと記事が読めます。", "archive_summary": "記事リストをひらく", "archive_item": "沖縄そば巡りの旅「{0}」編", "back": "← お店一覧にもどる", "prev": "← 前のお店", "next": "次のお店 →", "footer": "沖縄本島の沖縄そば屋、全店制覇が目標。<br>\n    食べ歩いたお店を少しずつ紹介しています。", "lb_close": "閉じる", "lb_prev": "前の写真", "lb_next": "次の写真", "lb_alt": "{0} の写真 {1}", "seo_index": "お店別の記事ページ一覧（{0}軒）", "reg_naha": "那覇エリア", "reg_south": "南部エリア", "reg_central": "中部エリア", "reg_north": "北部エリア", "reg_other": "沖縄本島", "lang_btn": "Language", "sp_title": "{0}（{1}）の沖縄そばレビュー", "sp_top": "トップ", "sp_info": "お店の情報", "sp_name": "店名", "sp_area": "エリア", "sp_addr": "住所", "sp_gmaps": "Googleマップで見る", "sp_cta": "地図やほかのお店も見る（{0}軒）", "sp_rating": "評価 {0}点/15点", "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。", "sp_original": "原文（日本語）", "gsi_attr": "国土地理院（地理院タイル）"};
+function U(k){ let s = (I18 && I18.ui[k]!=null) ? I18.ui[k] : (UI_JA[k]!=null ? UI_JA[k] : k);
+  for(let i=1;i<arguments.length;i++) s = s.split("{"+(i-1)+"}").join(arguments[i]); return s; }
+const TR = s => (I18 && I18.shops[s.name]) || null;
+const nm = s => (TR(s) && TR(s).name) || s.name;
+const ar = s => s.area==="—" ? U("honto") : ((TR(s) && TR(s).area) || s.area);
+const arRaw = s => s.area==="—" ? "" : ar(s);
+const ds = s => (TR(s) && TR(s).desc) || s.desc;
+const rk = s => s.rank ? ((TR(s) && TR(s).rank) || s.rank) : "";
+const tg = t => U("tag_"+t);
+const paren = x => (LANG==="ja" || LANG.startsWith("zh")) ? "（"+x+"）" : " ("+x+")";
 const PHOTOS = {
 "そば処くんち":{"id":"263","photos":["photos/263/08.jpg", "photos/263/01.jpg", "photos/263/02.jpg", "photos/263/03.jpg", "photos/263/05.jpg", "photos/263/06.jpg", "photos/263/09.jpg", "photos/263/04.jpg", "photos/263/07.jpg"]},
 "沖縄そばエッチャン":{"id":"262","photos":["photos/262/06.jpg", "photos/262/11.jpg", "photos/262/10.jpg", "photos/262/02.jpg", "photos/262/01.jpg", "photos/262/09.jpg", "photos/262/08.jpg", "photos/262/03.jpg", "photos/262/05.jpg", "photos/262/04.jpg", "photos/262/07.jpg"]},
@@ -6389,7 +6423,7 @@ const lbImg = document.getElementById("lb-img");
 let lbPhotos = [], lbIndex = 0, lbTitle = "";
 function renderLb(){
   lbImg.src = encodeURI(lbPhotos[lbIndex]);
-  lbImg.alt = lbTitle + " の写真 " + (lbIndex+1);
+  lbImg.alt = U("lb_alt", lbTitle, lbIndex+1);
   document.getElementById("lb-title").textContent = lbTitle;
   document.getElementById("lb-count").textContent = (lbIndex+1) + " / " + lbPhotos.length;
 }
@@ -6424,7 +6458,8 @@ function render(){
     if(activeTags.size && ![...activeTags].every(t=>s.tags.includes(t))) return false;
     if(query){
       const geo = SHOP_GEO[s.name];
-      const hay = (s.name+s.area+s.desc+s.tags.join()+(geo&&geo.addr?geo.addr:"")+((ARTICLES[s.name]||[]).join(""))).toLowerCase();
+      const t = TR(s);
+      const hay = (s.name+s.area+s.desc+s.tags.join()+(geo&&geo.addr?geo.addr:"")+((ARTICLES[s.name]||[]).join(""))+(t?(t.name+t.area+t.desc+JSON.stringify(t.art||"")):"")+s.tags.map(tg).join()).toLowerCase();
       if(!hay.includes(query)) return false;
     }
     return true;
@@ -6446,24 +6481,24 @@ function render(){
   grid.innerHTML = items.length ? items.map(s=>{
     const g = galleryOf(s);
     return `
-    <article class="card" data-slug="${slugOf(s)}" tabindex="0" role="link" aria-label="${s.name}の記事を読む">
+    <article class="card" data-slug="${slugOf(s)}" tabindex="0" role="link" aria-label="${U('card_aria',nm(s))}">
       <div class="thumb thumb-${s.region}">
         ${bowlSVG}
-        ${g.length ? `<img class="photo" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" loading="lazy">` : ""}
-        <span class="area-badge">${s.area==="—" ? "沖縄本島" : s.area}</span>
-        ${(()=>{ if(activeTags.has("オススメにも引けを取らない")){ const i=RIVAL_ORDER.indexOf(s.name); if(i>=0) return `<span class="rank-badge">${i+1}軒目</span>`; } return s.rank ? `<span class="rank-badge">${s.rank}</span>` : ""; })()}
-        ${g.length>1 ? `<span class="photo-count">📷 ${g.length}枚</span>` : ""}
+        ${g.length ? `<img class="photo" src="${encodeURI(g[0])}" alt="${U('photo_alt',nm(s))}" loading="lazy">` : ""}
+        <span class="area-badge">${ar(s)}</span>
+        ${(()=>{ if(activeTags.has("オススメにも引けを取らない")){ const i=RIVAL_ORDER.indexOf(s.name); if(i>=0) return `<span class="rank-badge">${U("nth",i+1)}</span>`; } return s.rank ? `<span class="rank-badge">${rk(s)}</span>` : ""; })()}
+        ${g.length>1 ? `<span class="photo-count">${U("photos",g.length)}</span>` : ""}
       </div>
       <div class="body">
-        <h3>${s.name}</h3>
-        <div class="tags">${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${t}</span>`).join("")}</div>
-        <p>${s.desc}</p>
-        <span class="more">記事を読む</span>
+        <h3>${nm(s)}</h3>
+        <div class="tags">${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${tg(t)}</span>`).join("")}</div>
+        <p>${ds(s)}</p>
+        <span class="more">${U("read")}</span>
       </div>
     </article>`;}).join("")
-    : `<div class="empty">条件に合うお店が見つかりませんでした。フィルターを変えてみてください。</div>`;
+    : `<div class="empty">${U("empty")}</div>`;
   const rc=document.getElementById("result-count");
-  if(rc) rc.textContent = items.length + "軒";
+  if(rc) rc.textContent = U("count", items.length);
   grid.querySelectorAll("img.photo").forEach(img=>{
     img.addEventListener("error", ()=>{ img.remove(); });
   });
@@ -6523,7 +6558,7 @@ function buildMap(){
   poly.setAttribute("points", OUTLINE.map(p=>px(p[0]).toFixed(1)+","+py(p[1]).toFixed(1)).join(" "));
   poly.setAttribute("class","island");
   svg.appendChild(poly);
-  const labels = [["東シナ海",40,150],["太平洋",330,560],["やんばる",320,120],["本部半島",150,205],["那覇",30,500]];
+  const labels = [[U("sea_ecs"),40,150],[U("sea_pac"),330,560],[U("yanbaru"),320,120],[U("motobu"),150,205],[U("naha_label"),30,500]];
   labels.forEach(([t,x,y])=>{
     const el = document.createElementNS(NS,"text");
     el.setAttribute("x",x); el.setAttribute("y",y); el.setAttribute("class","sea-label");
@@ -6542,15 +6577,15 @@ function buildMap(){
     if(isRec) dot.setAttribute("fill","#f0c469");
     g.appendChild(dot);
     const tip = document.createElementNS(NS,"title");
-    tip.textContent = s.name + (geo.addr ? "（"+geo.addr+"）" : "");
+    tip.textContent = nm(s) + (geo.addr ? paren(geo.addr) : "");
     g.appendChild(tip);
     g.addEventListener("click", ()=>{
       svg.querySelectorAll(".pin").forEach(p=>p.classList.remove("active"));
       g.classList.add("active");
-      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
+      info.innerHTML = `<h3>${nm(s)}<span class="cnt">${arRaw(s)}</span></h3>
         ${geo.addr?`<p style="color:var(--muted);font-size:.75rem">${geo.addr}</p>`:""}
-        <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem">${s.desc}</p>
-        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
+        <p style="color:var(--muted);font-size:.85rem;margin-top:.5rem">${ds(s)}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">${U("read_arrow")}</a></p>`;
     });
     svg.appendChild(g);
   });
@@ -6589,7 +6624,7 @@ function initLeaflet(){
   const map = L.map("leaflet-map", {scrollWheelZoom:true}).setView([26.42, 127.95], 10);
   // 国土地理院 標準地図（出典表示のみで利用可）
   const gsi = L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
-    attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院（地理院タイル）</a>',
+    attribution:'<a href="https://maps.gsi.go.jp/development/ichiran.html">'+U("gsi_attr")+'</a>',
     maxZoom:18
   }).addTo(map);
   // 地理院タイルが読み込めない環境ではOSMタイルに自動フォールバック
@@ -6619,17 +6654,17 @@ function initLeaflet(){
     }).addTo(map);
     const gq = encodeURIComponent(geo.addr ? s.name+" "+geo.addr : s.name+" 沖縄そば");
     m.bindPopup(`
-      <div class="lp-name">${s.name}${isRec?" ★":""}</div>
-      <div class="lp-area">${s.area==="—"?"沖縄本島":s.area}${s.rank?"　"+s.rank:""}</div>
+      <div class="lp-name">${nm(s)}${isRec?" ★":""}</div>
+      <div class="lp-area">${ar(s)}${s.rank?"　"+rk(s):""}</div>
       ${geo.addr?`<div class="lp-addr">${geo.addr}</div>`:""}
       <div class="lp-links">
-        <a href="#shop/${slugOf(s)}" onclick="document.querySelector('.leaflet-popup-close-button')?.click()">記事を読む</a>
-        <a href="https://www.google.com/maps/search/?api=1&query=${gq}" target="_blank" rel="noopener">Googleマップ</a>
+        <a href="#shop/${slugOf(s)}" onclick="document.querySelector('.leaflet-popup-close-button')?.click()">${U("read")}</a>
+        <a href="https://www.google.com/maps/search/?api=1&query=${gq}" target="_blank" rel="noopener">${U("gmaps")}</a>
       </div>`);
     m.on("click", ()=>{
-      info.innerHTML = `<h3>${s.name}<span class="cnt">${s.area==="—"?"":s.area}</span></h3>
-        <p style="color:var(--muted);font-size:.85rem">${s.desc}</p>
-        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">→ 記事を読む</a></p>`;
+      info.innerHTML = `<h3>${nm(s)}<span class="cnt">${arRaw(s)}</span></h3>
+        <p style="color:var(--muted);font-size:.85rem">${ds(s)}</p>
+        <p style="margin-top:.8rem"><a href="#shop/${slugOf(s)}" style="color:var(--gold)">${U("read_arrow")}</a></p>`;
     });
   });
   if(bounds.length) map.fitBounds(bounds, {padding:[30,30]});
@@ -6643,6 +6678,8 @@ window.addEventListener("load", ()=>{ try{ initLeaflet(); }catch(e){ console.war
 const artView = document.getElementById("article-view");
 
 function buildArticle(s){
+  const t = TR(s);
+  if(t && t.art) return t.art;
   if(ARTICLES[s.name]) return ARTICLES[s.name];
   const ps = [];
   ps.push(s.desc);
@@ -6665,27 +6702,27 @@ function renderArticle(slug){
   const prev = SOBA_SHOPS[(idx-1+SOBA_SHOPS.length)%SOBA_SHOPS.length];
   const next = SOBA_SHOPS[(idx+1)%SOBA_SHOPS.length];
   artView.innerHTML = `
-    <a class="art-back" href="#" onclick="location.hash='';return false;">← お店一覧にもどる</a>
+    <a class="art-back" href="#" onclick="location.hash='';return false;">${U("back")}</a>
     <div class="art-head">
-      <div class="art-eyebrow">沖縄そば巡りの旅</div>
-      <h1>${s.name}</h1>
+      <div class="art-eyebrow">${U("site")}</div>
+      <h1>${nm(s)}</h1>${I18 && nm(s)!==s.name ? `<div class="art-orig" lang="ja">${s.name}</div>` : ""}
       <div class="art-meta">
-        <span class="area">${s.area==="—" ? "沖縄本島" : s.area}</span>
-        ${s.rank ? `<span class="rank">${s.rank}</span>` : ""}
-        ${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${t}</span>`).join("")}
+        <span class="area">${ar(s)}</span>
+        ${s.rank ? `<span class="rank">${rk(s)}</span>` : ""}
+        ${s.tags.map(t=>`<span class="tag ${tagClass(t)}">${tg(t)}</span>`).join("")}
       </div>
     </div>
-    ${g.length ? `<img class="art-hero" src="${encodeURI(g[0])}" alt="${s.name}の沖縄そば" id="art-hero-img">` : ""}
+    ${g.length ? `<img class="art-hero" src="${encodeURI(g[0])}" alt="${U('photo_alt',nm(s))}" id="art-hero-img">` : ""}
     ${g.length>1 ? `<div class="art-gallery" id="art-gallery">` +
-        g.map((p,i)=>`<img src="${encodeURI(p)}" alt="${s.name}の写真${i+1}" loading="lazy" data-i="${i}">`).join("") + `</div>` : ""}
+        g.map((p,i)=>`<img src="${encodeURI(p)}" alt="${U('gallery_alt',nm(s),i+1)}" loading="lazy" data-i="${i}">`).join("") + `</div>` : ""}
     <div class="art-body">${paras.map(p=> (typeof p==="object"&&p.html) ? p.html : (typeof p==="object"&&p.video) ? `<figure class="art-fig art-video"><video src="${encodeURI(p.video)}"${p.poster?` poster="${encodeURI(p.poster)}"`:""} controls playsinline preload="metadata"></video><figcaption>${p.cap||""}</figcaption></figure>` : (typeof p==="object"&&p.img) ? `<figure class="art-fig"><img src="${encodeURI(p.img)}" alt="${p.cap||s.name}" loading="lazy"><figcaption>${p.cap||""}</figcaption></figure>` : `<p>${p}</p>`).join("")}</div>
     <div class="art-nav">
-      <a href="#shop/${slugOf(prev)}"><span class="lbl">← 前のお店</span>${prev.name}</a>
-      <a href="#shop/${slugOf(next)}" style="text-align:right"><span class="lbl">次のお店 →</span>${next.name}</a>
+      <a href="#shop/${slugOf(prev)}"><span class="lbl">${U("prev")}</span>${nm(prev)}</a>
+      <a href="#shop/${slugOf(next)}" style="text-align:right"><span class="lbl">${U("next")}</span>${nm(next)}</a>
     </div>`;
   const heroImg = document.getElementById("art-hero-img");
   if(heroImg){
-    heroImg.addEventListener("click", ()=>openLightbox(s.name, g, 0));
+    heroImg.addEventListener("click", ()=>openLightbox(nm(s), g, 0));
     heroImg.addEventListener("error", ()=>heroImg.remove());
   }
   artView.querySelectorAll(".art-fig img").forEach(img=>{
@@ -6693,12 +6730,12 @@ function renderArticle(slug){
     img.addEventListener("click", ()=>{
       const m = img.getAttribute("src").match(/(\d+)\.jpg$/);
       const i = m ? parseInt(m[1],10)-1 : 0;
-      openLightbox(s.name, g, (i>=0 && i<g.length) ? i : 0);
+      openLightbox(nm(s), g, (i>=0 && i<g.length) ? i : 0);
     });
   });
   const gal = document.getElementById("art-gallery");
   if(gal) gal.querySelectorAll("img").forEach(img=>{
-    img.addEventListener("click", ()=>openLightbox(s.name, g, +img.dataset.i));
+    img.addEventListener("click", ()=>openLightbox(nm(s), g, +img.dataset.i));
     img.addEventListener("error", ()=>img.remove());
   });
   window.scrollTo({top:0, behavior:"instant"});
@@ -6723,7 +6760,44 @@ window.addEventListener("hashchange", route);
 const archiveList = document.getElementById("archive-list");
 const allArticles = SOBA_SHOPS.filter(s=>ARTICLES[s.name]);
 archiveList.innerHTML = allArticles.map(s=>
-  `<li><a href="#shop/${slugOf(s)}">沖縄そば巡りの旅「${s.name}」編<span style="color:var(--ink3);font-size:.85em">（${s.area==="—"?"沖縄本島":s.area}）</span></a></li>`).join("");
+  `<li><a href="#shop/${slugOf(s)}">${U("archive_item",nm(s))}<span style="color:var(--ink3);font-size:.85em">${paren(ar(s))}</span></a></li>`).join("");
+
+// ===== 多言語：ページ内の固定の文字を差し替え =====
+function applyUI(){
+  if(!I18) return;
+  document.title = U("title");
+  const q = s => document.querySelector(s), qa = s => [...document.querySelectorAll(s)];
+  const txt = (el,k) => { if(el) el.textContent = U(k); }, html = (el,k) => { if(el) el.innerHTML = U(k); };
+  const md = q('meta[name="description"]'); if(md) md.setAttribute("content", U("meta_desc"));
+  html(q(".brand-title"),"brand"); txt(q(".brand-sub"),"brand_sub");
+  const ns = q("#nav-search"); if(ns) ns.placeholder = U("nav_search_ph");
+  const sb = q("#search"); if(sb) sb.placeholder = U("search_ph");
+  qa("nav .links a").forEach((a,i)=>txt(a,["nav_shops","nav_map","nav_archive"][i]));
+  txt(q(".hero-tate"),"hero_tate"); html(q(".hero h1"),"hero_h1"); html(q(".hero-goal"),"hero_goal"); html(q(".hero-sub"),"hero_sub");
+  qa(".hero-cta a").forEach((a,i)=>txt(a,["btn_shops","btn_map"][i]));
+  qa(".stats .stat .label").forEach((e,i)=>txt(e,["stat_shops","stat_reports","stat_cover"][i]));
+  const st3 = qa(".stats .stat .num")[2]; txt(st3,"stat_all");
+  txt(q("#shops .sec-head h2"),"sec_shops"); txt(q("#shops .sec-lead"),"sec_shops_lead");
+  qa(".chip[data-region]").forEach(c=>txt(c,"r_"+c.dataset.region));
+  qa(".chip[data-tag]").forEach(c=>{ c.textContent = (c.dataset.tag==="オススメ"?"★ ":"") + tg(c.dataset.tag); });
+  txt(q("#map-sec .sec-head h2"),"sec_map"); txt(q("#map-sec .sec-lead"),"map_lead");
+  txt(q("#map-info-real .mi-placeholder"),"map_ph_real"); txt(q("#map-info .mi-placeholder"),"map_ph_svg");
+  const om = q("#okinawa-map"); if(om) om.setAttribute("aria-label", U("map_aria"));
+  txt(q("#archive-sec .sec-head h2"),"sec_archive"); txt(q("#archive-sec .sec-lead"),"archive_lead"); txt(q("#archive summary"),"archive_summary");
+  html(q("footer p"),"footer");
+  [[".lb-close","lb_close"],[".lb-prev","lb_prev"],[".lb-next","lb_next"]].forEach(([s,k])=>{ const e=q(s); if(e) e.setAttribute("aria-label",U(k)); });
+  // お店別の記事ページ一覧 → その言語のページへ
+  const si = q(".seo-index");
+  if(si){
+    const links = qa(".seo-index a");
+    const sm = q(".seo-index summary"); if(sm) sm.textContent = U("seo_index", links.length);
+    const RK = {"那覇エリア":"reg_naha","南部エリア":"reg_south","中部エリア":"reg_central","北部エリア":"reg_north","沖縄本島":"reg_other"};
+    qa(".seo-index h3").forEach(h=>{ const m=h.textContent.match(/^(.+?)（(\d+)軒）$/); if(m&&RK[m[1]]) h.textContent = U(RK[m[1]]) + paren(U("count", m[2])); });
+    const byName = Object.fromEntries(SOBA_SHOPS.map(s=>[s.name,s]));
+    links.forEach(a=>{ const s = byName[a.textContent]; if(s){ a.textContent = nm(s); } a.setAttribute("href", LANG + "/" + a.getAttribute("href")); });
+  }
+}
+applyUI();
 
 // ===== 起動 =====
 document.getElementById("stat-count").textContent = SOBA_SHOPS.length + "+";

@@ -1,42 +1,32 @@
 // 沖縄そば巡りの旅 — SEO用の静的ページ生成スクリプト
-// 使い方（okinawa-soba フォルダで）: node tools/build_seo.mjs
-// index.html のデータ（ARTICLES / SOBA_SHOPS / PHOTOS / SHOP_GEO_DATA）から
-//   - shop/<店名>/index.html（お店ごとの記事ページ。Googleが読める本物のHTML）
+// 使い方（okinawa-soba フォルダで）: node tools/i18n_build.mjs && node tools/build_seo.mjs
+// index.html のデータ（ARTICLES / SOBA_SHOPS / PHOTOS / SHOP_GEO_DATA）と翻訳（i18n/<lang>.js）から
+//   - shop/<店名>/index.html（日本語）、<lang>/shop/<店名>/index.html（英・韓・繁・簡）
+//     … お店ごとの記事ページ。Googleが読める本物のHTML。言語どうしは hreflang で結ぶ
 //   - sitemap.xml
 //   - index.html 内の「お店別の記事ページ一覧」（SEO-INDEX マーカーの間）
 // を作り直す。記事を追加・修正したら毎回実行する。
 import fs from 'fs';
 import path from 'path';
+import { ROOT, readData } from './i18n_lib.mjs';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SITE = 'https://anji-1173.github.io/okinawa-soba/';
-const SITE_NAME = '沖縄そば巡りの旅';
 const AUTHOR = 'アンジ';
 const TODAY = new Date().toISOString().slice(0, 10);
+const LANGS = ['ja', 'en', 'ko', 'zh-TW', 'zh-CN'];
+const OG_LOCALE = { ja: 'ja_JP', en: 'en_US', ko: 'ko_KR', 'zh-TW': 'zh_TW', 'zh-CN': 'zh_CN' };
 
 let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-
-// ---- JSのオブジェクトリテラルを、文字列を考慮して括弧の対応で切り出す
-function literalAfter(marker) {
-  const i = html.indexOf(marker);
-  if (i < 0) throw new Error('not found: ' + marker);
-  let j = i + marker.length;
-  while (html[j] !== '{' && html[j] !== '[') j++;
-  const start = j; let depth = 0; let q = null;
-  for (; j < html.length; j++) {
-    const c = html[j];
-    if (q) { if (c === '\\') { j++; continue; } if (c === q) q = null; continue; }
-    if (c === '"' || c === "'" || c === '`') { q = c; continue; }
-    if (c === '{' || c === '[') depth++;
-    else if (c === '}' || c === ']') { depth--; if (depth === 0) break; }
-  }
-  return new Function('return (' + html.slice(start, j + 1) + ')')();
+const { ARTICLES, SHOPS, PHOTOS, GEO } = readData(html);
+const UI_ALL = JSON.parse(fs.readFileSync(path.join(ROOT, 'i18n', 'ui.json'), 'utf8'));
+// 翻訳データ（tools/i18n_build.mjs が作った i18n/<lang>.js）
+const TRANS = { ja: { ui: UI_ALL.ja, shops: {} } };
+for (const l of LANGS.slice(1)) {
+  const f = path.join(ROOT, 'i18n', `${l}.js`);
+  if (!fs.existsSync(f)) continue;
+  const src = fs.readFileSync(f, 'utf8');
+  TRANS[l] = JSON.parse(src.slice(src.indexOf('window.I18N=') + 'window.I18N='.length).replace(/;\s*$/, ''));
 }
-const ARTICLES = literalAfter('const ARTICLES = ');
-const SHOPS = literalAfter('const SOBA_SHOPS = ');
-const PHOTOS = literalAfter('const PHOTOS = ');
-const GEO = literalAfter('window.SHOP_GEO_DATA = ');
-const REGION_LABEL = { naha: '那覇エリア', south: '南部エリア', central: '中部エリア', north: '北部エリア', other: '沖縄本島' };
 const REGION_ORDER = ['naha', 'south', 'central', 'north', 'other'];
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,10 +34,11 @@ const strip = s => String(s ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').
 const cut = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 // フォルダ名：店名から URL に向かない文字を除く（空白は - に）
 const slugFS = name => name.replace(/[\/\\?#%&:*"<>|]/g, '').replace(/[\s\u3000]+/g, '-').replace(/^-+|-+$/g, '');
-const pageURL = s => SITE + 'shop/' + encodeURIComponent(slugFS(s.name)) + '/';
+const langDir = l => (l === 'ja' ? '' : l + '/');
+const pageURL = (s, l = 'ja') => SITE + langDir(l) + 'shop/' + encodeURIComponent(slugFS(s.name)) + '/';
 const absPhoto = p => SITE + p.split('/').map(encodeURIComponent).join('/');
-const areaOf = s => (s.area === '—' ? '沖縄本島' : s.area);
 const galleryOf = s => (s.photoKey && PHOTOS[s.photoKey]) ? PHOTOS[s.photoKey].photos : (s.photo ? [s.photo] : []);
+const fmt = (t, ...a) => a.reduce((x, v, i) => x.split(`{${i}}`).join(v), t);
 
 // 重複フォルダ名のチェック
 const seen = new Map();
@@ -56,6 +47,10 @@ for (const s of SHOPS) {
   if (seen.has(k)) throw new Error('slug重複: ' + s.name + ' / ' + seen.get(k));
   seen.set(k, s.name);
 }
+
+// その言語で表示できる店か（記事の翻訳がある）
+const hasLang = (s, l) => l === 'ja' ? Array.isArray(ARTICLES[s.name]) && ARTICLES[s.name].length > 0
+  : !!(TRANS[l] && TRANS[l].shops[s.name] && TRANS[l].shops[s.name].art);
 
 const CSS = `
 :root{--ink:#f2fbfd;--ink2:#e3f4fa;--panel:#fff;--line:#bfe3ef;--gold:#0a7ea4;--gold2:#00b4d8;--cream:#0b3d54;--text:#123c50;--muted:#4a6b7d;
@@ -69,8 +64,9 @@ main{max-width:44em;margin:0 auto;padding:1.4rem 16px 3rem}
 .crumb{font-size:.78rem;color:var(--muted);margin-bottom:1rem}
 .crumb a{color:var(--muted)}
 .eyebrow{font-size:.78rem;color:var(--gold);letter-spacing:.2em}
-h1{font-family:var(--serif);color:var(--cream);font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.4;margin:.2rem 0 .6rem}
-.meta{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem;font-size:.8rem}
+h1{font-family:var(--serif);color:var(--cream);font-size:clamp(1.6rem,6vw,2.3rem);line-height:1.4;margin:.2rem 0 .3rem}
+.orig{color:var(--muted);font-size:.85rem;margin-bottom:.6rem}
+.meta{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 1.2rem;font-size:.8rem}
 .meta span{border:1px solid var(--line);border-radius:999px;padding:.1rem .7rem;background:var(--panel)}
 .meta .rank{background:#f2b705;border-color:#f2b705;color:#3a2a00;font-weight:700}
 .lead{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;font-size:.92rem;margin-bottom:1.6rem}
@@ -84,25 +80,24 @@ h1{font-family:var(--serif);color:var(--cream);font-size:clamp(1.6rem,6vw,2.3rem
 .art-stars{display:block;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.9rem 1.2rem;font-family:var(--serif);line-height:2}
 .info{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;margin:2.4rem 0;font-size:.9rem}
 .info h2{font-family:var(--serif);font-size:1.05rem;color:var(--cream);margin-bottom:.4rem}
-.info dl{display:grid;grid-template-columns:5em 1fr;gap:.2rem .8rem}
+.info dl{display:grid;grid-template-columns:6em 1fr;gap:.2rem .8rem}
 .info dt{color:var(--muted)}
 .cta{display:block;text-align:center;background:var(--gold);color:#fff;text-decoration:none;border-radius:999px;padding:.8rem 1rem;font-weight:700;margin:1.6rem 0}
 .nav{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-top:1.6rem;font-size:.85rem}
 .nav a{display:block;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.7rem .9rem;text-decoration:none;color:var(--text)}
 .nav .r{text-align:right}
 .nav small{display:block;color:var(--muted);font-size:.72rem}
-footer{text-align:center;color:var(--muted);font-size:.78rem;padding:2rem 16px;border-top:1px solid var(--line)}
+footer{text-align:center;color:var(--muted);font-size:.78rem;padding:2rem 16px 5rem;border-top:1px solid var(--line)}
 `;
 
-function renderBody(items) {
+function renderBody(items, up) {
   return items.map(p => {
     if (p && typeof p === 'object') {
       if (p.html) return p.html;
-      if (p.video) return `<figure><video src="../../${esc(p.video)}"${p.poster ? ` poster="../../${esc(p.poster)}"` : ''} controls playsinline preload="metadata"></video><figcaption>${esc(p.cap || '')}</figcaption></figure>`;
-      if (p.img) return `<figure><img src="../../${esc(p.img)}" alt="${esc(p.cap || '')}" loading="lazy"><figcaption>${esc(p.cap || '')}</figcaption></figure>`;
+      if (p.video) return `<figure><video src="${up}${esc(p.video)}"${p.poster ? ` poster="${up}${esc(p.poster)}"` : ''} controls playsinline preload="metadata"></video><figcaption>${esc(p.cap || '')}</figcaption></figure>`;
+      if (p.img) return `<figure><img src="${up}${esc(p.img)}" alt="${esc(p.cap || '')}" loading="lazy"><figcaption>${esc(p.cap || '')}</figcaption></figure>`;
       return '';
     }
-    if (String(p).includes('class="art-stars"')) return `<p>${p}</p>`;
     return `<p>${p}</p>`;
   }).join('\n');
 }
@@ -117,66 +112,83 @@ function scoreOf(items) {
   return last;
 }
 
-const indexed = [];
 fs.rmSync(path.join(ROOT, 'shop'), { recursive: true, force: true });
-SHOPS.forEach((s, i) => {
-  const items = ARTICLES[s.name];
-  const hasArticle = Array.isArray(items) && items.length > 0;
-  const g = galleryOf(s);
-  const geo = GEO[s.name] && !Array.isArray(GEO[s.name]) ? GEO[s.name] : null;
-  const url = pageURL(s);
-  const area = areaOf(s);
-  const title = `${s.name}（${area}）の沖縄そばレビュー｜${SITE_NAME}`;
-  const desc = cut(strip(s.desc), 120);
-  const img = g.length ? absPhoto(g[0]) : SITE + 'icon-512.png';
-  const score = hasArticle ? scoreOf(items) : null;
-  const prev = SHOPS[(i - 1 + SHOPS.length) % SHOPS.length];
-  const next = SHOPS[(i + 1) % SHOPS.length];
-  const rel = s2 => '../' + encodeURIComponent(slugFS(s2.name)) + '/';
+for (const l of LANGS.slice(1)) fs.rmSync(path.join(ROOT, l), { recursive: true, force: true });
 
-  const restaurant = {
-    '@type': 'Restaurant', name: s.name, servesCuisine: '沖縄そば', image: img,
-    address: { '@type': 'PostalAddress', addressRegion: '沖縄県', addressCountry: 'JP', ...(geo?.addr ? { streetAddress: geo.addr } : { addressLocality: area }) },
-    ...(geo ? { geo: { '@type': 'GeoCoordinates', latitude: geo.lat, longitude: geo.lng } } : {}),
-  };
-  const ld = [
-    hasArticle ? {
-      '@context': 'https://schema.org', '@type': 'Review', name: `${s.name}の沖縄そばレビュー`, url,
-      author: { '@type': 'Person', name: AUTHOR },
-      publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE },
-      itemReviewed: restaurant,
-      ...(score != null ? { reviewRating: { '@type': 'Rating', ratingValue: score, bestRating: 15, worstRating: 0 } } : {}),
-      reviewBody: cut(strip(items.filter(x => typeof x === 'string' && !x.includes('art-stars')).join(' ')), 300),
-    } : { '@context': 'https://schema.org', ...restaurant },
-    {
-      '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
-        { '@type': 'ListItem', position: 1, name: SITE_NAME, item: SITE },
-        { '@type': 'ListItem', position: 2, name: REGION_LABEL[s.region] || '沖縄本島', item: SITE + '#list' },
-        { '@type': 'ListItem', position: 3, name: s.name, item: url },
-      ]
-    },
-  ];
-  const gq = encodeURIComponent(geo?.addr ? s.name + ' ' + geo.addr : s.name + ' 沖縄そば');
-  const body = hasArticle ? renderBody(items) : `<p>${esc(s.desc)}</p>`;
-  const page = `<!doctype html>
-<html lang="ja">
+const indexed = []; // {s, lang, url}
+for (const lang of LANGS) {
+  if (!TRANS[lang]) continue;
+  const UI = { ...UI_ALL.ja, ...TRANS[lang].ui };
+  const U = (k, ...a) => fmt(UI[k] ?? k, ...a);
+  const up = lang === 'ja' ? '../../' : '../../../';
+  const paren = x => (lang === 'ja' || lang.startsWith('zh')) ? `（${x}）` : ` (${x})`;
+  const list = SHOPS.filter(s => hasLang(s, lang));
+  list.forEach((s, i) => {
+    const T = lang === 'ja' ? null : TRANS[lang].shops[s.name];
+    const items = lang === 'ja' ? ARTICLES[s.name] : T.art;
+    const name = T ? T.name : s.name;
+    const area = s.area === '—' ? U('honto') : (T ? T.area : s.area);
+    const desc = T ? T.desc : s.desc;
+    const rank = s.rank ? (T && T.rank ? T.rank : s.rank) : '';
+    const g = galleryOf(s);
+    const geo = GEO[s.name] && !Array.isArray(GEO[s.name]) ? GEO[s.name] : null;
+    const url = pageURL(s, lang);
+    const title = `${U('sp_title', name, area)}｜${U('site')}`.replace('｜', lang === 'ja' || lang.startsWith('zh') ? '｜' : ' | ');
+    const mdesc = cut(strip(desc), 120);
+    const img = g.length ? absPhoto(g[0]) : SITE + 'icon-512.png';
+    const score = scoreOf(ARTICLES[s.name] || []);
+    const prev = list[(i - 1 + list.length) % list.length];
+    const next = list[(i + 1) % list.length];
+    const rel = s2 => '../' + encodeURIComponent(slugFS(s2.name)) + '/';
+    const nmOf = s2 => (lang === 'ja' ? s2.name : TRANS[lang].shops[s2.name].name);
+    const region = U('reg_' + (s.region || 'other'));
+    const alts = LANGS.filter(l2 => TRANS[l2] && hasLang(s, l2));
+
+    const restaurant = {
+      '@type': 'Restaurant', name, alternateName: name !== s.name ? s.name : undefined, servesCuisine: 'Okinawa soba', image: img,
+      address: { '@type': 'PostalAddress', addressRegion: '沖縄県', addressCountry: 'JP', ...(geo?.addr ? { streetAddress: geo.addr } : { addressLocality: s.area }) },
+      ...(geo ? { geo: { '@type': 'GeoCoordinates', latitude: geo.lat, longitude: geo.lng } } : {}),
+    };
+    const ld = [
+      {
+        '@context': 'https://schema.org', '@type': 'Review', name: U('sp_title', name, area), url, inLanguage: lang,
+        author: { '@type': 'Person', name: AUTHOR },
+        publisher: { '@type': 'Organization', name: U('site'), url: SITE },
+        itemReviewed: restaurant,
+        ...(score != null ? { reviewRating: { '@type': 'Rating', ratingValue: score, bestRating: 15, worstRating: 0 } } : {}),
+        reviewBody: cut(strip(items.filter(x => typeof x === 'string' && !x.includes('art-stars')).join(' ')), 300),
+      },
+      {
+        '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+          { '@type': 'ListItem', position: 1, name: U('site'), item: SITE },
+          { '@type': 'ListItem', position: 2, name: region, item: SITE + '#shops' },
+          { '@type': 'ListItem', position: 3, name, item: url },
+        ]
+      },
+    ];
+    const gq = encodeURIComponent(geo?.addr ? s.name + ' ' + geo.addr : s.name + ' 沖縄そば');
+    const ctaHref = `${up}${lang === 'ja' ? '' : '?lang=' + lang}#shop/${encodeURIComponent(s.name)}`;
+    const page = `<!doctype html>
+<html lang="${lang}" data-static>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(title)}</title>
-<meta name="description" content="${esc(desc)}">
-${hasArticle ? '' : '<meta name="robots" content="noindex">\n'}<link rel="canonical" href="${esc(url)}">
+<meta name="description" content="${esc(mdesc)}">
+<link rel="canonical" href="${esc(url)}">
+${alts.map(l2 => `<link rel="alternate" hreflang="${l2}" href="${esc(pageURL(s, l2))}">`).join('\n')}
+<link rel="alternate" hreflang="x-default" href="${esc(pageURL(s, 'ja'))}">
 <meta property="og:type" content="article">
-<meta property="og:site_name" content="${SITE_NAME}">
-<meta property="og:title" content="${esc(s.name + '（' + area + '）の沖縄そばレビュー')}">
-<meta property="og:description" content="${esc(desc)}">
+<meta property="og:site_name" content="${esc(U('site'))}">
+<meta property="og:title" content="${esc(U('sp_title', name, area))}">
+<meta property="og:description" content="${esc(mdesc)}">
 <meta property="og:url" content="${esc(url)}">
 <meta property="og:image" content="${esc(img)}">
-<meta property="og:locale" content="ja_JP">
+<meta property="og:locale" content="${OG_LOCALE[lang]}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#043a5c">
-<link rel="icon" type="image/png" href="../../icon-192.png">
-<link rel="apple-touch-icon" href="../../icon-180.png">
+<link rel="icon" type="image/png" href="${up}icon-192.png">
+<link rel="apple-touch-icon" href="${up}icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
@@ -184,64 +196,68 @@ ${hasArticle ? '' : '<meta name="robots" content="noindex">\n'}<link rel="canoni
 ${ld.map(o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, '\\u003c')}</script>`).join('\n')}
 </head>
 <body>
-<header class="top"><a href="../../">🍜 ${SITE_NAME}</a></header>
+<header class="top"><a href="${up}${lang === 'ja' ? '' : '?lang=' + lang}">🍜 ${esc(U('site'))}</a></header>
 <main>
-<nav class="crumb"><a href="../../">トップ</a> › ${esc(REGION_LABEL[s.region] || '沖縄本島')} › ${esc(s.name)}</nav>
-<div class="eyebrow">沖縄そば巡りの旅</div>
-<h1>${esc(s.name)}</h1>
-<div class="meta"><span>${esc(area)}</span>${s.rank ? `<span class="rank">${esc(s.rank)}</span>` : ''}${(s.tags || []).map(t => `<span>${esc(t)}</span>`).join('')}${score != null ? `<span>評価 ${score}点/15点</span>` : ''}</div>
-<p class="lead">${esc(s.desc)}</p>
-${g.length && !(hasArticle && items.some(x => x && x.img === g[0])) ? `<img class="hero" src="../../${esc(g[0])}" alt="${esc(s.name)}の沖縄そば">` : ''}
+<nav class="crumb"><a href="${up}${lang === 'ja' ? '' : '?lang=' + lang}">${esc(U('sp_top'))}</a> › ${esc(region)} › ${esc(name)}</nav>
+<div class="eyebrow">${esc(U('site'))}</div>
+<h1>${esc(name)}</h1>
+${name !== s.name ? `<div class="orig" lang="ja">${esc(s.name)}</div>` : ''}
+<div class="meta"><span>${esc(area)}</span>${rank ? `<span class="rank">${esc(rank)}</span>` : ''}${(s.tags || []).map(t => `<span>${esc(U('tag_' + t))}</span>`).join('')}${score != null ? `<span>${esc(U('sp_rating', score))}</span>` : ''}</div>
+<p class="lead">${esc(desc)}</p>
+${g.length && !items.some(x => x && x.img === g[0]) ? `<img class="hero" src="${up}${esc(g[0])}" alt="${esc(U('photo_alt', name))}">` : ''}
 <article class="body">
-${body}
+${renderBody(items, up)}
 </article>
 <section class="info">
-<h2>お店の情報</h2>
-<dl><dt>店名</dt><dd>${esc(s.name)}</dd><dt>エリア</dt><dd>${esc(area)}（${esc(REGION_LABEL[s.region] || '沖縄本島')}）</dd>${geo?.addr ? `<dt>住所</dt><dd>${esc(geo.addr)}</dd>` : ''}</dl>
-<p style="margin-top:.6rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=${gq}" target="_blank" rel="noopener">Googleマップで見る</a></p>
+<h2>${esc(U('sp_info'))}</h2>
+<dl><dt>${esc(U('sp_name'))}</dt><dd>${esc(name)}${name !== s.name ? `<br><span lang="ja">${esc(s.name)}</span>` : ''}</dd><dt>${esc(U('sp_area'))}</dt><dd>${esc(area)}${esc(paren(region))}</dd>${geo?.addr ? `<dt>${esc(U('sp_addr'))}</dt><dd lang="ja">${esc(geo.addr)}</dd>` : ''}</dl>
+<p style="margin-top:.6rem"><a href="https://www.google.com/maps/search/?api=1&amp;query=${gq}" target="_blank" rel="noopener">${esc(U('sp_gmaps'))}</a></p>
 </section>
-<a class="cta" href="../../#shop/${encodeURIComponent(s.name)}">地図やほかのお店も見る（${SHOPS.length}軒）</a>
+<a class="cta" href="${ctaHref}">${esc(U('sp_cta', SHOPS.length))}</a>
 <nav class="nav">
-<a href="${rel(prev)}"><small>← 前のお店</small>${esc(prev.name)}</a>
-<a class="r" href="${rel(next)}"><small>次のお店 →</small>${esc(next.name)}</a>
+<a href="${rel(prev)}"><small>${esc(U('prev'))}</small>${esc(nmOf(prev))}</a>
+<a class="r" href="${rel(next)}"><small>${esc(U('next'))}</small>${esc(nmOf(next))}</a>
 </nav>
 </main>
-<footer>沖縄本島の沖縄そば屋、全店制覇が目標。<br>© ${SITE_NAME}（${AUTHOR}）</footer>
-<script src="../../i18n.js" defer></script>
+<footer>${esc(U('sp_footer'))}<br>© ${esc(U('site'))}（${AUTHOR}）</footer>
+<script src="${up}i18n.js" defer></script>
 </body>
 </html>
 `;
-  const dir = path.join(ROOT, 'shop', slugFS(s.name));
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, 'index.html'), page);
-  if (hasArticle) indexed.push({ s, url });
-});
+    const dir = path.join(ROOT, langDir(lang), 'shop', slugFS(s.name));
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'index.html'), page);
+    indexed.push({ s, lang, url, alts });
+  });
+  console.log(`${lang}: ${list.length} pages`);
+}
 
-// ---- sitemap.xml
+// ---- sitemap.xml（言語ちがいのページを hreflang で結ぶ）
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <url><loc>${SITE}</loc><lastmod>${TODAY}</lastmod><priority>1.0</priority></url>
-${indexed.map(x => `<url><loc>${esc(x.url)}</loc><lastmod>${TODAY}</lastmod></url>`).join('\n')}
+${indexed.map(x => `<url><loc>${esc(x.url)}</loc><lastmod>${TODAY}</lastmod>${x.alts.map(l2 => `<xhtml:link rel="alternate" hreflang="${l2}" href="${esc(pageURL(x.s, l2))}"/>`).join('')}<xhtml:link rel="alternate" hreflang="x-default" href="${esc(pageURL(x.s, 'ja'))}"/></url>`).join('\n')}
 </urlset>
 `;
 fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sm);
 
-// ---- index.html にお店別ページへのリンク一覧を入れる（Googleがたどれるように）
+// ---- index.html にお店別ページへのリンク一覧を入れる（Googleがたどれるように。日本語ページ）
+const ja = indexed.filter(x => x.lang === 'ja');
+const RL = UI_ALL.ja;
 const S = '<!--SEO-INDEX-START-->', E = '<!--SEO-INDEX-END-->';
 const groups = REGION_ORDER.map(r => {
-  const list = indexed.filter(x => x.s.region === r);
+  const list = ja.filter(x => x.s.region === r);
   if (!list.length) return '';
-  return `<h3>${REGION_LABEL[r]}（${list.length}軒）</h3><ul>` +
+  return `<h3>${RL['reg_' + r]}（${list.length}軒）</h3><ul>` +
     list.map(x => `<li><a href="shop/${encodeURIComponent(slugFS(x.s.name))}/">${esc(x.s.name)}</a></li>`).join('') + '</ul>';
 }).join('');
 const block = `${S}
 <section class="seo-index" aria-label="お店別の記事ページ">
-<details><summary>お店別の記事ページ一覧（${indexed.length}軒）</summary>${groups}</details>
+<details><summary>お店別の記事ページ一覧（${ja.length}軒）</summary>${groups}</details>
 </section>
 ${E}`;
 if (html.includes(S)) html = html.slice(0, html.indexOf(S)) + block + html.slice(html.indexOf(E) + E.length);
 else html = html.replace('<footer>', block + '\n\n<footer>');
 fs.writeFileSync(path.join(ROOT, 'index.html'), html);
 
-console.log(`shop pages: ${SHOPS.length}（記事あり ${indexed.length} / 記事なし noindex ${SHOPS.length - indexed.length}）`);
 console.log('sitemap urls:', indexed.length + 1);

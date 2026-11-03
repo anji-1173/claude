@@ -79,7 +79,7 @@
 公開URL: https://anji-1173.github.io/okinawa-soba/
 
 ## SEO（2026年11月〜・記事を追加/修正したら毎回）
-- 記事を index.html に入れたら、構文チェックの前に `node tools/build_seo.mjs` を実行する（okinawa-soba フォルダで）。
+- 記事を index.html に入れたら、構文チェックの前に、下の「多言語表示」の手順（翻訳）のあと `node tools/build_seo.mjs` を実行する（okinawa-soba フォルダで）。
   - `shop/<店名>/index.html`（お店ごとの検索用ページ：題名・説明文・OGP・構造化データ Review/Restaurant 付き）、
     `sitemap.xml`、index.html 内の「お店別の記事ページ一覧」（`<!--SEO-INDEX-START-->`〜`END`）を作り直す。
   - 店名を変えると URL（shop/<店名>/）も変わる。shop/ フォルダは毎回まるごと作り直すので手で編集しない。
@@ -88,8 +88,20 @@
   （鍵ファイル `20937f63d3c0c32c70e6a792b25c1c0c.txt` は消さない）。後片付けの git rm 対象に含めないこと。
 - Google は Search Console（URLプレフィックス https://anji-1173.github.io/okinawa-soba/）で sitemap.xml を登録済み／登録予定。
 
-## 多言語表示（2026年11月〜）
-- `i18n.js`（index.html と shop/ の各ページが読み込む）が右下の「🌐」ボタンで 日本語/English/한국어/繁體中文/简体中文 を切り替える。
-- 翻訳は Google 翻訳ウィジェット。沖縄そば用語（ソーキ・三枚肉・てびち・じゅーしー・筋感・三線…）は `GLOSSARY` の訳語を日本語の文中に埋め込んでから Google に訳させる（文が途切れないよう notranslate は使わない）。
-  記事に新しい沖縄の言葉が出てきたら GLOSSARY に1行足す（[日本語|表記ゆれ, 英, 韓, 繁, 簡]）。かっこ書きの説明は文中には入れず、記事の最後の「用語集」ボックスにまとめて表示する。
-- Google 翻訳が読み込めない環境では translate.goog（Google翻訳サイト経由）への案内を出す。
+## 多言語表示（2026年11月〜）— 英語・韓国語・繁体字・簡体字
+- 右下の「🌐」ボタン（`i18n.js`）で 日本語 / English / 한국어 / 繁體中文 / 简体中文 を切り替える。**Google翻訳は使わず、事前に用意した翻訳を表示する**。
+- 仕組み
+  - 画面の固定文言（メニュー・見出し・ボタン等）: `i18n/ui.json`（言語ごと）。**変えたら index.html 内の `const UI_JA = {…}` も同じ内容に更新する**（日本語表示用の控え）。
+  - 店ごとの翻訳（店名・地名・紹介文・順位・記事本文・写真キャプション）: `i18n/<lang>.json`（訳の保管庫）→ `node tools/i18n_build.mjs` が `i18n/<lang>.js` を作る。index.html は選ばれた言語の `i18n/<lang>.js` だけ読み込む。
+  - 簡体字(zh-CN)は繁体字(zh-TW)から自動変換（opencc-js）。翻訳作業は en / ko / zh-TW の3言語。
+  - 言語の決め方: `?lang=xx` → 保存した言語(localStorage `soba-lang`) → ブラウザの言語（検索ロボットは日本語）。
+  - 検索用ページ: `shop/…`（日本語）と `<lang>/shop/…`（英韓繁簡）。`hreflang` で結び、sitemap.xml にも入る。
+- **記事を追加・修正したら毎回（okinawa-soba フォルダで）**
+  1. `node tools/i18n_extract.mjs` … 翻訳が必要な店を `i18n/work/batch-NN.ja.json` に書き出す（直した店は古い訳が外れる）
+  2. `node tools/i18n_todo.mjs en=1 ko=1 zh-TW=1` … 言語ごとの担当表 `i18n/work/todo/todo-N.<lang>.ja.json` を作る
+  3. 各担当表を翻訳して `i18n/work/parts/todo-N.<lang>.pK.json` に書く（サブエージェントに任せてよい。ルールと用語集は `i18n/GUIDE.md`）。
+     `node tools/i18n_check.mjs todo-N.<lang>` が OK になるまで直す。進み具合は `node tools/i18n_status.mjs`。
+  4. `node tools/i18n_build.mjs` → `node tools/build_seo.mjs`（言語別ページ・sitemap を作り直す）
+  5. `i18n/*.js`・`i18n/*.json`・`shop/`・`en/ ko/ zh-TW/ zh-CN/`・`sitemap.xml` も一緒にコミット＆プッシュ。
+- 翻訳の注意: 星評価の「麺：/スープ：/具：」は自動で各言語に置き換わる。沖縄そば用語の訳は GUIDE.md の表に従う（新しい用語は表に足す）。
+- `i18n/work/`（翻訳の作業用）は作業リポジトリ側にだけコミットし、公開リポジトリ(okinawa-soba main)には入れない。
