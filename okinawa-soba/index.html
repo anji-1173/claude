@@ -139,6 +139,14 @@ nav .links a{
   transition:color .2s;
 }
 nav .links a:hover{color:#7fe3ff}
+nav .links a{white-space:nowrap}
+/* スマホ幅：メニューを2段目に落として、どの言語でも切れない・縦に折り返さないようにする */
+@media(max-width:700px){
+  nav{flex-wrap:wrap;gap:.35rem .8rem;padding:.55rem 14px .5rem}
+  nav .brand{min-width:0}
+  nav .brand .brand-title{font-size:1.2rem;white-space:normal;line-height:1.25}
+  nav .links{width:100%;justify-content:space-around;gap:.6rem;border-top:1px solid rgba(255,255,255,.18);padding-top:.35rem}
+}
 
 /* ===== ヒーロー v2（写真背景） ===== */
 .hero{
@@ -6807,7 +6815,7 @@ buildMap();
 route();
 
 // ===== PWA / 自動更新（ネットワーク優先SW）=====
-const APP_VERSION = '2026.11.03.5';
+const APP_VERSION = '2026.11.03.6';
 (function(){ const vc = document.getElementById('app-version'); if(vc) vc.textContent = 'ver ' + APP_VERSION; })();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

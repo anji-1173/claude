@@ -21,7 +21,11 @@
     if (code === cur) return;
     save(code);
     var alt = document.querySelector('link[rel="alternate"][hreflang="' + code + '"]');
-    if (alt && document.documentElement.hasAttribute('data-static')) { location.href = alt.href; return; }
+    if (document.documentElement.hasAttribute('data-static')) {
+      // お店ページ：同じお店のその言語のページへ（いま見ているサイトからの相対アドレスで移動する）
+      var m = location.pathname.match(/^(.*?)\/?(?:(?:en|ko|zh-TW|zh-CN)\/)?shop\/(.*)$/);
+      if (alt && m) { location.href = m[1] + '/' + (code === 'ja' ? '' : code + '/') + 'shop/' + m[2] + location.search; return; }
+    }
     // トップ：?lang= を外して読み込み直す（保存した言語で表示される）
     var u = new URL(location.href);
     u.searchParams.delete('lang');
