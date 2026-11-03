@@ -53,12 +53,17 @@
     ['筋感', 'stringy texture', '힘줄 같은 질긴 식감', '筋感（口感偏韌）', '筋感（口感偏韧）'],
     ['麺リフト', 'noodle lift', '면 리프트(면을 들어 올린 사진)', '麵條特寫', '面条特写'],
     ['着丼', 'the bowl arrives', '소바가 나왔습니다', '上桌', '上桌'],
+    ['お邪魔してきました|お邪魔しました', 'visited', '다녀왔습니다', '造訪了', '造访了'],
+    ['のれん|暖簾', 'noren (shop curtain)', '노렌(가게 입구에 거는 천)', '暖簾（門簾）', '暖帘（门帘）'],
+    ['歯応え|歯ごたえ', 'chewiness', '씹는 맛', '嚼勁', '嚼劲'],
+    ['茹で加減', 'doneness', '삶은 정도', '煮麵的軟硬', '煮面的软硬'],
+    ['一杯', 'bowl', '한 그릇', '一碗', '一碗'],
     ['そば処', 'soba-dokoro ', '소바도코로 ', '麵館', '面馆'],
     ['そば屋', 'soba shop', '소바 가게', '沖繩麵店', '冲绳面店'],
     ['そば', 'soba', '소바', '麵', '面'],
-    ['麺　　：', 'Noodles: ', '면: ', '麵：', '面：'],
-    ['スープ：', 'Soup: ', '수프: ', '湯頭：', '汤头：'],
-    ['具　　：', 'Toppings: ', '토핑: ', '配料：', '配料：']
+    ['麺　　：', 'Noodles: ', '면: ', '麵：', '面：', 'label'],
+    ['スープ：', 'Soup: ', '수프: ', '湯頭：', '汤头：', 'label'],
+    ['具　　：', 'Toppings: ', '토핑: ', '配料：', '配料：', 'label']
   ];
 
   // ---- 現在の言語（cookie googtrans=/ja/xx、または translate.goog の _x_tr_tl）
@@ -77,11 +82,14 @@
   var col = { en: 1, ko: 2, 'zh-TW': 3, 'zh-CN': 4 }[lang];
 
   // ---- 用語集の差し替え
-  var re = null, map = {}, pad = (lang === 'en' || lang === 'ko');
+  // 文中には短い訳語だけを埋め込む（かっこ書きの説明まで Google が訳し直して誤訳になるため）。
+  // 説明は記事の最後に「用語集」としてまとめて表示する（ここは Google に訳させない）。
+  var re = null, map = {}, label = {}, pad = (lang === 'en' || lang === 'ko');
+  var short = function (s) { return s.replace(/\s*[（(][^（）()]*[）)]\s*$/, ''); };
   if (col) {
     var keys = [];
     GLOSSARY.forEach(function (row) {
-      row[0].split('|').forEach(function (k) { map[k] = row[col]; keys.push(k); });
+      row[0].split('|').forEach(function (k) { map[k] = row[col]; if (row[5] === 'label') label[k] = 1; keys.push(k); });
     });
     keys.sort(function (a, b) { return b.length - a.length; });
     re = new RegExp(keys.map(function (k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|'), 'g');
@@ -90,29 +98,66 @@
   function skipEl(el) {
     for (; el && el !== document.body; el = el.parentNode) {
       if (el.nodeType !== 1) continue;
-      if (SKIP[el.tagName] || el.classList.contains('i18n-gl') || el.id === 'i18n-switch') return true;
+      if (SKIP[el.tagName] || el.classList.contains('i18n-gl') || el.classList.contains('i18n-glossary') || el.id === 'i18n-switch') return true;
     }
     return false;
   }
-  var busy = false, seen = {}, lastHash = location.hash;
+  var busy = false, used = {}, lastHash = location.hash;
+  function articleBox() {
+    var av = document.getElementById('article-view');
+    if (av && !av.hidden) return av.querySelector('.art-body');
+    return document.querySelector('article.body');
+  }
   function applyGlossary(root) {
     if (!re || !root) return;
-    if (location.hash !== lastHash) { seen = {}; lastHash = location.hash; } // 記事が変わったら説明を付け直す
+    if (location.hash !== lastHash) { used = {}; lastHash = location.hash; } // 記事が変わったら用語集も作り直す
     busy = true;
     try {
       var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), nodes = [], n;
       while ((n = w.nextNode())) { re.lastIndex = 0; if (re.test(n.nodeValue)) nodes.push(n); }
+      var box = articleBox();
       nodes.forEach(function (t) {
         if (!t.parentNode || skipEl(t.parentNode)) return;
-        // 文を途切れさせないよう、訳語をそのまま日本語の文中に埋め込む（Google はこの訳語を残して文全体を訳す）
-        t.nodeValue = t.nodeValue.replace(re, function (k) {
-          var full = map[k], word = full;
-          // 説明（かっこ書き）はページで最初の1回だけ付ける
-          if (seen[full]) word = full.replace(/\s*[（(][^（）()]*[）)]\s*$/, ''); else seen[full] = 1;
-          return pad ? ' ' + word + ' ' : word;
+        var inArticle = box && box.contains(t);
+        var s = t.nodeValue;
+        re.lastIndex = 0;
+        if (Object.keys(label).length && /：/.test(s) && label[(s.match(re) || [])[0]]) {
+          // 単独ラベル（星評価の「麺：」など）は訳語に置き換え、Google に訳させない
+          var frag = document.createDocumentFragment(), last = 0, m;
+          while ((m = re.exec(s))) {
+            if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+            var sp = document.createElement('span');
+            sp.className = 'i18n-gl notranslate'; sp.setAttribute('translate', 'no'); sp.textContent = map[m[0]];
+            frag.appendChild(sp); last = m.index + m[0].length;
+          }
+          if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+          t.parentNode.replaceChild(frag, t);
+          return;
+        }
+        // 文を途切れさせないよう、短い訳語をそのまま日本語の文中に埋め込む（Google はこの訳語を残して文全体を訳す）
+        t.nodeValue = s.replace(re, function (k) {
+          var full = map[k];
+          if (inArticle && full !== short(full)) used[full] = 1;
+          return pad ? ' ' + short(full) + ' ' : short(full);
         });
       });
+      renderGlossary(box);
     } finally { busy = false; }
+  }
+  var TITLE = { en: 'Okinawa soba glossary', ko: '오키나와 소바 용어 설명', 'zh-TW': '沖繩麵用語說明', 'zh-CN': '冲绳面用语说明' };
+  function renderGlossary(box) {
+    if (!box) return;
+    var list = Object.keys(used);
+    var old = box.querySelector('.i18n-glossary');
+    if (!list.length) { if (old) old.remove(); return; }
+    var el = old || document.createElement('aside');
+    el.className = 'i18n-glossary notranslate'; el.setAttribute('translate', 'no');
+    var html = '<div class="i18n-gt">📖 ' + TITLE[lang] + '</div><ul>' + list.map(function (f) {
+      var m = f.match(/^(.*?)\s*[（(]([^（）()]*)[）)]\s*$/);
+      return '<li><b>' + m[1] + '</b>' + (pad ? ': ' : '：') + m[2] + '</li>';
+    }).join('') + '</ul>';
+    if (el.innerHTML !== html) el.innerHTML = html; // 変わったときだけ書き換える
+    if (!old) box.appendChild(el);
   }
 
   // ---- 切り替えボタン
@@ -127,6 +172,7 @@
       '#i18n-menu button[aria-current="true"]{background:#e3f4fa;font-weight:700}' +
       '#i18n-note{position:fixed;left:14px;right:80px;bottom:14px;z-index:89;background:#fff;border:1px solid #bfe3ef;border-radius:10px;padding:.6rem .8rem;font-size:.8rem;color:#123c50;box-shadow:0 4px 14px rgba(0,0,0,.2)}' +
       '.i18n-gl{font-style:normal}' +
+      '.i18n-glossary{margin:2rem 0 1rem;background:#fff;border:1px solid #bfe3ef;border-radius:8px;padding:.9rem 1.1rem;font-size:.85rem;line-height:1.7}.i18n-gt{font-weight:700;margin-bottom:.3rem;color:#0b3d54}.i18n-glossary ul{list-style:none;margin:0;padding:0}.i18n-glossary li{margin:.15rem 0}' +
       /* Google 翻訳の上部バー・吹き出しを隠す */
       'body{top:0!important}iframe.skiptranslate,.goog-te-banner-frame,#goog-gt-tt,.goog-te-balloon-frame{display:none!important}' +
       '.goog-text-highlight{background:none!important;box-shadow:none!important}#google_translate_element{display:none}';
@@ -198,6 +244,7 @@
         if (busy) return;
         muts.forEach(function (m) {
           m.addedNodes.forEach(function (nd) {
+            if (!nd.isConnected) return; // すでに外された要素は無視（無限ループ防止）
             if (nd.nodeType === 3) { if (nd.parentNode && !skipEl(nd.parentNode)) applyGlossary(nd.parentNode); }
             else if (nd.nodeType === 1 && !skipEl(nd)) applyGlossary(nd);
           });
