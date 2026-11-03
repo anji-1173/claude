@@ -207,6 +207,7 @@ ${body}
 </nav>
 </main>
 <footer>沖縄本島の沖縄そば屋、全店制覇が目標。<br>© ${SITE_NAME}（${AUTHOR}）</footer>
+<script src="../../i18n.js" defer></script>
 </body>
 </html>
 `;

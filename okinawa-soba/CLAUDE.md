@@ -87,3 +87,9 @@
 - sitemap.xml が更新されて main に push されると `.github/workflows/indexnow.yml` が自動で Bing 等に通知する
   （鍵ファイル `20937f63d3c0c32c70e6a792b25c1c0c.txt` は消さない）。後片付けの git rm 対象に含めないこと。
 - Google は Search Console（URLプレフィックス https://anji-1173.github.io/okinawa-soba/）で sitemap.xml を登録済み／登録予定。
+
+## 多言語表示（2026年11月〜）
+- `i18n.js`（index.html と shop/ の各ページが読み込む）が右下の「🌐」ボタンで 日本語/English/한국어/繁體中文/简体中文 を切り替える。
+- 翻訳は Google 翻訳ウィジェット。沖縄そば用語（ソーキ・三枚肉・てびち・じゅーしー・筋感・三線…）は `GLOSSARY` の訳に差し替えて Google に訳させない。
+  記事に新しい沖縄の言葉が出てきたら GLOSSARY に1行足す（[日本語|表記ゆれ, 英, 韓, 繁, 簡]）。説明のかっこ書きは各ページ最初の1回だけ表示される。
+- Google 翻訳が読み込めない環境では translate.goog（Google翻訳サイト経由）への案内を出す。
