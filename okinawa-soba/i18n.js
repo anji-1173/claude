@@ -1,7 +1,7 @@
 // 沖縄そば巡りの旅 — 多言語表示（Google翻訳＋沖縄そば用語集）
 // ・画面右下の「🌐」ボタンで 日本語 / English / 한국어 / 繁體中文 / 简体中文 を切り替える。
 // ・ページ全体は Google 翻訳で訳すが、沖縄そばの専門用語は下の用語集の訳に差し替え、
-//   Google には訳させない（notranslate）。変な訳（ソーキ→「ソーキ」不明語、筋感→muscle feeling 等）を防ぐ。
+//   その訳語を日本語の文中に埋め込んでから Google に訳させる。変な訳（そば→蕎麦、筋感→muscle feeling 等）を防ぐ。
 // ・用語集に言葉を足すときは GLOSSARY に1行追加するだけでよい（長い言葉が優先される）。
 (function () {
   'use strict';
@@ -14,7 +14,6 @@
   ];
   // [日本語の表記（| 区切りで表記ゆれ）, 英語, 韓国語, 繁体字, 簡体字]
   var GLOSSARY = [
-    ['沖縄そば巡りの旅', 'Okinawa Soba Journey', '오키나와 소바 순례 여행', '沖繩麵巡禮之旅', '冲绳面巡礼之旅'],
     ['沖縄そば', 'Okinawa soba', '오키나와 소바', '沖繩麵', '冲绳面'],
     ['宮古そば', 'Miyako soba', '미야코 소바', '宮古麵', '宫古面'],
     ['八重山そば', 'Yaeyama soba', '야에야마 소바', '八重山麵', '八重山面'],
@@ -54,6 +53,9 @@
     ['筋感', 'stringy texture', '힘줄 같은 질긴 식감', '筋感（口感偏韌）', '筋感（口感偏韧）'],
     ['麺リフト', 'noodle lift', '면 리프트(면을 들어 올린 사진)', '麵條特寫', '面条特写'],
     ['着丼', 'the bowl arrives', '소바가 나왔습니다', '上桌', '上桌'],
+    ['そば処', 'soba-dokoro ', '소바도코로 ', '麵館', '面馆'],
+    ['そば屋', 'soba shop', '소바 가게', '沖繩麵店', '冲绳面店'],
+    ['そば', 'soba', '소바', '麵', '面'],
     ['麺　　：', 'Noodles: ', '면: ', '麵：', '面：'],
     ['スープ：', 'Soup: ', '수프: ', '湯頭：', '汤头：'],
     ['具　　：', 'Toppings: ', '토핑: ', '配料：', '配料：']
@@ -102,20 +104,13 @@
       while ((n = w.nextNode())) { re.lastIndex = 0; if (re.test(n.nodeValue)) nodes.push(n); }
       nodes.forEach(function (t) {
         if (!t.parentNode || skipEl(t.parentNode)) return;
-        var s = t.nodeValue, frag = document.createDocumentFragment(), last = 0, m;
-        re.lastIndex = 0;
-        while ((m = re.exec(s))) {
-          if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
-          var sp = document.createElement('span');
-          sp.className = 'i18n-gl notranslate'; sp.setAttribute('translate', 'no');
-          sp.setAttribute('data-ja', m[0]); var full = map[m[0]], word = full;
+        // 文を途切れさせないよう、訳語をそのまま日本語の文中に埋め込む（Google はこの訳語を残して文全体を訳す）
+        t.nodeValue = t.nodeValue.replace(re, function (k) {
+          var full = map[k], word = full;
           // 説明（かっこ書き）はページで最初の1回だけ付ける
           if (seen[full]) word = full.replace(/\s*[（(][^（）()]*[）)]\s*$/, ''); else seen[full] = 1;
-          sp.textContent = pad ? ' ' + word + ' ' : word;
-          frag.appendChild(sp); last = m.index + m[0].length;
-        }
-        if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
-        t.parentNode.replaceChild(frag, t);
+          return pad ? ' ' + word + ' ' : word;
+        });
       });
     } finally { busy = false; }
   }
