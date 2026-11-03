@@ -77,3 +77,13 @@
 ## 報告フォーマット（作業の最後に日本語で）
 追加した記事数 / 修正したピン / 除外したAIイラスト / 未使用写真 / 公開URL とビルド成功、を簡潔にまとめる。
 公開URL: https://anji-1173.github.io/okinawa-soba/
+
+## SEO（2026年11月〜・記事を追加/修正したら毎回）
+- 記事を index.html に入れたら、構文チェックの前に `node tools/build_seo.mjs` を実行する（okinawa-soba フォルダで）。
+  - `shop/<店名>/index.html`（お店ごとの検索用ページ：題名・説明文・OGP・構造化データ Review/Restaurant 付き）、
+    `sitemap.xml`、index.html 内の「お店別の記事ページ一覧」（`<!--SEO-INDEX-START-->`〜`END`）を作り直す。
+  - 店名を変えると URL（shop/<店名>/）も変わる。shop/ フォルダは毎回まるごと作り直すので手で編集しない。
+- `shop/`・`sitemap.xml` も一緒にコミット＆プッシュする。
+- sitemap.xml が更新されて main に push されると `.github/workflows/indexnow.yml` が自動で Bing 等に通知する
+  （鍵ファイル `20937f63d3c0c32c70e6a792b25c1c0c.txt` は消さない）。後片付けの git rm 対象に含めないこと。
+- Google は Search Console（URLプレフィックス https://anji-1173.github.io/okinawa-soba/）で sitemap.xml を登録済み／登録予定。

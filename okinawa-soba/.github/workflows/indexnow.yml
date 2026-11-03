@@ -1,0 +1,33 @@
+# 公開後、更新したページを IndexNow（Bing など）に自動で知らせる
+name: indexnow
+on:
+  push:
+    branches: [main]
+    paths: ['sitemap.xml']
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: wait for Pages and submit
+        run: |
+          KEY=20937f63d3c0c32c70e6a792b25c1c0c
+          SITE=https://anji-1173.github.io/okinawa-soba/
+          for i in $(seq 1 40); do
+            [ "$(curl -s ${SITE}${KEY}.txt)" = "$KEY" ] && grep -q "$(git log -1 --format=%cs)" <(curl -s ${SITE}sitemap.xml) && break
+            sleep 15
+          done
+          python3 - <<'PY'
+          import json, re, urllib.request
+          urls = re.findall(r'<loc>([^<]+)</loc>', open('sitemap.xml').read())
+          body = json.dumps({"host": "anji-1173.github.io", "key": "20937f63d3c0c32c70e6a792b25c1c0c",
+                             "keyLocation": "https://anji-1173.github.io/okinawa-soba/20937f63d3c0c32c70e6a792b25c1c0c.txt",
+                             "urlList": urls}).encode()
+          req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                       headers={"Content-Type": "application/json; charset=utf-8"})
+          try:
+              r = urllib.request.urlopen(req, timeout=60); print("IndexNow:", r.status, len(urls), "urls")
+          except urllib.error.HTTPError as e:
+              print("IndexNow:", e.code, e.read()[:300]); raise
+          PY
