@@ -26,8 +26,13 @@ jobs:
                              "urlList": urls}).encode()
           req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
                                        headers={"Content-Type": "application/json; charset=utf-8"})
-          try:
-              r = urllib.request.urlopen(req, timeout=60); print("IndexNow:", r.status, len(urls), "urls")
-          except urllib.error.HTTPError as e:
-              print("IndexNow:", e.code, e.read()[:300]); raise
+          import time
+          for attempt in range(6):
+              try:
+                  r = urllib.request.urlopen(req, timeout=60); print("IndexNow:", r.status, len(urls), "urls"); break
+              except urllib.error.HTTPError as e:
+                  msg = e.read()[:300]; print("IndexNow:", e.code, msg)
+                  if b"SiteVerificationNotCompleted" in msg and attempt < 5:
+                      time.sleep(120); continue   # 初回は鍵の確認待ち
+                  raise
           PY
