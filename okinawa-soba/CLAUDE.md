@@ -103,5 +103,10 @@
      `node tools/i18n_check.mjs todo-N.<lang>` が OK になるまで直す。進み具合は `node tools/i18n_status.mjs`。
   4. `node tools/i18n_build.mjs` → `node tools/build_seo.mjs`（言語別ページ・sitemap を作り直す）
   5. `i18n/*.js`・`i18n/*.json`・`shop/`・`en/ ko/ zh-TW/ zh-CN/`・`sitemap.xml` も一緒にコミット＆プッシュ。
+- **繁体字(zh-TW)は、店名・メニュー名・本文のどこにもかな（ひらがな・カタカナ）を残さない。** 店名は中国語名にする（付け方は `i18n/GUIDE.md` の「繁体字の店名・固有名詞のルール」）。
+  既存260店の中国語名は `i18n/zh-names.json`（{日本語の店名: 中国語名}）。`i18n_check.mjs` は zh-TW にかなが残るとエラーにする。
+  あとから日本語が混ざったときの直し方: `node tools/zh_kana_extract.mjs 5` → 担当ごとに `i18n/work/zhfix/out-N.json` を書く（`node tools/zh_kana_check.mjs N`）→ `node tools/zh_kana_apply.mjs` → `i18n_build.mjs`。
+  括弧書きの日本語読みだけなら `node tools/zh_kana_strip.mjs` で外せる。
+- 画面・検索用ページには、日本語の店名を小さく添える（`.art-orig` / `.orig`。住所も日本語のまま：タクシー・地図アプリ用）。筆者名は言語ごとの表記（`tools/build_seo.mjs` の `AUTHORS`）。
 - 翻訳の注意: 星評価の「麺：/スープ：/具：」は自動で各言語に置き換わる。沖縄そば用語の訳は GUIDE.md の表に従う（新しい用語は表に足す）。
 - `i18n/work/`（翻訳の作業用）は作業リポジトリ側にだけコミットし、公開リポジトリ(okinawa-soba main)には入れない。

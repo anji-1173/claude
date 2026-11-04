@@ -11,7 +11,7 @@ import path from 'path';
 import { ROOT, readData } from './i18n_lib.mjs';
 
 const SITE = 'https://anji-1173.github.io/okinawa-soba/';
-const AUTHOR = 'アンジ';
+const AUTHORS = { ja: 'アンジ', en: 'Anji', ko: '안지', 'zh-TW': '安吉', 'zh-CN': '安吉' }; // 筆者名（その言語の表記）
 const TODAY = new Date().toISOString().slice(0, 10);
 const LANGS = ['ja', 'en', 'ko', 'zh-TW', 'zh-CN'];
 const OG_LOCALE = { ja: 'ja_JP', en: 'en_US', ko: 'ko_KR', 'zh-TW': 'zh_TW', 'zh-CN': 'zh_CN' };
@@ -121,6 +121,7 @@ for (const lang of LANGS) {
   const UI = { ...UI_ALL.ja, ...TRANS[lang].ui };
   const U = (k, ...a) => fmt(UI[k] ?? k, ...a);
   const up = lang === 'ja' ? '../../' : '../../../';
+  const AUTHOR = AUTHORS[lang];
   const paren = x => (lang === 'ja' || lang.startsWith('zh')) ? `（${x}）` : ` (${x})`;
   const list = SHOPS.filter(s => hasLang(s, lang));
   list.forEach((s, i) => {

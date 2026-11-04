@@ -22,6 +22,11 @@ function checkShop(k, a, b, lang) {
     if ((lang === 'en' || lang === 'ko') && kana.test(y)) W(`${k}[${i}]: かなが残っている: ${y.match(/[\u3041-\u3096\u30A1-\u30FA]+/)[0]}`);
   });
   if (a.desc.trim() && !b.desc.trim()) E(`${k}: desc が空`);
+  if (lang === 'zh-TW') { // 繁体字は店名・メニュー名もすべて中国語にする（かなを残さない）
+    const strip = s => String(s || '').replace(/<[^>]+>/g, '');
+    for (const fld of ['name', 'area', 'desc']) if (kana.test(strip(b[fld]))) E(`${k}: ${fld} にかなが残っている`);
+    (b.t || []).forEach((y, i) => { if (typeof y === 'string' && kana.test(strip(y))) E(`${k}[${i}]: かなが残っている: ${strip(y).match(/.{0,8}[\u3041-\u3096\u30A1-\u30FA]+.{0,6}/)[0]}`); });
+  }
   if ((lang === 'en' || lang === 'ko') && kana.test(b.desc)) W(`${k}: desc にかな`);
 }
 

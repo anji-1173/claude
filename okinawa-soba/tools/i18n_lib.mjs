@@ -46,10 +46,12 @@ const STAR_LABELS = {
   en: ['Noodles', 'Soup', 'Toppings'], ko: ['면', '수프', '토핑'],
   'zh-TW': ['麵', '湯頭', '配料'], 'zh-CN': ['面', '汤头', '配料'],
 };
+const STAR_NOTES = { en: ' (*for the fish cake)', ko: ' (※어묵 기준)', 'zh-TW': '（※針對魚板）', 'zh-CN': '（※针对鱼板）' };
 export function starsFor(p, lang) {
   const L = STAR_LABELS[lang];
   const colon = lang.startsWith('zh') ? '：' : ': ';
-  return p.replace('麺　　：', L[0] + colon).replace('スープ：', L[1] + colon).replace('具　　：', L[2] + colon);
+  return p.replace('麺　　：', L[0] + colon).replace('スープ：', L[1] + colon).replace('具　　：', L[2] + colon)
+    .replace('（※かまぼこに対して）', STAR_NOTES[lang]);
 }
 export function rebuild(items, units, lang) {
   return items.map((p, i) => {
