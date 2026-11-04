@@ -1,0 +1,38 @@
+# 公開後、更新したページを IndexNow（Bing など）に自動で知らせる
+name: indexnow
+on:
+  push:
+    branches: [main]
+    paths: ['sitemap.xml']
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: wait for Cloudflare deploy and submit
+        run: |
+          KEY=20937f63d3c0c32c70e6a792b25c1c0c
+          SITE=https://okinawa-soba.apps-okinawa.workers.dev/
+          for i in $(seq 1 40); do
+            [ "$(curl -s ${SITE}${KEY}.txt)" = "$KEY" ] && grep -q "$(git log -1 --format=%cs)" <(curl -s ${SITE}sitemap.xml) && break
+            sleep 15
+          done
+          python3 - <<'PY'
+          import json, re, urllib.request
+          urls = re.findall(r'<loc>([^<]+)</loc>', open('sitemap.xml').read())
+          body = json.dumps({"host": "okinawa-soba.apps-okinawa.workers.dev", "key": "20937f63d3c0c32c70e6a792b25c1c0c",
+                             "keyLocation": "https://okinawa-soba.apps-okinawa.workers.dev/20937f63d3c0c32c70e6a792b25c1c0c.txt",
+                             "urlList": urls}).encode()
+          req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
+                                       headers={"Content-Type": "application/json; charset=utf-8"})
+          import time
+          for attempt in range(6):
+              try:
+                  r = urllib.request.urlopen(req, timeout=60); print("IndexNow:", r.status, len(urls), "urls"); break
+              except urllib.error.HTTPError as e:
+                  msg = e.read()[:300]; print("IndexNow:", e.code, msg)
+                  if b"SiteVerificationNotCompleted" in msg and attempt < 5:
+                      time.sleep(120); continue   # 初回は鍵の確認待ち
+                  raise
+          PY
