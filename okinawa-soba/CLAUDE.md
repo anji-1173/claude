@@ -55,6 +55,10 @@
 - 記事の「画像」マーカー数より写真が少ない/位置が合わない分は無理に埋めず、未使用として報告する。
 
 ## 公開（デプロイ）手順
+- **本家（正式な公開URL）は Cloudflare: https://okinawa-soba.apps-okinawa.workers.dev/**（2026-11-04〜）。`anji-1173/okinawa-soba` の main に push すると Cloudflare Workers Builds（Worker名 okinawa-soba、設定は `wrangler.jsonc`）が自動で公開する。
+  - 公開の確認は `curl https://api.github.com/repos/anji-1173/okinawa-soba/commits/<sha>/check-runs` の `Workers Builds: okinawa-soba` が success になるまで（`[skip ci]` のコミットではビルドされない）。
+  - GitHub Pages（https://anji-1173.github.io/okinawa-soba/）は同じ内容のコピーとして残る。各ページの canonical / hreflang / sitemap / og:url / IndexNow はすべて Cloudflare のURLを指す（`tools/build_seo.mjs` の `SITE`）。
+  - robots.txt の Sitemap 行も Cloudflare のURL。Search Console は Cloudflare のURLプレフィックスのプロパティを登録して sitemap.xml を送る。
 - 作業リポジトリ: `anji-1173/claude` ブランチ `claude/okinawa-soba-blog-site-s7h78g`
 - 公開リポジトリ（GitHub Pages）: `anji-1173/okinawa-soba` ブランチ `main`（pub clone は scratchpad/pub）
 - 同じ index.html を両方へプッシュする。push は `-u origin <branch>`、ネットワーク失敗のみ指数バックオフで最大4回リトライ。
@@ -76,7 +80,7 @@
 
 ## 報告フォーマット（作業の最後に日本語で）
 追加した記事数 / 修正したピン / 除外したAIイラスト / 未使用写真 / 公開URL とビルド成功、を簡潔にまとめる。
-公開URL: https://anji-1173.github.io/okinawa-soba/
+公開URL: https://okinawa-soba.apps-okinawa.workers.dev/
 
 ## SEO（2026年11月〜・記事を追加/修正したら毎回）
 - 記事を index.html に入れたら、構文チェックの前に、下の「多言語表示」の手順（翻訳）のあと `node tools/build_seo.mjs` を実行する（okinawa-soba フォルダで）。
@@ -86,7 +90,7 @@
 - `shop/`・`sitemap.xml` も一緒にコミット＆プッシュする。
 - sitemap.xml が更新されて main に push されると `.github/workflows/indexnow.yml` が自動で Bing 等に通知する
   （鍵ファイル `20937f63d3c0c32c70e6a792b25c1c0c.txt` は消さない）。後片付けの git rm 対象に含めないこと。
-- Google は Search Console（URLプレフィックス https://anji-1173.github.io/okinawa-soba/）で sitemap.xml を登録済み／登録予定。
+- Google は Search Console（Cloudflare のURLプレフィックス https://okinawa-soba.apps-okinawa.workers.dev/）で sitemap.xml を登録済み／登録予定。
 
 ## 多言語表示（2026年11月〜）— 英語・韓国語・繁体字・簡体字
 - 右下の「🌐」ボタン（`i18n.js`）で 日本語 / English / 한국어 / 繁體中文 / 简体中文 を切り替える。**Google翻訳は使わず、事前に用意した翻訳を表示する**。

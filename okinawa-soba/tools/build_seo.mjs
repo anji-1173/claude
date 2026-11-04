@@ -10,7 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { ROOT, readData } from './i18n_lib.mjs';
 
-const SITE = 'https://anji-1173.github.io/okinawa-soba/';
+const SITE = 'https://okinawa-soba.apps-okinawa.workers.dev/';
 const AUTHORS = { ja: 'アンジ', en: 'Anji', ko: '안지', 'zh-TW': '安吉', 'zh-CN': '安吉' }; // 筆者名（その言語の表記）
 const TODAY = new Date().toISOString().slice(0, 10);
 const LANGS = ['ja', 'en', 'ko', 'zh-TW', 'zh-CN'];

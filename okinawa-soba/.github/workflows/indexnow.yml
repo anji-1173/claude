@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: wait for Pages and submit
+      - name: wait for Cloudflare deploy and submit
         run: |
           KEY=20937f63d3c0c32c70e6a792b25c1c0c
-          SITE=https://anji-1173.github.io/okinawa-soba/
+          SITE=https://okinawa-soba.apps-okinawa.workers.dev/
           for i in $(seq 1 40); do
             [ "$(curl -s ${SITE}${KEY}.txt)" = "$KEY" ] && grep -q "$(git log -1 --format=%cs)" <(curl -s ${SITE}sitemap.xml) && break
             sleep 15
@@ -21,8 +21,8 @@ jobs:
           python3 - <<'PY'
           import json, re, urllib.request
           urls = re.findall(r'<loc>([^<]+)</loc>', open('sitemap.xml').read())
-          body = json.dumps({"host": "anji-1173.github.io", "key": "20937f63d3c0c32c70e6a792b25c1c0c",
-                             "keyLocation": "https://anji-1173.github.io/okinawa-soba/20937f63d3c0c32c70e6a792b25c1c0c.txt",
+          body = json.dumps({"host": "okinawa-soba.apps-okinawa.workers.dev", "key": "20937f63d3c0c32c70e6a792b25c1c0c",
+                             "keyLocation": "https://okinawa-soba.apps-okinawa.workers.dev/20937f63d3c0c32c70e6a792b25c1c0c.txt",
                              "urlList": urls}).encode()
           req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
                                        headers={"Content-Type": "application/json; charset=utf-8"})
