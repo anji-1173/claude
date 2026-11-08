@@ -26,10 +26,12 @@
       var m = location.pathname.match(/^(.*?)\/?(?:(?:en|ko|zh-TW|zh-CN)\/)?shop\/(.*)$/);
       if (alt && m) { location.href = m[1] + '/' + (code === 'ja' ? '' : code + '/') + 'shop/' + m[2] + location.search; return; }
     }
-    // トップ：?lang= を外して読み込み直す（保存した言語で表示される）
+    // トップ・記事（#shop/…）：?lang= を外してから、必ずページを読み込み直す（保存した言語で表示される）。
+    // ※ #shop/… が付いたURLへ location.replace しても「同じページ内の移動」扱いで読み込み直されないため reload を使う
     var u = new URL(location.href);
     u.searchParams.delete('lang');
-    location.replace(u.pathname + u.search + u.hash);
+    try { history.replaceState(history.state, '', u.pathname + u.search + u.hash); } catch (e) {}
+    location.reload();
   }
 
   function build() {
