@@ -28,6 +28,11 @@ for (const l of LANGS.slice(1)) {
   TRANS[l] = JSON.parse(src.slice(src.indexOf('window.I18N=') + 'window.I18N='.length).replace(/;\s*$/, ''));
 }
 const REGION_ORDER = ['naha', 'south', 'central', 'north', 'other'];
+// うんちくコーナー（i18n/trivia.json）
+const TRV = JSON.parse(fs.readFileSync(path.join(ROOT, 'i18n', 'trivia.json'), 'utf8'));
+const triviaOf = l => (l === 'ja' ? TRV.ja : (TRANS[l] && TRANS[l].trivia ? TRANS[l].trivia.topics : null));
+const triviaURL = l => SITE + langDir(l) + 'trivia/';
+const triviaLangs = () => LANGS.filter(l => TRANS[l] && triviaOf(l));
 
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const strip = s => String(s ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
@@ -113,6 +118,7 @@ function scoreOf(items) {
 }
 
 fs.rmSync(path.join(ROOT, 'shop'), { recursive: true, force: true });
+fs.rmSync(path.join(ROOT, 'trivia'), { recursive: true, force: true });
 for (const l of LANGS.slice(1)) fs.rmSync(path.join(ROOT, l), { recursive: true, force: true });
 
 const indexed = []; // {s, lang, url}
@@ -230,13 +236,95 @@ ${renderBody(items, up)}
     fs.writeFileSync(path.join(dir, 'index.html'), page);
     indexed.push({ s, lang, url, alts });
   });
-  console.log(`${lang}: ${list.length} pages`);
+  // ---- うんちくのページ（全話題を1ページに。アプリ側の #trivia と同じ内容）
+  const topics = triviaOf(lang);
+  if (topics) {
+    const upT = lang === 'ja' ? '../' : '../../';
+    const home = `${upT}${lang === 'ja' ? '' : '?lang=' + lang}`;
+    const tUrl = triviaURL(lang);
+    const tTitle = `${U('trivia_title')}${lang === 'ja' || lang.startsWith('zh') ? '｜' : ' | '}${U('site')}`;
+    const tDesc = cut(strip(U('trivia_lead')), 120);
+    const byName = Object.fromEntries(SHOPS.map(s => [s.name, s]));
+    const nmOf = s2 => (lang === 'ja' ? s2.name : TRANS[lang].shops[s2.name].name);
+    const bodyOf = t => t.body.map(p => (p && p.list) ? `<ul>${p.list.map(x => `<li>${x}</li>`).join('')}</ul>` : `<p>${p}</p>`).join('\n');
+    const relOf = t => (TRV.shops[t.id] || []).map(n => byName[n]).filter(s2 => s2 && hasLang(s2, lang));
+    const ldT = {
+      '@context': 'https://schema.org', '@type': 'Article', headline: U('trivia_title'), url: tUrl, inLanguage: lang,
+      author: { '@type': 'Person', name: AUTHOR }, publisher: { '@type': 'Organization', name: U('site'), url: SITE },
+      about: 'Okinawa soba', articleSection: topics.map(t => t.title),
+    };
+    const pageT = `<!doctype html>
+<html lang="${lang}" data-static>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(tTitle)}</title>
+<meta name="description" content="${esc(tDesc)}">
+<link rel="canonical" href="${esc(tUrl)}">
+${triviaLangs().map(l2 => `<link rel="alternate" hreflang="${l2}" href="${esc(triviaURL(l2))}">`).join('\n')}
+<link rel="alternate" hreflang="x-default" href="${esc(triviaURL('ja'))}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="${esc(U('site'))}">
+<meta property="og:title" content="${esc(U('trivia_title'))}">
+<meta property="og:description" content="${esc(tDesc)}">
+<meta property="og:url" content="${esc(tUrl)}">
+<meta property="og:image" content="${SITE}photos/002/01.jpg">
+<meta property="og:locale" content="${OG_LOCALE[lang]}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#043a5c">
+<link rel="icon" type="image/png" href="${upT}icon-192.png">
+<link rel="apple-touch-icon" href="${upT}icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>${CSS}
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.6rem;margin:1.2rem 0 2rem}
+.toc a{display:flex;gap:.6rem;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:.7rem .9rem;text-decoration:none;color:var(--text);font-size:.92rem}
+.topic{border-top:1px solid var(--line);padding-top:1.6rem;margin-top:1.8rem}
+.topic h2{font-family:var(--serif);color:var(--cream);font-size:1.35rem;line-height:1.5;margin-bottom:.6rem}
+.topic ul{list-style:none;margin:1rem 0}
+.topic li{padding:.6rem 0;border-top:1px dashed var(--line)}
+.rel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem}
+.rel a{display:inline-block;margin:.2rem .6rem .2rem 0}
+.note{color:var(--muted);font-size:.76rem;margin-top:2rem}
+</style>
+<script type="application/ld+json">${JSON.stringify(ldT).replace(/</g, '\\u003c')}</script>
+</head>
+<body>
+<header class="top"><a href="${home}">🍜 ${esc(U('site'))}</a></header>
+<main>
+<nav class="crumb"><a href="${home}">${esc(U('sp_top'))}</a> › ${esc(U('trivia_title'))}</nav>
+<div class="eyebrow">${esc(U('site'))}</div>
+<h1>${esc(U('trivia_title'))}</h1>
+<p class="lead">${esc(U('trivia_lead'))}</p>
+<nav class="toc">${topics.map(t => `<a href="#${t.id}"><span>${t.icon}</span><span>${t.title}</span></a>`).join('')}</nav>
+<article class="body">
+${topics.map(t => `<section class="topic" id="${t.id}">
+<h2>${t.icon} ${t.title}</h2>
+${bodyOf(t)}
+${relOf(t).length ? `<div class="rel"><b>🍜 ${esc(U('trivia_related'))}</b><br>${relOf(t).map(s2 => `<a href="../shop/${encodeURIComponent(slugFS(s2.name))}/">${esc(nmOf(s2))}</a>`).join('')}</div>` : ''}
+</section>`).join('\n')}
+</article>
+<p class="note">${esc(U('trivia_note'))}</p>
+<a class="cta" href="${home}#trivia">${esc(U('sp_cta', SHOPS.length))}</a>
+</main>
+<footer>${esc(U('sp_footer'))}<br>© ${esc(U('site'))}（${AUTHOR}）</footer>
+<script src="${upT}i18n.js" defer></script>
+</body>
+</html>
+`;
+    const dirT = path.join(ROOT, langDir(lang), 'trivia');
+    fs.mkdirSync(dirT, { recursive: true });
+    fs.writeFileSync(path.join(dirT, 'index.html'), pageT);
+  }
+  console.log(`${lang}: ${list.length} pages${topics ? ' + trivia' : ''}`);
 }
 
 // ---- sitemap.xml（言語ちがいのページを hreflang で結ぶ）
 const sm = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <url><loc>${SITE}</loc><lastmod>${TODAY}</lastmod><priority>1.0</priority></url>
+${triviaLangs().map(l => `<url><loc>${esc(triviaURL(l))}</loc><lastmod>${TODAY}</lastmod><priority>0.8</priority>${triviaLangs().map(l2 => `<xhtml:link rel="alternate" hreflang="${l2}" href="${esc(triviaURL(l2))}"/>`).join('')}<xhtml:link rel="alternate" hreflang="x-default" href="${esc(triviaURL('ja'))}"/></url>`).join('\n')}
 ${indexed.map(x => `<url><loc>${esc(x.url)}</loc><lastmod>${TODAY}</lastmod>${x.alts.map(l2 => `<xhtml:link rel="alternate" hreflang="${l2}" href="${esc(pageURL(x.s, l2))}"/>`).join('')}<xhtml:link rel="alternate" hreflang="x-default" href="${esc(pageURL(x.s, 'ja'))}"/></url>`).join('\n')}
 </urlset>
 `;
@@ -261,4 +349,4 @@ if (html.includes(S)) html = html.slice(0, html.indexOf(S)) + block + html.slice
 else html = html.replace('<footer>', block + '\n\n<footer>');
 fs.writeFileSync(path.join(ROOT, 'index.html'), html);
 
-console.log('sitemap urls:', indexed.length + 1);
+console.log('sitemap urls:', indexed.length + 1 + triviaLangs().length);

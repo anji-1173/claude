@@ -37,6 +37,7 @@
   if(lang!=='ja') document.write('<script src="i18n/'+lang+'.js"><\/script>');
 })();
 </script>
+<script src="i18n/trivia-ja.js"></script>
 <link rel="manifest" href="app.webmanifest">
 <meta name="theme-color" content="#043a5c">
 <meta name="mobile-web-app-capable" content="yes">
@@ -449,6 +450,35 @@ section{margin-top:5rem}
 .map-info a .mi-area{color:var(--muted);font-size:.72rem;margin-left:.5rem}
 
 .art-orig{color:var(--muted);font-size:.85rem;margin:-.2rem 0 .6rem;letter-spacing:.05em}
+/* ===== うんちくコーナー ===== */
+#trivia-entry{margin-top:3.5rem}
+.tv-banner{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.6rem;background:linear-gradient(135deg,#043a5c,#0a7ea4);color:#fff;border-radius:14px;padding:1.5rem 1.7rem;box-shadow:0 10px 30px rgba(4,58,92,.18)}
+.tv-banner .tv-b-txt{flex:1 1 16em;min-width:0}
+.tv-banner h2{font-family:var(--serif);font-size:1.45rem;letter-spacing:.06em;margin-bottom:.3rem;color:#fff}
+.tv-banner p{font-size:.88rem;line-height:1.8;color:#d8f1fb}
+.tv-banner a.tv-go{flex:0 0 auto;background:#fff;color:#043a5c;font-weight:700;text-decoration:none;border-radius:999px;padding:.75rem 1.5rem;font-size:.95rem;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.tv-banner a.tv-go:hover{background:#7fe3ff}
+.tv-ic{font-size:2.6rem;line-height:1;margin-bottom:.5rem}
+.tv-lead{color:var(--muted);font-size:.95rem;line-height:1.9;margin:0 0 1.6rem;max-width:40em}
+.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.9rem;margin-bottom:1.6rem}
+.tv-btn{display:flex;align-items:center;gap:.9rem;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;text-decoration:none;color:var(--text);transition:transform .15s,box-shadow .15s,border-color .15s;min-height:4.6rem}
+.tv-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(10,126,164,.16);border-color:#0a7ea4}
+.tv-btn .ic{font-size:1.9rem;line-height:1;flex:0 0 auto}
+.tv-btn .tt{display:block;font-family:var(--serif);font-weight:700;color:#083c58;font-size:1.02rem;line-height:1.45}
+.tv-btn .ld{display:block;color:var(--muted);font-size:.78rem;line-height:1.5;margin-top:.15rem}
+.tv-note{color:var(--muted);font-size:.76rem;line-height:1.8;max-width:44em}
+.tv-body p{font-size:1rem;color:#20495f;line-height:2.1;margin-bottom:1.4em;max-width:40em}
+.tv-body ul{list-style:none;margin:0 0 1.4em;max-width:40em}
+.tv-body li{position:relative;padding:.7rem 0 .7rem 1.2rem;border-top:1px dashed var(--line);line-height:1.9;color:#20495f}
+.tv-body li::before{content:"";position:absolute;left:.1rem;top:1.45rem;width:.42rem;height:.42rem;border-radius:50%;background:#0a7ea4}
+.tv-body li b{color:#083c58}
+.tv-rel{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:2rem 0;max-width:44em}
+.tv-rel h3,.tv-more h3{font-family:var(--serif);font-size:.98rem;color:#083c58;margin-bottom:.7rem}
+.tv-chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.tv-chips a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.35rem .9rem;font-size:.85rem;color:#0a6f90;text-decoration:none}
+.tv-chips a:hover{border-color:#0a7ea4;background:#f0f9fc}
+.tv-more{margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--line)}
+@media(max-width:520px){.tv-grid{grid-template-columns:1fr}.tv-banner{padding:1.2rem}.tv-banner a.tv-go{width:100%;text-align:center}}
 /* ===== お店別ページ一覧（SEO） ===== */
 .seo-index{max-width:1100px;margin:0 auto 2rem;padding:0 16px;font-size:.85rem}
 .seo-index details{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:1rem 1.4rem}
@@ -593,6 +623,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
     <a href="#shops" onclick="location.hash='';setTimeout(()=>document.getElementById('shops').scrollIntoView(),50);return false;">お店一覧</a>
     <a href="#map-sec" onclick="location.hash='';setTimeout(()=>document.getElementById('map-sec').scrollIntoView(),50);return false;">マップ</a>
     <a href="#archive-sec" onclick="location.hash='';setTimeout(()=>document.getElementById('archive-sec').scrollIntoView(),50);return false;">全記事</a>
+    <a href="#trivia">うんちく</a>
   </div>
 </nav>
 
@@ -611,6 +642,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
     <div class="hero-cta">
       <a class="btn btn-gold" href="#shops">お店をさがす</a>
       <a class="btn btn-ghost" href="#map-sec">マップでさがす</a>
+      <a class="btn btn-ghost" href="#trivia">沖縄そばのうんちく</a>
     </div>
     <div class="stats">
       <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
@@ -622,6 +654,16 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
 </header>
 
 <main id="home-main">
+
+<section id="trivia-entry">
+  <div class="tv-banner">
+    <div class="tv-b-txt">
+      <h2>沖縄そばのうんちく</h2>
+      <p>歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。</p>
+    </div>
+    <a class="tv-go" href="trivia/" onclick="location.hash='trivia';return false;">うんちくを読む →</a>
+  </div>
+</section>
 
 
 
@@ -700,7 +742,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
 // ===== 多言語：表示用ヘルパー（データのキーは日本語の店名のまま） =====
 const LANG = window.SOBA_LANG || "ja";
 const I18 = (LANG!=="ja" && window.I18N) ? window.I18N : null;
-const UI_JA = {"lang_name": "日本語", "title": "沖縄そば巡りの旅｜沖縄本島の沖縄そば屋 食べ歩きレビュー", "meta_desc": "沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を、写真付きの実食レビューと麺・スープ・具の星評価で紹介。地図からお店も探せます。", "site": "沖縄そば巡りの旅", "brand": "沖縄そば<span class=\"wave\">巡り</span>の旅", "brand_sub": "沖縄本島・沖縄そば屋 全店制覇をめざす食べ歩きブログ", "nav_search_ph": "🔍 店名・地名・キーワード", "nav_shops": "お店一覧", "nav_map": "マップ", "nav_archive": "全記事", "hero_tate": "一杯入魂", "hero_h1": "すすった数だけ、<br>島を知る。", "hero_goal": "沖縄本島・沖縄そば屋 <span class=\"accent\">全店制覇</span> への道", "hero_sub": "沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を\n      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、\n      24時間無人営業の変わり種まで──今日もどこかで、すすっています。", "btn_shops": "お店をさがす", "btn_map": "マップでさがす", "stat_shops": "食べ歩いた店", "stat_reports": "巡礼レポート", "stat_all": "全域", "stat_cover": "本島カバー", "sec_shops": "お店をさがす", "sec_shops_lead": "エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。", "r_all": "すべて", "r_naha": "那覇", "r_south": "南部", "r_central": "中部", "r_north": "北部", "r_other": "その他", "tag_オススメ": "オススメ", "tag_オススメにも引けを取らない": "オススメにも引けを取らない", "tag_変わり種": "変わり種", "tag_古民家": "古民家", "tag_閉店": "閉店", "search_ph": "店名・キーワードで検索", "count": "{0}軒", "empty": "条件に合うお店が見つかりませんでした。フィルターを変えてみてください。", "honto": "沖縄本島", "nth": "{0}軒目", "photos": "📷 {0}枚", "read": "記事を読む", "read_arrow": "→ 記事を読む", "card_aria": "{0}の記事を読む", "photo_alt": "{0}の沖縄そば", "gallery_alt": "{0}の写真{1}", "sec_map": "マップでさがす", "map_lead": "ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）", "map_ph_real": "🍜 地図のピンか、下のエリアボタンを選んでください。", "map_ph_svg": "🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。", "map_aria": "沖縄本島の沖縄そばマップ", "sea_ecs": "東シナ海", "sea_pac": "太平洋", "yanbaru": "やんばる", "motobu": "本部半島", "naha_label": "那覇", "gmaps": "Googleマップ", "sec_archive": "全記事アーカイブ", "archive_lead": "本サイトに掲載中の食べ歩き記事の一覧です。店名を選ぶと記事が読めます。", "archive_summary": "記事リストをひらく", "archive_item": "沖縄そば巡りの旅「{0}」編", "back": "← お店一覧にもどる", "prev": "← 前のお店", "next": "次のお店 →", "footer": "沖縄本島の沖縄そば屋、全店制覇が目標。<br>\n    食べ歩いたお店を少しずつ紹介しています。", "lb_close": "閉じる", "lb_prev": "前の写真", "lb_next": "次の写真", "lb_alt": "{0} の写真 {1}", "seo_index": "お店別の記事ページ一覧（{0}軒）", "reg_naha": "那覇エリア", "reg_south": "南部エリア", "reg_central": "中部エリア", "reg_north": "北部エリア", "reg_other": "沖縄本島", "lang_btn": "Language", "sp_title": "{0}（{1}）の沖縄そばレビュー", "sp_top": "トップ", "sp_info": "お店の情報", "sp_name": "店名", "sp_area": "エリア", "sp_addr": "住所", "sp_gmaps": "Googleマップで見る", "sp_cta": "地図やほかのお店も見る（{0}軒）", "sp_rating": "評価 {0}点/15点", "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。", "sp_original": "原文（日本語）", "gsi_attr": "国土地理院（地理院タイル）"};
+const UI_JA = {"lang_name": "日本語", "title": "沖縄そば巡りの旅｜沖縄本島の沖縄そば屋 食べ歩きレビュー", "meta_desc": "沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を、写真付きの実食レビューと麺・スープ・具の星評価で紹介。地図からお店も探せます。", "site": "沖縄そば巡りの旅", "brand": "沖縄そば<span class=\"wave\">巡り</span>の旅", "brand_sub": "沖縄本島・沖縄そば屋 全店制覇をめざす食べ歩きブログ", "nav_search_ph": "🔍 店名・地名・キーワード", "nav_shops": "お店一覧", "nav_map": "マップ", "nav_archive": "全記事", "hero_tate": "一杯入魂", "hero_h1": "すすった数だけ、<br>島を知る。", "hero_goal": "沖縄本島・沖縄そば屋 <span class=\"accent\">全店制覇</span> への道", "hero_sub": "沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を\n      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、\n      24時間無人営業の変わり種まで──今日もどこかで、すすっています。", "btn_shops": "お店をさがす", "btn_map": "マップでさがす", "stat_shops": "食べ歩いた店", "stat_reports": "巡礼レポート", "stat_all": "全域", "stat_cover": "本島カバー", "sec_shops": "お店をさがす", "sec_shops_lead": "エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。", "r_all": "すべて", "r_naha": "那覇", "r_south": "南部", "r_central": "中部", "r_north": "北部", "r_other": "その他", "tag_オススメ": "オススメ", "tag_オススメにも引けを取らない": "オススメにも引けを取らない", "tag_変わり種": "変わり種", "tag_古民家": "古民家", "tag_閉店": "閉店", "search_ph": "店名・キーワードで検索", "count": "{0}軒", "empty": "条件に合うお店が見つかりませんでした。フィルターを変えてみてください。", "honto": "沖縄本島", "nth": "{0}軒目", "photos": "📷 {0}枚", "read": "記事を読む", "read_arrow": "→ 記事を読む", "card_aria": "{0}の記事を読む", "photo_alt": "{0}の沖縄そば", "gallery_alt": "{0}の写真{1}", "sec_map": "マップでさがす", "map_lead": "ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）", "map_ph_real": "🍜 地図のピンか、下のエリアボタンを選んでください。", "map_ph_svg": "🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。", "map_aria": "沖縄本島の沖縄そばマップ", "sea_ecs": "東シナ海", "sea_pac": "太平洋", "yanbaru": "やんばる", "motobu": "本部半島", "naha_label": "那覇", "gmaps": "Googleマップ", "sec_archive": "全記事アーカイブ", "archive_lead": "本サイトに掲載中の食べ歩き記事の一覧です。店名を選ぶと記事が読めます。", "archive_summary": "記事リストをひらく", "archive_item": "沖縄そば巡りの旅「{0}」編", "back": "← お店一覧にもどる", "prev": "← 前のお店", "next": "次のお店 →", "footer": "沖縄本島の沖縄そば屋、全店制覇が目標。<br>\n    食べ歩いたお店を少しずつ紹介しています。", "lb_close": "閉じる", "lb_prev": "前の写真", "lb_next": "次の写真", "lb_alt": "{0} の写真 {1}", "seo_index": "お店別の記事ページ一覧（{0}軒）", "reg_naha": "那覇エリア", "reg_south": "南部エリア", "reg_central": "中部エリア", "reg_north": "北部エリア", "reg_other": "沖縄本島", "lang_btn": "Language", "sp_title": "{0}（{1}）の沖縄そばレビュー", "sp_top": "トップ", "sp_info": "お店の情報", "sp_name": "店名", "sp_area": "エリア", "sp_addr": "住所", "sp_gmaps": "Googleマップで見る", "sp_cta": "地図やほかのお店も見る（{0}軒）", "sp_rating": "評価 {0}点/15点", "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。", "sp_original": "原文（日本語）", "gsi_attr": "国土地理院（地理院タイル）", "nav_trivia": "うんちく", "btn_trivia": "沖縄そばのうんちく", "trivia_title": "沖縄そばのうんちく", "trivia_sub": "Soba Trivia", "trivia_lead": "歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。", "trivia_pick": "気になる話題を選んでください。", "trivia_open": "うんちくを読む →", "trivia_back_home": "← トップにもどる", "trivia_back_list": "← うんちく一覧にもどる", "trivia_related": "このブログで食べ歩いたお店", "trivia_more": "ほかの話題", "trivia_note": "※年号などは、沖縄生麺協同組合や新聞各社などの公開資料をもとにまとめました。諸説あるものは、その旨を書いています。"};
 function U(k){ let s = (I18 && I18.ui[k]!=null) ? I18.ui[k] : (UI_JA[k]!=null ? UI_JA[k] : k);
   for(let i=1;i<arguments.length;i++) s = s.split("{"+(i-1)+"}").join(arguments[i]); return s; }
 const TR = s => (I18 && I18.shops[s.name]) || null;
@@ -6780,6 +6822,42 @@ function renderArticle(slug){
   window.scrollTo({top:0, behavior:"instant"});
 }
 
+// ===== うんちくコーナー（#trivia＝話題のボタン一覧、#trivia/<id>＝説明） =====
+const TRIVIA = (I18 && I18.trivia) || window.TRIVIA_JA || {topics:[], shops:{}};
+function triviaBtn(t){
+  return `<a class="tv-btn" href="#trivia/${t.id}"><span class="ic">${t.icon}</span><span><span class="tt">${t.title}</span><span class="ld">${t.lead}</span></span></a>`;
+}
+function renderTrivia(id){
+  const topics = TRIVIA.topics || [];
+  const t = topics.find(x=>x.id===id);
+  if(!t){
+    artView.innerHTML = `
+      <a class="art-back" href="#" onclick="location.hash='';return false;">${U("trivia_back_home")}</a>
+      <div class="art-head">
+        <div class="art-eyebrow">${U("site")}</div>
+        <h1>${U("trivia_title")}</h1>
+      </div>
+      <p class="tv-lead">${U("trivia_lead")}<br>${U("trivia_pick")}</p>
+      <div class="tv-grid">${topics.map(triviaBtn).join("")}</div>
+      <p class="tv-note">${U("trivia_note")}</p>`;
+  }else{
+    const byName = Object.fromEntries(SOBA_SHOPS.map(s=>[s.name,s]));
+    const rel = ((TRIVIA.shops||{})[t.id]||[]).map(n=>byName[n]).filter(Boolean);
+    artView.innerHTML = `
+      <a class="art-back" href="#trivia">${U("trivia_back_list")}</a>
+      <div class="art-head">
+        <div class="art-eyebrow">${U("trivia_title")}</div>
+        <div class="tv-ic">${t.icon}</div>
+        <h1>${t.title}</h1>
+      </div>
+      <div class="tv-body">${t.body.map(p=> (p && p.list) ? `<ul>${p.list.map(x=>`<li>${x}</li>`).join("")}</ul>` : `<p>${p}</p>`).join("")}</div>
+      ${rel.length ? `<div class="tv-rel"><h3>🍜 ${U("trivia_related")}</h3><div class="tv-chips">${rel.map(s=>`<a href="#shop/${slugOf(s)}">${nm(s)}</a>`).join("")}</div></div>` : ""}
+      <div class="tv-more"><h3>${U("trivia_more")}</h3><div class="tv-grid">${topics.filter(x=>x.id!==t.id).map(triviaBtn).join("")}</div></div>
+      <a class="art-back" href="#trivia" style="margin-top:1.5rem">${U("trivia_back_list")}</a>`;
+  }
+  window.scrollTo({top:0, behavior:"instant"});
+}
+
 // ===== ルーター =====
 function route(){
   const h = decodeURIComponent(location.hash.replace(/^#/,""));
@@ -6788,6 +6866,10 @@ function route(){
     document.body.classList.add("article-mode");
     artView.hidden = false;
     renderArticle(slug);
+  }else if(h==="trivia" || h.startsWith("trivia/")){
+    document.body.classList.add("article-mode");
+    artView.hidden = false;
+    renderTrivia(h.slice(7));
   }else{
     document.body.classList.remove("article-mode");
     artView.hidden = true;
@@ -6811,9 +6893,11 @@ function applyUI(){
   html(q(".brand-title"),"brand"); txt(q(".brand-sub"),"brand_sub");
   const ns = q("#nav-search"); if(ns) ns.placeholder = U("nav_search_ph");
   const sb = q("#search"); if(sb) sb.placeholder = U("search_ph");
-  qa("nav .links a").forEach((a,i)=>txt(a,["nav_shops","nav_map","nav_archive"][i]));
+  qa("nav .links a").forEach((a,i)=>txt(a,["nav_shops","nav_map","nav_archive","nav_trivia"][i]));
   txt(q(".hero-tate"),"hero_tate"); html(q(".hero h1"),"hero_h1"); html(q(".hero-goal"),"hero_goal"); html(q(".hero-sub"),"hero_sub");
-  qa(".hero-cta a").forEach((a,i)=>txt(a,["btn_shops","btn_map"][i]));
+  qa(".hero-cta a").forEach((a,i)=>txt(a,["btn_shops","btn_map","btn_trivia"][i]));
+  txt(q(".tv-banner h2"),"trivia_title"); txt(q(".tv-banner p"),"trivia_lead");
+  const tg0 = q(".tv-banner a.tv-go"); if(tg0){ tg0.textContent = U("trivia_open"); tg0.setAttribute("href", LANG + "/trivia/"); }
   qa(".stats .stat .label").forEach((e,i)=>txt(e,["stat_shops","stat_reports","stat_cover"][i]));
   const st3 = qa(".stats .stat .num")[2]; txt(st3,"stat_all");
   txt(q("#shops .sec-head h2"),"sec_shops"); txt(q("#shops .sec-lead"),"sec_shops_lead");
@@ -6846,7 +6930,7 @@ buildMap();
 route();
 
 // ===== PWA / 自動更新（ネットワーク優先SW）=====
-const APP_VERSION = '2026.11.08.1';
+const APP_VERSION = '2026.11.10.1';
 (function(){ const vc = document.getElementById('app-version'); if(vc) vc.textContent = 'ver ' + APP_VERSION; })();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

@@ -15,6 +15,14 @@ const { ARTICLES, SHOPS } = readData();
 const byName = Object.fromEntries(SHOPS.map(s => [s.name, s]));
 const UI = JSON.parse(fs.readFileSync(path.join(ROOT, 'i18n', 'ui.json'), 'utf8'));
 const JA = loadJa(); // 翻訳に出した時点の原文
+// うんちくコーナー（i18n/trivia.json：{shops:{話題id:[店名]}, ja:[…], en:[…], ko:[…], 'zh-TW':[…]}）
+const TRV = JSON.parse(fs.readFileSync(path.join(ROOT, 'i18n', 'trivia.json'), 'utf8'));
+const deep = (v, conv) => typeof v === 'string' ? conv(v) : Array.isArray(v) ? v.map(x => deep(x, conv)) : (v && typeof v === 'object') ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, k === 'id' || k === 'icon' ? x : deep(x, conv)])) : v;
+for (const l of ['en', 'ko', 'zh-TW']) {
+  if (TRV[l].length !== TRV.ja.length || TRV[l].some((x, i) => x.id !== TRV.ja[i].id || x.body.length !== TRV.ja[i].body.length)) throw new Error('trivia.json: ' + l + ' の話題・段落の数が日本語と合っていません');
+}
+if (/[\u3041-\u3096\u30A1-\u30FA]/.test(JSON.stringify(TRV['zh-TW']))) throw new Error('trivia.json: zh-TW にかなが残っています');
+for (const [id, names] of Object.entries(TRV.shops)) for (const n of names) if (!byName[n]) throw new Error('trivia.json: 店が見つかりません ' + n);
 
 function store(lang) {
   const f = path.join(ROOT, 'i18n', `${lang}.json`);
@@ -49,10 +57,11 @@ function runtime(lang, st, conv = x => x) {
     : UI[lang];
   if (lang === 'zh-CN') { ui.lang_name = '简体中文'; ui.lang_btn = '简体中文'; }
   fs.writeFileSync(path.join(ROOT, 'i18n', `${lang}.js`),
-    '// 自動生成（tools/i18n_build.mjs）。手で編集しない\nwindow.I18N=' + JSON.stringify({ lang, ui, shops }) + ';\n');
+    '// 自動生成（tools/i18n_build.mjs）。手で編集しない\nwindow.I18N=' + JSON.stringify({ lang, ui, shops, trivia: { topics: lang === 'zh-CN' ? deep(TRV['zh-TW'], conv) : TRV[lang], shops: TRV.shops } }) + ';\n');
   console.log(lang, '店', Object.keys(shops).length, '/', SHOPS.length, '（最新', fresh, '/ 原文変更あり', stale, '）');
 }
 
 for (const lang of ['en', 'ko', 'zh-TW']) runtime(lang, store(lang));
 runtime('zh-CN', JSON.parse(fs.readFileSync(path.join(ROOT, 'i18n', 'zh-TW.json'), 'utf8')), tw2cn);
+fs.writeFileSync(path.join(ROOT, 'i18n', 'trivia-ja.js'), '// 自動生成（tools/i18n_build.mjs）。元は i18n/trivia.json\nwindow.TRIVIA_JA=' + JSON.stringify({ topics: TRV.ja, shops: TRV.shops }) + ';\n');
 fs.writeFileSync(path.join(ROOT, 'i18n', 'ui-ja.js'), '// 自動生成\nwindow.I18N_JA=' + JSON.stringify(UI.ja) + ';\n');

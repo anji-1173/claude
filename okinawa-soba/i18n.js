@@ -23,8 +23,8 @@
     var alt = document.querySelector('link[rel="alternate"][hreflang="' + code + '"]');
     if (document.documentElement.hasAttribute('data-static')) {
       // お店ページ：同じお店のその言語のページへ（いま見ているサイトからの相対アドレスで移動する）
-      var m = location.pathname.match(/^(.*?)\/?(?:(?:en|ko|zh-TW|zh-CN)\/)?shop\/(.*)$/);
-      if (alt && m) { location.href = m[1] + '/' + (code === 'ja' ? '' : code + '/') + 'shop/' + m[2] + location.search; return; }
+      var m = location.pathname.match(/^(.*?)\/?(?:(?:en|ko|zh-TW|zh-CN)\/)?((?:shop|trivia)\/.*)$/);
+      if (alt && m) { location.href = m[1] + '/' + (code === 'ja' ? '' : code + '/') + m[2] + location.search; return; }
     }
     // トップ・記事（#shop/…）：?lang= を外してから、必ずページを読み込み直す（保存した言語で表示される）。
     // ※ #shop/… が付いたURLへ location.replace しても「同じページ内の移動」扱いで読み込み直されないため reload を使う

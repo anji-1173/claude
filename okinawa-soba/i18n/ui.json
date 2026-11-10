@@ -85,7 +85,19 @@
   "sp_rating": "評価 {0}点/15点",
   "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。",
   "sp_original": "原文（日本語）",
-  "gsi_attr": "国土地理院（地理院タイル）"
+  "gsi_attr": "国土地理院（地理院タイル）",
+  "nav_trivia": "うんちく",
+  "btn_trivia": "沖縄そばのうんちく",
+  "trivia_title": "沖縄そばのうんちく",
+  "trivia_sub": "Soba Trivia",
+  "trivia_lead": "歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。",
+  "trivia_pick": "気になる話題を選んでください。",
+  "trivia_open": "うんちくを読む →",
+  "trivia_back_home": "← トップにもどる",
+  "trivia_back_list": "← うんちく一覧にもどる",
+  "trivia_related": "このブログで食べ歩いたお店",
+  "trivia_more": "ほかの話題",
+  "trivia_note": "※年号などは、沖縄生麺協同組合や新聞各社などの公開資料をもとにまとめました。諸説あるものは、その旨を書いています。"
  },
  "en": {
   "lang_name": "English",
@@ -173,7 +185,19 @@
   "sp_rating": "Rating {0}/15",
   "sp_footer": "My goal: eat at every Okinawa soba shop on Okinawa Island.",
   "sp_original": "Original (Japanese)",
-  "gsi_attr": "Geospatial Information Authority of Japan (GSI tiles)"
+  "gsi_attr": "Geospatial Information Authority of Japan (GSI tiles)",
+  "nav_trivia": "Trivia",
+  "btn_trivia": "Okinawa soba trivia",
+  "trivia_title": "Okinawa Soba Trivia",
+  "trivia_sub": "Soba Trivia",
+  "trivia_lead": "History, Okinawa Soba Day, wood-ash noodles, tojin soba, broth… Knowing the story makes every bowl taste better.",
+  "trivia_pick": "Choose a topic you are curious about.",
+  "trivia_open": "Read the trivia →",
+  "trivia_back_home": "← Back to top",
+  "trivia_back_list": "← Back to all topics",
+  "trivia_related": "Shops on this blog",
+  "trivia_more": "Other topics",
+  "trivia_note": "* Dates and figures are based on public materials from the Okinawa Fresh Noodle Cooperative Association, newspapers and others. Where accounts differ, I say so."
  },
  "ko": {
   "lang_name": "한국어",
@@ -261,7 +285,19 @@
   "sp_rating": "평가 {0}점/15점",
   "sp_footer": "오키나와 본섬의 오키나와 소바 가게 완전 정복이 목표.",
   "sp_original": "원문(일본어)",
-  "gsi_attr": "일본 국토지리원(지리원 타일)"
+  "gsi_attr": "일본 국토지리원(지리원 타일)",
+  "nav_trivia": "상식",
+  "btn_trivia": "오키나와 소바 상식",
+  "trivia_title": "오키나와 소바 상식",
+  "trivia_sub": "Soba Trivia",
+  "trivia_lead": "역사, 오키나와 소바의 날, 목회 소바, 도진 소바, 육수… 알고 먹으면 한 그릇이 더 맛있어집니다.",
+  "trivia_pick": "궁금한 주제를 골라 보세요.",
+  "trivia_open": "상식 읽기 →",
+  "trivia_back_home": "← 처음으로 돌아가기",
+  "trivia_back_list": "← 상식 목록으로 돌아가기",
+  "trivia_related": "이 블로그에서 다녀온 가게",
+  "trivia_more": "다른 주제",
+  "trivia_note": "※ 연도 등은 오키나와 생면 협동조합과 각 신문사 등의 공개 자료를 바탕으로 정리했습니다. 여러 설이 있는 것은 그렇게 적었습니다."
  },
  "zh-TW": {
   "lang_name": "繁體中文",
@@ -349,6 +385,18 @@
   "sp_rating": "評分 {0}分/15分",
   "sp_footer": "目標是吃遍沖繩本島所有沖繩麵店。",
   "sp_original": "原文（日文）",
-  "gsi_attr": "日本國土地理院（地理院地圖）"
+  "gsi_attr": "日本國土地理院（地理院地圖）",
+  "nav_trivia": "小知識",
+  "btn_trivia": "沖繩麵小知識",
+  "trivia_title": "沖繩麵小知識",
+  "trivia_sub": "Soba Trivia",
+  "trivia_lead": "歷史、沖繩麵之日、木灰麵、唐人麵、高湯……了解之後再吃，每一碗都更美味。",
+  "trivia_pick": "請選擇想了解的主題。",
+  "trivia_open": "閱讀小知識 →",
+  "trivia_back_home": "← 回到首頁",
+  "trivia_back_list": "← 回到小知識列表",
+  "trivia_related": "本部落格走訪過的店家",
+  "trivia_more": "其他主題",
+  "trivia_note": "※年份等資料，是根據沖繩生麵協同組合與各報社等公開資料整理而成。有不同說法之處，文中皆有註明。"
  }
 }
