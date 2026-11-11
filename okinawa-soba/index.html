@@ -142,6 +142,11 @@ nav .links a{
 }
 nav .links a:hover{color:#7fe3ff}
 nav .links a{white-space:nowrap}
+/* タブレット幅：メニューが4つになって右にはみ出すので、メニューだけ2段目に落とす */
+@media(max-width:1040px){
+  nav{flex-wrap:wrap;gap:.35rem .8rem}
+  nav .links{width:100%;justify-content:space-around;gap:.6rem;border-top:1px solid rgba(255,255,255,.18);padding-top:.35rem}
+}
 /* スマホ幅：メニューを2段目に落として、どの言語でも切れない・縦に折り返さないようにする */
 @media(max-width:700px){
   nav{flex-wrap:wrap;gap:.35rem .8rem;padding:.55rem 14px .5rem}
@@ -210,16 +215,18 @@ h1 .accent{color:#7fe3ff}
   font-weight:300;text-shadow:0 2px 12px rgba(11,61,84,.18);
 }
 .hero-sub b{color:#ffffff;font-weight:600}
-.hero-cta{margin-top:2.5rem;display:flex;flex-wrap:wrap;gap:1rem}
+.hero-cta{margin-top:2.5rem;display:grid;grid-template-columns:repeat(3,minmax(0,13rem));gap:.8rem}
+.hero-cta .btn{justify-content:center;padding-left:.8rem;padding-right:.8rem;white-space:nowrap;min-height:3rem}
+@media(max-width:700px){.hero-cta{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.hero-cta .btn:first-child{grid-column:1/-1}.hero-cta .btn{letter-spacing:.04em;padding-left:.4rem;padding-right:.4rem}}
 .btn{
   display:inline-flex;align-items:center;gap:.5rem;
   padding:.9rem 1.9rem;border-radius:3px;
   font-size:.9rem;letter-spacing:.1em;text-decoration:none;
   transition:all .25s;font-weight:500;
 }
-.btn-gold{background:#00b4d8;color:#04364f;font-weight:700;box-shadow:0 8px 28px rgba(0,180,216,.4)}
+.btn-gold{background:#00b4d8;border:1px solid #00b4d8;color:#04364f;font-weight:700;box-shadow:0 8px 28px rgba(0,180,216,.4)}
 .btn-gold:hover{background:#7fe3ff;transform:translateY(-2px)}
-.btn-ghost{border:1px solid rgba(255,255,255,.55);color:#ffffff;backdrop-filter:blur(4px)}
+.btn-ghost{border:1px solid rgba(255,255,255,.55);color:#ffffff;background:rgba(4,58,92,.45);backdrop-filter:blur(4px)}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
 .hero-tate{
   position:absolute;right:2.2rem;top:50%;transform:translateY(-50%);z-index:2;
@@ -245,7 +252,7 @@ h1 .accent{color:#7fe3ff}
   font-family:var(--serif);font-size:1.8rem;font-weight:700;color:var(--gold2);
   line-height:1.2;font-variant-numeric:tabular-nums;
 }
-.stat .label{font-size:.75rem;color:var(--muted);letter-spacing:.2em;margin-top:.3rem}
+.stat .label{font-size:.75rem;color:#cfeaf7;letter-spacing:.2em;margin-top:.3rem}
 .scroll-cue{
   position:absolute;left:50%;bottom:1.4rem;transform:translateX(-50%);z-index:2;
   color:rgba(255,255,255,.85);font-size:.75rem;letter-spacing:.3em;text-align:center;
@@ -452,16 +459,16 @@ section{margin-top:5rem}
 .art-orig{color:var(--muted);font-size:.85rem;margin:-.2rem 0 .6rem;letter-spacing:.05em}
 /* ===== うんちくコーナー ===== */
 #trivia-entry{margin-top:3.5rem}
-.tv-banner{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.6rem;background:linear-gradient(135deg,#043a5c,#0a7ea4);color:#fff;border-radius:14px;padding:1.5rem 1.7rem;box-shadow:0 10px 30px rgba(4,58,92,.18)}
-.tv-banner .tv-b-txt{flex:1 1 16em;min-width:0}
-.tv-banner h2{font-family:var(--serif);font-size:1.45rem;letter-spacing:.06em;margin-bottom:.3rem;color:#fff}
-.tv-banner p{font-size:.88rem;line-height:1.8;color:#d8f1fb}
-.tv-banner a.tv-go{flex:0 0 auto;background:#fff;color:#043a5c;font-weight:700;text-decoration:none;border-radius:999px;padding:.75rem 1.5rem;font-size:.95rem;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.2)}
-.tv-banner a.tv-go:hover{background:#7fe3ff}
+.tv-banner{display:flex;flex-wrap:wrap;align-items:center;gap:1.1rem 2rem;background:#043a5c;color:#fff;border-radius:8px;border-left:4px solid #00b4d8;padding:1.6rem 1.8rem;box-shadow:0 10px 30px rgba(4,58,92,.16)}
+.tv-banner .tv-b-txt{flex:1 1 18em;min-width:0}
+.tv-banner h2{font-family:var(--serif);font-weight:700;font-size:1.9rem;letter-spacing:.08em;line-height:1.4;margin-bottom:.35rem;color:#fff}
+.tv-banner p{font-size:.9rem;line-height:1.8;color:#eaf7ff;font-weight:300}
+.tv-banner .btn{flex:0 0 auto;justify-content:center;min-width:13rem;min-height:3rem;white-space:nowrap}
+@media(max-width:700px){.tv-banner{padding:1.3rem 1.2rem}.tv-banner h2{font-size:1.5rem}.tv-banner .btn{width:100%}}
 .tv-ic{font-size:2.6rem;line-height:1;margin-bottom:.5rem}
 .tv-lead{color:var(--muted);font-size:.95rem;line-height:1.9;margin:0 0 1.6rem;max-width:40em}
 .tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.9rem;margin-bottom:1.6rem}
-.tv-btn{display:flex;align-items:center;gap:.9rem;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem;text-decoration:none;color:var(--text);transition:transform .15s,box-shadow .15s,border-color .15s;min-height:4.6rem}
+.tv-btn{display:flex;align-items:center;gap:.9rem;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:1rem 1.1rem;text-decoration:none;color:var(--text);transition:transform .15s,box-shadow .15s,border-color .15s;min-height:4.6rem}
 .tv-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(10,126,164,.16);border-color:#0a7ea4}
 .tv-btn .ic{font-size:1.9rem;line-height:1;flex:0 0 auto}
 .tv-btn .tt{display:block;font-family:var(--serif);font-weight:700;color:#083c58;font-size:1.02rem;line-height:1.45}
@@ -472,13 +479,13 @@ section{margin-top:5rem}
 .tv-body li{position:relative;padding:.7rem 0 .7rem 1.2rem;border-top:1px dashed var(--line);line-height:1.9;color:#20495f}
 .tv-body li::before{content:"";position:absolute;left:.1rem;top:1.45rem;width:.42rem;height:.42rem;border-radius:50%;background:#0a7ea4}
 .tv-body li b{color:#083c58}
-.tv-rel{background:var(--ink2);border:1px solid var(--line);border-radius:10px;padding:1rem 1.2rem;margin:2rem 0;max-width:44em}
+.tv-rel{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:1rem 1.2rem;margin:2rem 0;max-width:44em}
 .tv-rel h3,.tv-more h3{font-family:var(--serif);font-size:.98rem;color:#083c58;margin-bottom:.7rem}
 .tv-chips{display:flex;flex-wrap:wrap;gap:.5rem}
-.tv-chips a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:.35rem .9rem;font-size:.85rem;color:#0a6f90;text-decoration:none}
+.tv-chips a{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.4rem 1rem;font-size:.8rem;color:var(--text);text-decoration:none;letter-spacing:.05em}
 .tv-chips a:hover{border-color:#0a7ea4;background:#f0f9fc}
 .tv-more{margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--line)}
-@media(max-width:520px){.tv-grid{grid-template-columns:1fr}.tv-banner{padding:1.2rem}.tv-banner a.tv-go{width:100%;text-align:center}}
+@media(max-width:520px){.tv-grid{grid-template-columns:1fr}}
 /* ===== お店別ページ一覧（SEO） ===== */
 .seo-index{max-width:1100px;margin:0 auto 2rem;padding:0 16px;font-size:.85rem}
 .seo-index details{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:1rem 1.4rem}
@@ -642,7 +649,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
     <div class="hero-cta">
       <a class="btn btn-gold" href="#shops">お店をさがす</a>
       <a class="btn btn-ghost" href="#map-sec">マップでさがす</a>
-      <a class="btn btn-ghost" href="#trivia">沖縄そばのうんちく</a>
+      <a class="btn btn-ghost" href="#trivia">うんちくを読む</a>
     </div>
     <div class="stats">
       <div class="stat"><div class="num" id="stat-count">60+</div><div class="label">食べ歩いた店</div></div>
@@ -661,7 +668,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
       <h2>沖縄そばのうんちく</h2>
       <p>歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。</p>
     </div>
-    <a class="tv-go" href="trivia/" onclick="location.hash='trivia';return false;">うんちくを読む →</a>
+    <a class="btn btn-gold tv-go" href="trivia/" onclick="location.hash='trivia';return false;">うんちくを読む</a>
   </div>
 </section>
 
@@ -742,7 +749,7 @@ footer .copy{margin-top:2.5rem;font-size:.75rem;color:#54607a;letter-spacing:.15
 // ===== 多言語：表示用ヘルパー（データのキーは日本語の店名のまま） =====
 const LANG = window.SOBA_LANG || "ja";
 const I18 = (LANG!=="ja" && window.I18N) ? window.I18N : null;
-const UI_JA = {"lang_name": "日本語", "title": "沖縄そば巡りの旅｜沖縄本島の沖縄そば屋 食べ歩きレビュー", "meta_desc": "沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を、写真付きの実食レビューと麺・スープ・具の星評価で紹介。地図からお店も探せます。", "site": "沖縄そば巡りの旅", "brand": "沖縄そば<span class=\"wave\">巡り</span>の旅", "brand_sub": "沖縄本島・沖縄そば屋 全店制覇をめざす食べ歩きブログ", "nav_search_ph": "🔍 店名・地名・キーワード", "nav_shops": "お店一覧", "nav_map": "マップ", "nav_archive": "全記事", "hero_tate": "一杯入魂", "hero_h1": "すすった数だけ、<br>島を知る。", "hero_goal": "沖縄本島・沖縄そば屋 <span class=\"accent\">全店制覇</span> への道", "hero_sub": "沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を\n      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、\n      24時間無人営業の変わり種まで──今日もどこかで、すすっています。", "btn_shops": "お店をさがす", "btn_map": "マップでさがす", "stat_shops": "食べ歩いた店", "stat_reports": "巡礼レポート", "stat_all": "全域", "stat_cover": "本島カバー", "sec_shops": "お店をさがす", "sec_shops_lead": "エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。", "r_all": "すべて", "r_naha": "那覇", "r_south": "南部", "r_central": "中部", "r_north": "北部", "r_other": "その他", "tag_オススメ": "オススメ", "tag_オススメにも引けを取らない": "オススメにも引けを取らない", "tag_変わり種": "変わり種", "tag_古民家": "古民家", "tag_閉店": "閉店", "search_ph": "店名・キーワードで検索", "count": "{0}軒", "empty": "条件に合うお店が見つかりませんでした。フィルターを変えてみてください。", "honto": "沖縄本島", "nth": "{0}軒目", "photos": "📷 {0}枚", "read": "記事を読む", "read_arrow": "→ 記事を読む", "card_aria": "{0}の記事を読む", "photo_alt": "{0}の沖縄そば", "gallery_alt": "{0}の写真{1}", "sec_map": "マップでさがす", "map_lead": "ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）", "map_ph_real": "🍜 地図のピンか、下のエリアボタンを選んでください。", "map_ph_svg": "🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。", "map_aria": "沖縄本島の沖縄そばマップ", "sea_ecs": "東シナ海", "sea_pac": "太平洋", "yanbaru": "やんばる", "motobu": "本部半島", "naha_label": "那覇", "gmaps": "Googleマップ", "sec_archive": "全記事アーカイブ", "archive_lead": "本サイトに掲載中の食べ歩き記事の一覧です。店名を選ぶと記事が読めます。", "archive_summary": "記事リストをひらく", "archive_item": "沖縄そば巡りの旅「{0}」編", "back": "← お店一覧にもどる", "prev": "← 前のお店", "next": "次のお店 →", "footer": "沖縄本島の沖縄そば屋、全店制覇が目標。<br>\n    食べ歩いたお店を少しずつ紹介しています。", "lb_close": "閉じる", "lb_prev": "前の写真", "lb_next": "次の写真", "lb_alt": "{0} の写真 {1}", "seo_index": "お店別の記事ページ一覧（{0}軒）", "reg_naha": "那覇エリア", "reg_south": "南部エリア", "reg_central": "中部エリア", "reg_north": "北部エリア", "reg_other": "沖縄本島", "lang_btn": "Language", "sp_title": "{0}（{1}）の沖縄そばレビュー", "sp_top": "トップ", "sp_info": "お店の情報", "sp_name": "店名", "sp_area": "エリア", "sp_addr": "住所", "sp_gmaps": "Googleマップで見る", "sp_cta": "地図やほかのお店も見る（{0}軒）", "sp_rating": "評価 {0}点/15点", "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。", "sp_original": "原文（日本語）", "gsi_attr": "国土地理院（地理院タイル）", "nav_trivia": "うんちく", "btn_trivia": "沖縄そばのうんちく", "trivia_title": "沖縄そばのうんちく", "trivia_sub": "Soba Trivia", "trivia_lead": "歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。", "trivia_pick": "気になる話題を選んでください。", "trivia_open": "うんちくを読む →", "trivia_back_home": "← トップにもどる", "trivia_back_list": "← うんちく一覧にもどる", "trivia_related": "このブログで食べ歩いたお店", "trivia_more": "ほかの話題", "trivia_note": "※年号などは、沖縄生麺協同組合や新聞各社などの公開資料をもとにまとめました。諸説あるものは、その旨を書いています。"};
+const UI_JA = {"lang_name": "日本語", "title": "沖縄そば巡りの旅｜沖縄本島の沖縄そば屋 食べ歩きレビュー", "meta_desc": "沖縄本島の沖縄そば屋全店制覇を目指す食べ歩きブログ。那覇・首里・南部・中部・北部のお店を、写真付きの実食レビューと麺・スープ・具の星評価で紹介。地図からお店も探せます。", "site": "沖縄そば巡りの旅", "brand": "沖縄そば<span class=\"wave\">巡り</span>の旅", "brand_sub": "沖縄本島・沖縄そば屋 全店制覇をめざす食べ歩きブログ", "nav_search_ph": "🔍 店名・地名・キーワード", "nav_shops": "お店一覧", "nav_map": "マップ", "nav_archive": "全記事", "hero_tate": "一杯入魂", "hero_h1": "すすった数だけ、<br>島を知る。", "hero_goal": "沖縄本島・沖縄そば屋 <span class=\"accent\">全店制覇</span> への道", "hero_sub": "沖縄本島の沖縄そば屋を一杯ずつ食べ歩き、<b>麺・スープ・具材</b>を\n      じっくり味わって綴る巡礼の記録。観光地の名店から住宅街の隠れた実力店、\n      24時間無人営業の変わり種まで──今日もどこかで、すすっています。", "btn_shops": "お店をさがす", "btn_map": "マップでさがす", "stat_shops": "食べ歩いた店", "stat_reports": "巡礼レポート", "stat_all": "全域", "stat_cover": "本島カバー", "sec_shops": "お店をさがす", "sec_shops_lead": "エリアやタグで絞り込んで、次の一杯を見つけてください。カードをタップすると記事が読めます。", "r_all": "すべて", "r_naha": "那覇", "r_south": "南部", "r_central": "中部", "r_north": "北部", "r_other": "その他", "tag_オススメ": "オススメ", "tag_オススメにも引けを取らない": "オススメにも引けを取らない", "tag_変わり種": "変わり種", "tag_古民家": "古民家", "tag_閉店": "閉店", "search_ph": "店名・キーワードで検索", "count": "{0}軒", "empty": "条件に合うお店が見つかりませんでした。フィルターを変えてみてください。", "honto": "沖縄本島", "nth": "{0}軒目", "photos": "📷 {0}枚", "read": "記事を読む", "read_arrow": "→ 記事を読む", "card_aria": "{0}の記事を読む", "photo_alt": "{0}の沖縄そば", "gallery_alt": "{0}の写真{1}", "sec_map": "マップでさがす", "map_lead": "ピンをタップするとお店の情報が出ます。ズーム・スクロールも自由自在。（ピンの位置はおおよその目安です。正確な場所は各ポップアップの「Googleマップ」からどうぞ）", "map_ph_real": "🍜 地図のピンか、下のエリアボタンを選んでください。", "map_ph_svg": "🍜 地図のピンを選ぶと、その街で食べ歩いたお店が出てきます。", "map_aria": "沖縄本島の沖縄そばマップ", "sea_ecs": "東シナ海", "sea_pac": "太平洋", "yanbaru": "やんばる", "motobu": "本部半島", "naha_label": "那覇", "gmaps": "Googleマップ", "sec_archive": "全記事アーカイブ", "archive_lead": "本サイトに掲載中の食べ歩き記事の一覧です。店名を選ぶと記事が読めます。", "archive_summary": "記事リストをひらく", "archive_item": "沖縄そば巡りの旅「{0}」編", "back": "← お店一覧にもどる", "prev": "← 前のお店", "next": "次のお店 →", "footer": "沖縄本島の沖縄そば屋、全店制覇が目標。<br>\n    食べ歩いたお店を少しずつ紹介しています。", "lb_close": "閉じる", "lb_prev": "前の写真", "lb_next": "次の写真", "lb_alt": "{0} の写真 {1}", "seo_index": "お店別の記事ページ一覧（{0}軒）", "reg_naha": "那覇エリア", "reg_south": "南部エリア", "reg_central": "中部エリア", "reg_north": "北部エリア", "reg_other": "沖縄本島", "lang_btn": "Language", "sp_title": "{0}（{1}）の沖縄そばレビュー", "sp_top": "トップ", "sp_info": "お店の情報", "sp_name": "店名", "sp_area": "エリア", "sp_addr": "住所", "sp_gmaps": "Googleマップで見る", "sp_cta": "地図やほかのお店も見る（{0}軒）", "sp_rating": "評価 {0}点/15点", "sp_footer": "沖縄本島の沖縄そば屋、全店制覇が目標。", "sp_original": "原文（日本語）", "gsi_attr": "国土地理院（地理院タイル）", "nav_trivia": "うんちく", "btn_trivia": "うんちくを読む", "trivia_title": "沖縄そばのうんちく", "trivia_sub": "Soba Trivia", "trivia_lead": "歴史、沖縄そばの日、木灰そば、唐人そば、出汁…。知ってから食べると、一杯がもっと美味しくなります。", "trivia_pick": "気になる話題を選んでください。", "trivia_open": "うんちくを読む", "trivia_back_home": "← トップにもどる", "trivia_back_list": "← うんちく一覧にもどる", "trivia_related": "このブログで食べ歩いたお店", "trivia_more": "ほかの話題", "trivia_note": "※年号などは、沖縄生麺協同組合や新聞各社などの公開資料をもとにまとめました。諸説あるものは、その旨を書いています。"};
 function U(k){ let s = (I18 && I18.ui[k]!=null) ? I18.ui[k] : (UI_JA[k]!=null ? UI_JA[k] : k);
   for(let i=1;i<arguments.length;i++) s = s.split("{"+(i-1)+"}").join(arguments[i]); return s; }
 const TR = s => (I18 && I18.shops[s.name]) || null;
@@ -6930,7 +6937,7 @@ buildMap();
 route();
 
 // ===== PWA / 自動更新（ネットワーク優先SW）=====
-const APP_VERSION = '2026.11.11.1';
+const APP_VERSION = '2026.11.11.2';
 (function(){ const vc = document.getElementById('app-version'); if(vc) vc.textContent = 'ver ' + APP_VERSION; })();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
