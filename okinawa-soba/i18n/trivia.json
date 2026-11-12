@@ -16,6 +16,7 @@
   "men": [
    "ゆし豆腐そば専門店 わらいそば",
    "帆掛（ふーか）きそば",
+   "金月そば",
    "本家亀そば　わかさ店",
    "きんそば",
    "マルヨ製麺 塩屋店",
@@ -91,7 +92,7 @@
    "id": "men",
    "icon": "🥢",
    "title": "麺と製麺所の話",
-   "lead": "細麺・縮れ麺・平麺、麺を支える作り手たち",
+   "lead": "細麺・縮れ麺・平麺、麺を支える作り手と県産小麦",
    "body": [
     "沖縄そばの麺は、お店で打つ「自家製麺」と、製麺所から仕入れる麺の2通りがあります。「どこの麺を使っているか」を知ると、食べ歩きがもっと面白くなります。",
     "麺の形は、細麺・中太麺・太麺・平麺、それにまっすぐな麺と縮れ麺などさまざま。沖縄生麺協同組合によると、本島の北部は平たくて太めの麺、中部は太麺、南部は細麺が多いといわれています。ただ最近は、地域よりもお客さんの好みで選ばれることが増えているそうです。",
@@ -107,6 +108,7 @@
      ]
     },
     "製麺所が直営するそば屋もあります。作りたての生麺を、その場で食べられるのが魅力です。",
+    "麺のもとになる小麦にも、沖縄生まれのものがあります。「島麦（しまむぎ）かなさん」は、沖縄県麦生産組合が2019年にブランド化した県産小麦です。農薬や化学肥料を使わずに、うるま市などで育てられています。「かなさん」は沖縄の言葉で「愛おしい」という意味。組合には沖縄そば屋「金月（きんちち）そば」のオーナーも加わっていて、お店の自家製麺に使われているそうです。伊江島でも、昔からの品種の小麦「江島神力（えじまじんりき）」が作られています。",
     "自家製麺のお店では、沖縄県産の小麦や全粒粉を使った麺、よもぎを練り込んだ麺など、そのお店でしか食べられない麺に出会えます。このブログの評価のひとつ目が「麺」なのは、それだけ麺が大事だからです。"
    ]
   },
@@ -218,7 +220,7 @@
    "id": "men",
    "icon": "🥢",
    "title": "Noodles and noodle makers",
-   "lead": "Thin, curly or flat — and the makers behind them",
+   "lead": "Thin, curly or flat — the makers and Okinawan wheat behind them",
    "body": [
     "Okinawa soba noodles come in two ways: house-made noodles made at the shop, and noodles bought in from a noodle factory (seimenjo). Knowing whose noodles a shop uses makes eating around even more fun.",
     "Noodles vary in shape: thin, medium-thick, thick and flat, as well as straight and curly. According to the Okinawa Fresh Noodle Cooperative Association, it is said that flat, thicker noodles are common in the north of the main island, thick noodles in the central area, and thin noodles in the south. Recently, though, noodles are reportedly chosen more and more by customers’ taste rather than by region.",
@@ -234,6 +236,7 @@
      ]
     },
     "Some soba shops are run directly by a noodle maker. The appeal is eating freshly made noodles right there.",
+    "There is also Okinawa-grown wheat for noodles. “Shimamugi Kanasan” is a brand of Okinawan wheat launched in 2019 by the Okinawa Wheat Producers’ Association. It is grown without pesticides or chemical fertilizers, in Uruma City and other areas. “Kanasan” means “dear” or “beloved” in the Okinawan language. The owner of the Okinawa soba shop Kinchichi Soba is also a member of the association, and the wheat is said to be used in the shop’s house-made noodles. On Ie Island, too, a traditional local variety of wheat called “Ejima Jinriki” is grown.",
     "At shops with house-made noodles, you can find noodles you can only eat there — made with Okinawan wheat or whole wheat flour, or kneaded with mugwort. The first rating on this blog is “noodles” because they matter that much."
    ]
   },
@@ -345,7 +348,7 @@
    "id": "men",
    "icon": "🥢",
    "title": "면과 제면소 이야기",
-   "lead": "가는 면·꼬불꼬불한 면·넓적한 면, 면을 만드는 사람들",
+   "lead": "가는 면·꼬불꼬불한 면·넓적한 면, 면을 만드는 사람들과 오키나와산 밀",
    "body": [
     "오키나와 소바의 면은 가게에서 직접 뽑는 ‘자가제면’과 제면소에서 받아 쓰는 면, 두 가지가 있습니다. ‘어느 제면소의 면을 쓰는지’를 알면 맛집 탐방이 더 재미있어집니다.",
     "면의 모양은 가는 면·중간 굵기 면·굵은 면·넓적한 면, 그리고 곧은 면과 꼬불꼬불한 면 등 다양합니다. 오키나와 생면 협동조합에 따르면, 본섬 북부는 넓적하고 굵은 면, 중부는 굵은 면, 남부는 가는 면이 많다고 합니다. 다만 최근에는 지역보다 손님의 취향에 따라 고르는 경우가 늘고 있다고 합니다.",
@@ -361,6 +364,7 @@
      ]
     },
     "제면소가 직접 운영하는 소바집도 있습니다. 갓 만든 생면을 그 자리에서 먹을 수 있는 것이 매력입니다.",
+    "면의 재료인 밀에도 오키나와에서 난 것이 있습니다. ‘시마무기 카나산’은 오키나와현 밀 생산 조합이 2019년에 브랜드화한 오키나와산 밀입니다. 농약과 화학비료를 쓰지 않고 우루마시 등에서 재배하고 있습니다. ‘카나산’은 오키나와 말로 ‘사랑스럽다’는 뜻입니다. 조합에는 오키나와 소바집 ‘긴치치 소바’의 오너도 참여하고 있어, 가게의 자가제면에 쓰이고 있다고 합니다. 이에지마에서도 옛날부터 내려온 품종의 밀 ‘에지마 진리키’가 재배되고 있습니다.",
     "자가제면 가게에서는 오키나와산 밀이나 통밀가루를 쓴 면, 쑥을 넣어 반죽한 면 등, 그 가게에서만 먹을 수 있는 면을 만날 수 있습니다. 이 블로그의 평가 첫 번째가 ‘면’인 것은, 그만큼 면이 중요하기 때문입니다."
    ]
   },
@@ -472,7 +476,7 @@
    "id": "men",
    "icon": "🥢",
    "title": "麵條與製麵所",
-   "lead": "細麵、捲麵、寬扁麵，以及做麵的職人們",
+   "lead": "細麵、捲麵、寬扁麵，做麵的職人與縣產小麥",
    "body": [
     "沖繩麵的麵條有兩種來源：店家自己做的「自家製麵」，以及向製麵所進貨的麵。知道「用的是哪一家的麵」，到處吃麵就會更有趣。",
     "麵條的形狀有細麵、中粗麵、粗麵、寬扁麵，還有直麵與捲麵等，種類很多。根據沖繩生麵協同組合的說法，本島北部多為寬扁偏粗的麵，中部多為粗麵，南部則多為細麵。不過近年來，據說比起地區，依客人喜好來選擇的情況越來越多。",
@@ -488,6 +492,7 @@
      ]
     },
     "也有由製麵所直營的麵店。魅力就在於能當場吃到剛做好的生麵。",
+    "做麵用的小麥，也有沖繩本地出產的。「島麥Kanasan」是沖繩縣麥生產組合在2019年推出的縣產小麥品牌，不使用農藥與化學肥料，在宇流麻市等地栽種。「Kanasan」在沖繩話裡是「惹人憐愛」的意思。組合成員中也有沖繩麵店「金月麵」的老闆，據說店裡的自家製麵就使用這種小麥。伊江島也栽種著自古流傳的小麥品種「江島神力」。",
     "在自家製麵的店裡，可以遇到只有那家店才吃得到的麵，例如使用沖繩縣產小麥或全麥麵粉的麵、揉入艾草的麵等等。這個部落格的評分第一項就是「麵」，正是因為麵條就是這麼重要。"
    ]
   },
