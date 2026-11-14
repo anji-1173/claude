@@ -102,6 +102,8 @@
       "<b>照喜名（てるきな）製麺所</b>（那覇市）：強く縮れた麺で知られています。県内の多くのそば屋で使われている、定番の麺です。",
       "<b>亀浜（かめはま）製麺所</b>（豊見城市）：細くてまっすぐな、コシのある麺が特徴です。以前は那覇市の辻で、長く営業していたそうです。「縮れ麺の照喜名、細麺の亀浜」と、並べて語られることもあります。",
       "<b>知念（ちねん）製麺所</b>（沖縄市）：1955年（昭和30年）創業。作り置きをせず、手仕事で麺を作り続けているそうです。",
+      "<b>与那覇（よなは）製麺</b>（西原町）：会社名は与那覇食品。1993年（平成5年）創業で、お店の好みに合わせた「オーダーメイド麺」を、少ない量から作っています。",
+      "<b>三倉（みつくら）食品</b>（西原町）：1952年（昭和27年）創業。「与那原そば」の名前で、長く麺を作り続けています。",
       "<b>西崎（にしざき）製麺所</b>（糸満市）：よもぎ・イカスミ・もずくを練り込んだ麺のほか、そば屋ごとのオリジナル麺も手がけています。",
       "<b>三角屋（さんかくや）製麺所</b>（名護市）：平たい麺の「名護そば」で知られる老舗です。名護のそば屋の多くが、ここの麺を使っているといわれています。",
       "<b>サン食品</b>（糸満市）：「沖縄そばの日」の話に出てくる、土肥健一さんが創業した会社です。日持ちのする半生麺など、お土産用の沖縄そばも作っています。"
@@ -230,6 +232,8 @@
       "<b>Terukina Seimenjo</b> (Naha City): known for strongly curly noodles. A standard choice used by many soba shops in Okinawa.",
       "<b>Kamehama Seimenjo</b> (Tomigusuku City): thin, straight noodles with a firm bite. It is said to have operated for many years in Tsuji, Naha. The two are sometimes mentioned side by side: “Terukina for curly noodles, Kamehama for thin noodles.”",
       "<b>Chinen Seimenjo</b> (Okinawa City): founded in 1955 (Showa 30). It is said to keep making noodles by hand, without making them ahead of time.",
+      "<b>Yonaha Seimen</b> (Nishihara Town): the company name is Yonaha Shokuhin. Founded in 1993 (Heisei 5), it makes “made-to-order noodles” to suit each shop’s preferences, even in small quantities.",
+      "<b>Mitsukura Shokuhin</b> (Nishihara Town): founded in 1952 (Showa 27). It has long made noodles under the name “Yonabaru Soba.”",
       "<b>Nishizaki Seimenjo</b> (Itoman City): besides noodles kneaded with mugwort, squid ink or mozuku seaweed, it also makes original noodles for individual soba shops.",
       "<b>Sankakuya Seimenjo</b> (Nago City): a long-established maker known for the flat noodles of “Nago soba.” Many soba shops in Nago are said to use its noodles.",
       "<b>Sun Foods</b> (Itoman City): the company founded by Kenichi Dohi, who appears in the story of Okinawa Soba Day. It also makes Okinawa soba for souvenirs, such as semi-fresh noodles that keep well."
@@ -358,6 +362,8 @@
       "<b>데루키나 제면소</b>(나하시): 강하게 꼬불꼬불한 면으로 알려져 있습니다. 오키나와의 많은 소바집에서 쓰는 대표적인 면입니다.",
       "<b>가메하마 제면소</b>(도미구스쿠시): 가늘고 곧으며 쫄깃한 면이 특징입니다. 예전에는 나하시 쓰지에서 오랫동안 영업했다고 합니다. ‘꼬불꼬불한 면은 데루키나, 가는 면은 가메하마’라고 나란히 이야기되기도 합니다.",
       "<b>지넨 제면소</b>(오키나와시): 1955년(쇼와 30년) 창업. 미리 만들어 두지 않고, 손으로 면을 만들어 오고 있다고 합니다.",
+      "<b>요나하 제면</b>(니시하라초): 회사 이름은 요나하 식품. 1993년(헤이세이 5년) 창업으로, 가게의 취향에 맞춘 ‘오더메이드 면’을 적은 양부터 만들고 있습니다.",
+      "<b>미쓰쿠라 식품</b>(니시하라초): 1952년(쇼와 27년) 창업. ‘요나바루 소바’라는 이름으로 오랫동안 면을 만들어 오고 있습니다.",
       "<b>니시자키 제면소</b>(이토만시): 쑥·오징어 먹물·모즈쿠를 넣어 반죽한 면 외에, 소바집마다의 오리지널 면도 만들고 있습니다.",
       "<b>산카쿠야 제면소</b>(나고시): 넓적한 면의 ‘나고 소바’로 알려진 노포입니다. 나고의 소바집 대부분이 이곳의 면을 쓴다고 합니다.",
       "<b>산 식품</b>(이토만시): ‘오키나와 소바의 날’ 이야기에 나오는 도히 겐이치 씨가 창업한 회사입니다. 오래 보관할 수 있는 반생면 등, 선물용 오키나와 소바도 만들고 있습니다."
@@ -486,6 +492,8 @@
       "<b>照喜名製麵所</b>（那霸市）：以捲度很強的捲麵聞名，是縣內許多麵店採用的經典麵條。",
       "<b>龜濱製麵所</b>（豐見城市）：特色是又細又直、有嚼勁的麵。據說以前在那霸市的辻營業了很長一段時間。也常有人把兩家並列，說「捲麵是照喜名，細麵是龜濱」。",
       "<b>知念製麵所</b>（沖繩市）：1955年（昭和30年）創業。據說不預先做好存放，一直以手工製作麵條。",
+      "<b>與那霸製麵</b>（西原町）：公司名稱為與那霸食品。1993年（平成5年）創業，可依店家的喜好，從少量開始製作「客製化麵條」。",
+      "<b>三倉食品</b>（西原町）：1952年（昭和27年）創業。長年以「與那原麵」的名稱製作麵條。",
       "<b>西崎製麵所</b>（糸滿市）：除了揉入艾草、墨魚汁、水雲的麵條之外，也為各家麵店製作專屬的麵。",
       "<b>三角屋製麵所</b>（名護市）：以寬扁麵「名護麵」聞名的老字號。據說名護的麵店大多使用這裡的麵。",
       "<b>SUN食品</b>（糸滿市）：由「沖繩麵之日」故事中登場的土肥健一先生所創辦的公司。也生產可以久放的半生麵等伴手禮用的沖繩麵。"
